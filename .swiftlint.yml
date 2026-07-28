@@ -2,6 +2,7 @@ included:
   - Pokespeare/Sources
   - Pokespeare/Tests
   - Demo/PokeApp
+  - Demo/PokeAppTests
 
 excluded:
   - Pokespeare/.build

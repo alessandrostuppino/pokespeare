@@ -73,10 +73,10 @@ jobs:
             -destination "platform=iOS Simulator,name=${{ steps.destination.outputs.device }}" \
             | xcbeautify
 
-      - name: Build PokeApp
+      - name: Test PokeApp
         run: |
           set -o pipefail
-          xcodebuild build \
+          xcodebuild test \
             -project Demo/PokeApp.xcodeproj \
             -scheme PokeApp \
             -destination "platform=iOS Simulator,name=${{ steps.destination.outputs.device }}" \

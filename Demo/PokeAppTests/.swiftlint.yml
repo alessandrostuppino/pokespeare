@@ -1,0 +1,7 @@
+parent_config: ../../.swiftlint.yml
+
+# Test fixtures legitimately build values that cannot fail to construct.
+disabled_rules:
+  - force_try
+  - force_unwrapping
+  - identifier_name

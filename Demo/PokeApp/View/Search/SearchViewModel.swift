@@ -17,7 +17,9 @@ final class SearchViewModel {
   private let pokespeare: Pokespeare
 
   /// The in-flight search, kept so a new one can cancel it.
-  private var searchTask: Task<Void, Never>?
+  ///
+  /// Readable internally so tests can await a search that is otherwise fire-and-forget.
+  private(set) var searchTask: Task<Void, Never>?
 
   init(pokespeare: Pokespeare = .live) {
     self.pokespeare = pokespeare

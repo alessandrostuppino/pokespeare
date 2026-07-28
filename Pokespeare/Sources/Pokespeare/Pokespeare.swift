@@ -5,6 +5,29 @@ public struct Pokespeare: Sendable {
   private var _sprite: @Sendable (_ name: String) async throws -> URL
 }
 
+// MARK: - Custom Implementations
+
+extension Pokespeare {
+  /// Builds an instance backed by the given closures.
+  ///
+  /// The SDK is a struct of closures precisely so callers can substitute it: use this in
+  /// tests and SwiftUI previews to drive a view model without touching the network, with no
+  /// protocol to declare and no mock class to maintain.
+  ///
+  /// ```swift
+  /// let sdk = Pokespeare(
+  ///   description: { _ in "A description" },
+  ///   sprite: { _ in URL(string: "https://example.com/pikachu.png")! }
+  /// )
+  /// ```
+  public init(
+    description: @escaping @Sendable (_ name: String) async throws -> String,
+    sprite: @escaping @Sendable (_ name: String) async throws -> URL
+  ) {
+    self.init(_description: description, _sprite: sprite)
+  }
+}
+
 // MARK: - Live Implementation
 
 extension Pokespeare {
