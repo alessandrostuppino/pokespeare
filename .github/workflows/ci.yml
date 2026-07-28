@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Overridable so the workflow does not break when the runner image drops a device.
+  PREFERRED_SIMULATOR: iPhone 17 Pro
+
+jobs:
+  lint:
+    name: SwiftLint
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Lint
+        run: swiftlint lint --strict
+
+  test:
+    name: Package tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      - name: Install xcbeautify
+        run: brew install xcbeautify
+
+      - name: Resolve simulator destination
+        id: destination
+        run: |
+          set -euo pipefail
+
+          device=$(xcrun simctl list devices available \
+            | grep -E '^\s+iPhone' \
+            | sed -E 's/^ *([^(]*[^ (]) *\(.*/\1/' \
+            | grep -x "$PREFERRED_SIMULATOR" \
+            || true)
+
+          if [ -z "$device" ]; then
+            device=$(xcrun simctl list devices available \
+              | grep -E '^\s+iPhone' \
+              | sed -E 's/^ *([^(]*[^ (]) *\(.*/\1/' \
+              | tail -1)
+            echo "::warning::$PREFERRED_SIMULATOR unavailable, falling back to $device"
+          fi
+
+          echo "device=$device" >> "$GITHUB_OUTPUT"
+
+      # The package declares only .iOS(.v17), so it cannot be built with `swift build`
+      # on macOS: everything goes through xcodebuild against a simulator.
+      #
+      # Integration tests hit live third-party APIs behind a 5 calls/hour rate limit and
+      # are skipped unless RUN_INTEGRATION_TESTS is set. Do not set it here.
+      - name: Test Pokespeare
+        working-directory: Pokespeare
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme Pokespeare \
+            -destination "platform=iOS Simulator,name=${{ steps.destination.outputs.device }}" \
+            | xcbeautify
+
+      - name: Build PokeApp
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Demo/PokeApp.xcodeproj \
+            -scheme PokeApp \
+            -destination "platform=iOS Simulator,name=${{ steps.destination.outputs.device }}" \
+            | xcbeautify
