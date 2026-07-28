@@ -1,7 +1,7 @@
 import Foundation
 
 /// A protocol that defines requirements for an HTTP request.
-public protocol HTTPRequest: URLRequestConvertible {
+protocol HTTPRequest: URLRequestConvertible {
   /// The host of the API `URL`.
   var host: String { get }
 
@@ -27,7 +27,7 @@ public protocol HTTPRequest: URLRequestConvertible {
   var timeout: TimeInterval { get }
 }
 
-public extension HTTPRequest {
+extension HTTPRequest {
   var query: QueryParameters? { nil }
 
   var body: HTTPBody? { nil }

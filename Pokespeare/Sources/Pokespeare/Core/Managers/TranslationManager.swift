@@ -1,10 +1,14 @@
 import Foundation
 
-struct TranslationManager {
+struct TranslationManager: Sendable {
+  /// The domain failures of the FunTranslations endpoint.
+  ///
+  /// Transport failures leave the manager as ``APIError``.
   enum Error: Swift.Error, Equatable {
-    case networkError(URLError)
-
+    /// There is nothing to translate.
     case invalidQueryText(String)
+
+    /// The service rejected the call because the caller ran out of quota.
     case rateLimitReached
   }
 
@@ -18,31 +22,21 @@ struct TranslationManager {
 // MARK: - Live Implementation
 
 extension TranslationManager {
-  static func live(session: Session = URLSession.shared) -> Self {
-    .init(
+  static func live(session: any Session = URLSession.shared) -> Self {
+    let client = APIClient(session: session) { statusCode in
+      statusCode == 429 ? Error.rateLimitReached : nil
+    }
+
+    return .init(
       _translation: { text in
-        let request = ShakespeareanTranslationRequest(text: text)
-        guard let url = request.urlRequest else {
-          throw Error.networkError(.init(.badURL, userInfo: ["error": "Invalid URL \(request.urlRequest?.url?.absoluteString ?? "nil")"]))
+        // The free tier allows 5 calls per hour: never spend one on an empty string.
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+          throw Error.invalidQueryText(text)
         }
 
-        let (data, response) = try await session.dataHandler(for: url)
+        let response = try await client.perform(ShakespeareanTranslationRequest(text: text))
 
-        guard let response = response as? HTTPURLResponse else {
-          throw URLError(.badServerResponse)
-        }
-
-        guard (200..<300) ~= response.statusCode else {
-          throw response.statusCode == 429 ? Error.rateLimitReached : URLError(.badServerResponse)
-        }
-
-        do {
-          let decoded = try request.jsonDecoder.decode(ShakespeareanTranslationRequest.ResponseType.self, from: data)
-
-          return decoded.translated
-        } catch {
-          throw Error.networkError(error as? URLError ?? URLError(.unknown, userInfo: ["error": error]))
-        }
+        return response.translated
       }
     )
   }

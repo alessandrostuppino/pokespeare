@@ -1,7 +1,7 @@
 import Foundation
 
 /// A protocol that defines requirements for an HTTP request that expects a `Decodable` model from the response.
-public protocol HTTPCodableRequest: HTTPRequest {
+protocol HTTPCodableRequest: HTTPRequest {
   /// The `Decodable` type expected from the response body.
   associatedtype ResponseType: Decodable
 
@@ -12,7 +12,7 @@ public protocol HTTPCodableRequest: HTTPRequest {
   var jsonEncoder: JSONEncoder { get }
 }
 
-public extension HTTPCodableRequest {
+extension HTTPCodableRequest {
   var jsonDecoder: JSONDecoder {
     JSONDecoder()
   }

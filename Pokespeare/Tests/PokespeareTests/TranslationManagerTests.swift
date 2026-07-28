@@ -15,21 +15,28 @@ struct TranslationManagerTests {
     }
 
     @Test func translation_ko() async throws {
-      let expected = URLError(.badURL)
-      let manager = TranslationManager.live(session: MockedSession.failureSession(with: expected))
+      let manager = TranslationManager.live(session: MockedSession.failureSession(with: URLError(.badURL)))
 
-      await #expect(throws: expected) {
+      await #expect(throws: APIError.transport(URLError(.badURL))) {
         _ = try await manager.translation(for: "Whatever text")
       }
     }
 
     @Test func translation_ko_rate_limit() async throws {
-      let rateLimitReachedError = TranslationManager.Error.rateLimitReached
-      let expectedError = URLError(.unknown, userInfo: ["error": rateLimitReachedError])
-      let manager = TranslationManager.live(session: MockedSession.failureSession(with: expectedError))
+      let manager = TranslationManager.live(session: MockedSession.responding(statusCode: 429))
 
-      await #expect(throws: expectedError) {
+      await #expect(throws: TranslationManager.Error.rateLimitReached) {
         _ = try await manager.translation(for: "Whatever text")
+      }
+    }
+
+    /// The free tier allows 5 calls per hour: an empty string is rejected before the call.
+    @Test(arguments: ["", "   ", "\n\t"])
+    func blank_text_is_rejected_without_a_network_call(text: String) async throws {
+      let manager = TranslationManager.live(session: MockedSession.unimplemented())
+
+      await #expect(throws: TranslationManager.Error.invalidQueryText(text)) {
+        _ = try await manager.translation(for: text)
       }
     }
   }
@@ -49,10 +56,9 @@ struct TranslationManagerTests {
     }
 
     @Test func empty_translation_integration() async throws {
-      let expected = ""
-      let translated = try await TranslationManager.live().translation(for: "")
-
-      #expect(translated == expected)
+      await #expect(throws: TranslationManager.Error.invalidQueryText("")) {
+        _ = try await TranslationManager.live().translation(for: "")
+      }
     }
   }
 }

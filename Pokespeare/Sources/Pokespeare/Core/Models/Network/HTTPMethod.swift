@@ -1,5 +1,5 @@
 /// The supported HTTP methods.
-public enum HTTPMethod: String {
+enum HTTPMethod: String {
   case connect = "CONNECT"
 
   case delete = "DELETE"

@@ -9,31 +9,38 @@ public struct Pokespeare: Sendable {
 
 extension Pokespeare {
   /// The default implementation of the SDK that concretely fetches data from official APIs.
-  public static var live: Self {
-    self.live(pokemonManager: .live(), translationManager: .live())
-  }
+  ///
+  /// A single shared instance: building one is cheap but not free, and there is no
+  /// per-caller state to keep apart.
+  public static let live = Self.live(pokemonManager: .live(), translationManager: .live())
 
-  static func live(pokemonManager: PokemonManager, translationManager: TranslationManager) -> Self {
+  /// - Parameter isTranslationEnabled: Whether descriptions go through the Shakespearean
+  ///   translation step. Defaults to `false` because the FunTranslations endpoint this SDK
+  ///   was written against is no longer served; with it off, `description(for:)` returns the
+  ///   PokeAPI flavor text verbatim. Turn it on once a translation backend is available
+  ///   again — the path stays compiled and covered by tests either way.
+  static func live(
+    pokemonManager: PokemonManager,
+    translationManager: TranslationManager,
+    isTranslationEnabled: Bool = false
+  ) -> Self {
     .init(
       _description: { name in
         do {
-          guard let description = try await pokemonManager.description(for: name) else {
-            throw Pokespeare.Error.pokemonNotFound
+          let description = try await pokemonManager.description(for: name)
+
+          guard isTranslationEnabled else {
+            return description
           }
 
-//					return try await translationManager.translation(for: description)
-          return description
+          return try await translationManager.translation(for: description)
         } catch {
           throw Pokespeare.Error.from(error: error)
         }
       },
       _sprite: { name in
         do {
-          guard let url = try await pokemonManager.sprite(for: name) else {
-            throw Pokespeare.Error.spriteUnavailable
-          }
-
-          return url
+          return try await pokemonManager.sprite(for: name)
         } catch {
           throw Pokespeare.Error.from(error: error)
         }
