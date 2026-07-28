@@ -21,8 +21,17 @@ final class SearchViewModel {
   /// Readable internally so tests can await a search that is otherwise fire-and-forget.
   private(set) var searchTask: Task<Void, Never>?
 
-  init(pokespeare: Pokespeare = .live) {
+  /// The model context used to persist the history.
+  ///
+  /// Required, not an optional set later from `onAppear`: every persistence path used to
+  /// be a silent no-op whenever it happened to be `nil`.
+  private let modelContext: ModelContext
+
+  init(modelContext: ModelContext, pokespeare: Pokespeare = .live) {
+    self.modelContext = modelContext
     self.pokespeare = pokespeare
+
+    fetchHistory()
   }
 
   // MARK: - Constants
@@ -43,9 +52,6 @@ final class SearchViewModel {
   let sectionHeader = "RECENTLY SEARCHED"
 
   // MARK: - Stored Properties
-
-  /// The model conext used to persist data.
-  var modelContext: ModelContext?
 
   /// The search text prompted by the user.
   var searchText = ""
@@ -79,14 +85,16 @@ final class SearchViewModel {
 
   /// Whether the view should display the alert with an error.
   ///
-  /// - Note: C-15, addressed in phase 4. The setter discards `newValue` and always clears
-  ///   the error, so `isErrorVisible = true` silently does nothing.
+  /// Setting it to `false` dismisses the alert by clearing the error. Setting it to `true`
+  /// is not meaningful — an alert needs an error to show — so it is ignored rather than
+  /// silently treated as a dismissal, which is what the previous setter did.
   var isErrorVisible: Bool {
     get {
       sdkError != nil
     }
-    // swiftlint:disable:next unused_setter_value
     set {
+      guard !newValue else { return }
+
       sdkError = nil
     }
   }
@@ -109,9 +117,9 @@ final class SearchViewModel {
     guard isSearchButtonVisible else { return }
     reset()
 
-    if let pokemon = recentlySearched.enumerated().first(where: { $0.element.name.lowercased() == searchText.lowercased() }) {
-      updatePokemon(pokemon)
-      pokemonDetail = pokemon.element
+    if let pokemon = recentlySearched.first(where: { $0.name.lowercased() == searchText.lowercased() }) {
+      markAsJustSearched(pokemon)
+      pokemonDetail = pokemon
       return
     }
 
@@ -174,10 +182,11 @@ final class SearchViewModel {
 
   /// The user confirmed the deletion of the history from memory.
   func didTapConfirmHistoryDeletion() {
-    guard let modelContext else { return }
-
     recentlySearched.forEach { modelContext.delete($0) }
     recentlySearched.removeAll()
+
+    save()
+    historyAlertConfirmation = false
   }
 
   /// The user tapped the button to clear the history.
@@ -199,14 +208,6 @@ final class SearchViewModel {
     searchText = filtered != searchText ? filtered : searchText
   }
 
-  /// Invoked when the view appears, evaluates `modelContext` and fetches the history in memory.
-  ///
-  /// - Parameters: The model context retrieved of the view.
-  func evaluateModelContext(_ mc: ModelContext) {
-    modelContext = mc
-    fetchHistory()
-  }
-
   /// Initializes a `Pokespeare.PokemonViewModel` with the given `pokemon` then passed to the `Pokespeare.PokemonView`.
   ///
   /// - Parameters: The Pokémon source information.
@@ -217,31 +218,35 @@ final class SearchViewModel {
 
   /// Stores `pokemon` in the history, both in memory and in the model context.
   private func persist(_ pokemon: Pokemon) {
-    guard let modelContext else { return }
-
     modelContext.insert(pokemon)
-    try? modelContext.save()
-
     recentlySearched.insert(pokemon, at: .zero)
+
+    save()
   }
 
   /// Fetches the history from SwiftData persistency container.
   private func fetchHistory() {
     let fetchDescriptor = FetchDescriptor<Pokemon>(sortBy: [SortDescriptor(\.searchDate, order: .reverse)])
-    guard let fetched = try? modelContext?.fetch(fetchDescriptor) else { return }
+
+    guard let fetched = try? modelContext.fetch(fetchDescriptor) else { return }
+
     recentlySearched = fetched
   }
 
-  /// Refreshes the Pokémon inside both the list and the model context by recreate it to update the `searchDate`.
-  /// - Parameter item: The item to update.
-  private func updatePokemon(_ item: EnumeratedSequence<[Pokemon]>.Element) {
-    let updatedPokemon = Pokemon(pokemon: item.element)
-    recentlySearched.remove(at: item.offset)
-    modelContext?.delete(item.element)
+  /// Moves `pokemon` back to the top of the history.
+  ///
+  /// A plain mutation: the entry used to be deleted and recreated just to refresh its
+  /// timestamp, which threw away the row's identity on every repeated search.
+  private func markAsJustSearched(_ pokemon: Pokemon) {
+    pokemon.searchDate = Date()
+    recentlySearched.sort { $0.searchDate > $1.searchDate }
 
-    recentlySearched.insert(updatedPokemon, at: .zero)
-    modelContext?.insert(updatedPokemon)
-    try? modelContext?.save()
+    save()
+  }
+
+  /// Commits pending changes to the store.
+  private func save() {
+    try? modelContext.save()
   }
 
   /// Resets the values of `pokemonDetail` and `sdkError` before any operation.

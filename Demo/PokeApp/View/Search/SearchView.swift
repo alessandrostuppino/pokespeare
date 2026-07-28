@@ -3,8 +3,11 @@ import SwiftData
 import SwiftUI
 
 struct SearchView: View {
-  @Environment(\.modelContext) private var modelContext
-  @State private var viewModel = SearchViewModel()
+  @State private var viewModel: SearchViewModel
+
+  init(viewModel: SearchViewModel) {
+    _viewModel = State(initialValue: viewModel)
+  }
 
   var body: some View {
     NavigationStack {
@@ -40,9 +43,6 @@ struct SearchView: View {
     }
     .background(Color(UIColor.systemGroupedBackground))
     .navigationTitle(viewModel.title)
-    .onAppear {
-      viewModel.evaluateModelContext(modelContext)
-    }
   }
 
   /// The search bar component.
@@ -143,7 +143,16 @@ struct SearchView: View {
 
 #if DEBUG
 #Preview {
-  SearchView()
-    .modelContainer(for: Pokemon.self)
+  // A throwaway file-backed store: an `isStoredInMemoryOnly` container traps on the first
+  // fetch on the current toolchain, which would take the preview down with it.
+  let schema = Schema([Pokemon.self])
+  let url = URL.temporaryDirectory.appending(path: "PokeAppPreview-\(UUID().uuidString).store")
+
+  if let container = try? ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: url)]) {
+    SearchView(viewModel: SearchViewModel(modelContext: container.mainContext))
+      .modelContainer(container)
+  } else {
+    Text("Could not create the preview store")
+  }
 }
 #endif
