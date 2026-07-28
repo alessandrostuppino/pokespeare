@@ -1,0 +1,62 @@
+included:
+  - Pokespeare/Sources
+  - Pokespeare/Tests
+  - Demo/PokeApp
+
+excluded:
+  - Pokespeare/.build
+  - Demo/PokeApp.xcodeproj
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - fatal_error_message
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - last_where
+  - literal_expression_end_indentation
+  - modifier_order
+  - operator_usage_whitespace
+  - overridden_super_call
+  - prefer_self_type_over_type_of_self
+  - redundant_nil_coalescing
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - vertical_whitespace_closing_braces
+  - yoda_condition
+
+disabled_rules:
+  # Test names read as sentences on purpose: `http_500_escapes_as_a_bare_url_error`.
+  - identifier_name
+
+analyzer_rules:
+  - unused_import
+
+line_length:
+  warning: 140
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+type_body_length:
+  warning: 300
+  error: 400
+
+file_length:
+  warning: 400
+  error: 600
+
+function_body_length:
+  warning: 60
+  error: 100
+
+nesting:
+  type_level: 3
+
+force_unwrapping:
+  severity: warning
+
+# Test helpers legitimately build fixtures that cannot fail.
+force_try:
+  severity: warning
