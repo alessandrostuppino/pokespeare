@@ -8,7 +8,7 @@ struct PokespeareTests {
     let urlError = PokemonManager.Error.pokemonNotFound
     let sdk = Pokespeare.live(
       pokemonManager: PokemonManager.live(session: MockedSession.failureSession(with: urlError)),
-      translationManager: TranslationManager.live(session: MockedSession.unimplemented)
+      translationManager: TranslationManager.live(session: MockedSession.unimplemented())
     )
     
     await #expect(throws: Pokespeare.Error.pokemonNotFound) {
@@ -38,7 +38,7 @@ struct PokespeareTests {
       let expected = URL(string: urlString)
       let sdk = Pokespeare.live(
         pokemonManager: PokemonManager.live(session: MockedSession.pokemonSpriteSession(with: urlString)),
-        translationManager: TranslationManager.live(session: MockedSession.unimplemented)
+        translationManager: TranslationManager.live(session: MockedSession.unimplemented())
       )
       
       let spriteUrl = try await sdk.sprite(for: "pikachu")
