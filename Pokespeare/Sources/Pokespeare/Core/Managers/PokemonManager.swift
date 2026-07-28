@@ -1,7 +1,7 @@
 import Foundation
 
 struct PokemonManager {
-	enum Error: Swift.Error {
+	enum Error: Swift.Error, Equatable {
 		case networkError(URLError)
     case pokemonNotFound
 	}
