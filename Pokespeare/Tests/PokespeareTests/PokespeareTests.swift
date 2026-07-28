@@ -11,11 +11,8 @@ struct PokespeareTests {
       translationManager: TranslationManager.live(session: MockedSession.unimplemented)
     )
     
-    do {
+    await #expect(throws: Pokespeare.Error.pokemonNotFound) {
       _ = try await sdk.description(for: "picatchu")
-    } catch {
-      let pokespeareError = try #require(error as? Pokespeare.Error)
-      #expect(pokespeareError == Pokespeare.Error.pokemonNotFound)
     }
   }
   

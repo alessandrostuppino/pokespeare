@@ -15,26 +15,20 @@ struct TranslationManagerTests {
     
     @Test func translation_ko() async throws {
       let expected = URLError(.badURL)
-      
-      do {
-        _ = try await TranslationManager.live(session: MockedSession.failureSession(with: expected)).translation(for: "Whatever text")
-      } catch {
-        let urlError = try #require(error as? URLError)
-        
-        #expect(urlError == expected)
+      let manager = TranslationManager.live(session: MockedSession.failureSession(with: expected))
+
+      await #expect(throws: expected) {
+        _ = try await manager.translation(for: "Whatever text")
       }
     }
     
     @Test func translation_ko_rate_limit() async throws {
       let rateLimitReachedError = TranslationManager.Error.rateLimitReached
       let expectedError = URLError(.unknown, userInfo: ["error" : rateLimitReachedError])
-      
-      do {
-        _ = try await TranslationManager.live(session: MockedSession.failureSession(with: expectedError)).translation(for: "Whatever text")
-      } catch {
-        let urlError = try #require(error as? URLError)
-        
-        #expect(expectedError == urlError)
+      let manager = TranslationManager.live(session: MockedSession.failureSession(with: expectedError))
+
+      await #expect(throws: expectedError) {
+        _ = try await manager.translation(for: "Whatever text")
       }
     }
   }
