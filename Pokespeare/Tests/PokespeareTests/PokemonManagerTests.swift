@@ -22,8 +22,12 @@ struct PokemonManagerTests {
     }
   }
   
-  @Suite("Integration Tests")
-  struct IntegrationTests {
+  @Suite(
+    "Integration Tests",
+    .tags(.integration),
+    .disabled(if: !IntegrationTests.isEnabled, IntegrationTests.skipReason)
+  )
+  struct LiveAPITests {
     @Test func sprite_integration() async throws {
       let expected = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png")
       let sprite = try await PokemonManager.live().sprite(for: "pikachu")

@@ -33,8 +33,12 @@ struct TranslationManagerTests {
     }
   }
   
-  @Suite("Integration Tests")
-  struct IntegrationTests {
+  @Suite(
+    "Integration Tests",
+    .tags(.integration),
+    .disabled(if: !IntegrationTests.isEnabled, IntegrationTests.skipReason)
+  )
+  struct LiveAPITests {
     @Test func translation_integration() async throws {
       let text = "You gave Mr. Tim a hearty meal, but unfortunately what he ate made him die."
       let expected = "Thee did giveth mr. Tim a hearty meal,  but unfortunately what he did doth englut did maketh him kicketh the bucket."
