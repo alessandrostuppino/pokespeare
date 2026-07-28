@@ -1,0 +1,8 @@
+parent_config: ../../.swiftlint.yml
+
+# Test fixtures legitimately build values that cannot fail to construct. A trap in a
+# fixture is a loud, immediate signal, which is what you want while writing tests.
+disabled_rules:
+  - force_try
+  - force_unwrapping
+  - identifier_name

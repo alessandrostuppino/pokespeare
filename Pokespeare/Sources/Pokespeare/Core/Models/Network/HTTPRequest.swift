@@ -13,7 +13,7 @@ public protocol HTTPRequest: URLRequestConvertible {
 
   /// The query parameters to include in the request. Defaults to `nil`.
   var query: QueryParameters? { get }
-  
+
   /// The body to include in the request. Defaults to `nil`.
   var body: HTTPBody? { get }
 
@@ -29,7 +29,7 @@ public protocol HTTPRequest: URLRequestConvertible {
 
 public extension HTTPRequest {
   var query: QueryParameters? { nil }
-  
+
   var body: HTTPBody? { nil }
 
   var defaultHeaders: HTTPHeaders {
@@ -62,15 +62,15 @@ public extension HTTPRequest {
 
     var urlRequest = URLRequest(url: url, timeoutInterval: timeout)
     urlRequest.httpMethod = method.rawValue
-    
+
     if method.bodyAllowed {
       if let body, let httpBody = try? JSONSerialization.data(withJSONObject: body) {
         urlRequest.httpBody = httpBody
       } else {
-        urlRequest.httpBody = "{}".data(using: .utf8)
+        urlRequest.httpBody = Data("{}".utf8)
       }
     }
-    
+
     defaultHeaders.forEach { urlRequest.setValue($0.value, forHTTPHeaderField: $0.key) }
     customHeaders.forEach { urlRequest.setValue($0.value, forHTTPHeaderField: $0.key) }
 

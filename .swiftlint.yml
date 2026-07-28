@@ -54,6 +54,10 @@ function_body_length:
 nesting:
   type_level: 3
 
+# The codebase consistently indents switch cases; keep that as the house style.
+switch_case_alignment:
+  indented_cases: true
+
 force_unwrapping:
   severity: warning
 

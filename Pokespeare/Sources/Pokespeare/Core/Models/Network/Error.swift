@@ -5,28 +5,28 @@ extension Pokespeare {
   public enum Error: Swift.Error, Equatable {
     /// Thrown when there is a network error.
     case networkError(URLError)
-    
+
     /// Thrown when no Pokémon has been found with the provided `name`.
     case pokemonNotFound
-    
+
     /// Thrown when the fetched Pokémon has no descriptions available.
     case descriptionUnavailable(String)
-    
+
     /// Thrown when the list of descriptions doesn't have any english version.
     case englishDescriptionUnavailable(String)
-    
+
     /// Thrown when the translation failed.
     case translationFailed(String)
-    
+
     /// Thrown when the fetched Pokémon has no sprite available.
     case spriteUnavailable
-    
+
     /// Thrown when the user exceeds the rate limit with the translation service.
     case rateLimitExceeded
-    
+
     /// Fallbacks any unhandled error.
     case unknown
-    
+
     /// Human-readable description of the error.
     public var errorDescription: String {
       switch self {
@@ -52,35 +52,35 @@ extension Pokespeare {
 }
 
 extension Pokespeare.Error {
-	static func from(error: any Error) -> Self {
-		return if let pokemonManagerError = error as? PokemonManager.Error {
+  static func from(error: any Error) -> Self {
+    return if let pokemonManagerError = error as? PokemonManager.Error {
       Pokespeare.Error.from(error: pokemonManagerError)
-		} else if let translationManagerError = error as? TranslationManager.Error {
+    } else if let translationManagerError = error as? TranslationManager.Error {
       Pokespeare.Error.from(error: translationManagerError)
-		} else {
+    } else {
       Pokespeare.Error.networkError(.init(.unknown))
-		}
-	}
-	
-	static func from(error: PokemonManager.Error) -> Self {
-		switch error {
-		case let .networkError(urlError) where urlError.code == .unknown && urlError.userInfo.isEmpty:
-				.pokemonNotFound
-		case let .networkError(urlError):
-				.networkError(urlError)
+    }
+  }
+
+  static func from(error: PokemonManager.Error) -> Self {
+    switch error {
+      case let .networkError(urlError) where urlError.code == .unknown && urlError.userInfo.isEmpty:
+        .pokemonNotFound
+      case let .networkError(urlError):
+        .networkError(urlError)
       case .pokemonNotFound:
-          .pokemonNotFound
-		}
-	}
-	
-	static func from(error: TranslationManager.Error) -> Self {
-		switch error {
-		case let .networkError(urlError):
-				.networkError(urlError)
-		case let .invalidQueryText(text):
-				.translationFailed(text)
-		case .rateLimitReached:
-				.rateLimitExceeded
-		}
-	}
+        .pokemonNotFound
+    }
+  }
+
+  static func from(error: TranslationManager.Error) -> Self {
+    switch error {
+      case let .networkError(urlError):
+        .networkError(urlError)
+      case let .invalidQueryText(text):
+        .translationFailed(text)
+      case .rateLimitReached:
+        .rateLimitExceeded
+    }
+  }
 }

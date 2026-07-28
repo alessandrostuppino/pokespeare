@@ -4,11 +4,11 @@ import Testing
 
 class MockedSession: Session, @unchecked Sendable {
   private let _dataHandler: (URLRequest) async throws -> (Data, URLResponse)
-  
+
   func dataHandler(for request: URLRequest) async throws -> (Data, URLResponse) {
     try await _dataHandler(request)
   }
-  
+
   init(dataHandler: @escaping (URLRequest) async throws -> (Data, URLResponse)) {
     self._dataHandler = dataHandler
   }
@@ -21,7 +21,6 @@ extension MockedSession {
     }
   }
 }
-
 
 extension MockedSession {
   /// A session that must never be reached.

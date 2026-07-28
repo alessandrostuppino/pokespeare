@@ -3,11 +3,11 @@ import SwiftUI
 /// The view used to display the Pokémon sprite and description.
 public struct PokemonView: View {
   private let viewModel: PokemonViewModel
-  
+
   public init(viewModel: PokemonViewModel) {
     self.viewModel = viewModel
   }
-  
+
   public var body: some View {
     VStack(spacing: 8) {
       AsyncImage(url: viewModel.spriteUrl) {
@@ -20,11 +20,11 @@ public struct PokemonView: View {
       }
       .frame(maxWidth: 100, maxHeight: 100)
       .clipShape(.rect(cornerRadius: 12))
-      
+
       Text(viewModel.name)
         .font(.title)
         .bold()
-      
+
       Text(viewModel.description)
         .multilineTextAlignment(.center)
     }

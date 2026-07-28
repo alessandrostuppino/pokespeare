@@ -9,7 +9,7 @@ struct TextFieldClearButton: ViewModifier {
   var visibility: Visibility
   @FocusState private var focused
   @Binding var text: String
-  
+
   func body(content: Content) -> some View {
     content
       .focused($focused)
@@ -22,11 +22,11 @@ struct TextFieldClearButton: ViewModifier {
       }
       .animation(.smooth, value: focused)
   }
-  
+
   private var clearButton: some View {
     HStack {
       Spacer()
-      
+
       Button {
         text = ""
       } label: {

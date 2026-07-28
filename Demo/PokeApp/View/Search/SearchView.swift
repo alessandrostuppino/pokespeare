@@ -5,7 +5,7 @@ import SwiftUI
 struct SearchView: View {
   @Environment(\.modelContext) private var modelContext
   @State private var viewModel = SearchViewModel()
-  
+
   var body: some View {
     NavigationStack {
       content
@@ -28,9 +28,9 @@ struct SearchView: View {
       Text(viewModel.confirmMessage)
     }
   }
-  
+
   // MARK: - Subviews
-  
+
   /// The content of the view.
   private var content: some View {
     VStack(alignment: .leading, spacing: 16) {
@@ -44,7 +44,7 @@ struct SearchView: View {
       viewModel.evaluateModelContext(modelContext)
     }
   }
-  
+
   /// The search bar component.
   private var searchHeader: some View {
     HStack(spacing: 16) {
@@ -59,7 +59,7 @@ struct SearchView: View {
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(.capsule(style: .continuous))
         .disabled(viewModel.isLoading)
-      
+
       if viewModel.isSearchButtonVisible {
         Button(action: viewModel.didTapSearchButton) {
           Text(viewModel.search).bold()
@@ -75,7 +75,7 @@ struct SearchView: View {
     }
     .animation(.default, value: viewModel.isSearchButtonVisible)
   }
-  
+
   /// The history list component.
   @ViewBuilder private var recentlySearchedList: some View {
     if viewModel.hasHistory {
@@ -87,9 +87,9 @@ struct SearchView: View {
             Text(viewModel.sectionHeader)
               .font(.footnote)
               .foregroundStyle(.gray)
-            
+
             Spacer()
-            
+
             Button(action: viewModel.didTapClearHistoryButton) {
               Image(systemName: "trash")
             }
@@ -107,7 +107,7 @@ struct SearchView: View {
       Spacer()
     }
   }
-  
+
   /// Creates the item component for the given `pokemon`.
   /// - Parameter pokemon: The Pokémon model.
   /// - Returns: The history list item component.
@@ -126,10 +126,10 @@ struct SearchView: View {
             .aspectRatio(contentMode: .fill)
         }
         .frame(maxWidth: 50, maxHeight: 30)
-        
+
         Text(pokemon.name.capitalized)
           .tint(Color.primary)
-        
+
         Spacer()
       }
       .padding(.leading, 8)
