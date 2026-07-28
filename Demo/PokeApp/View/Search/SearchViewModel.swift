@@ -4,8 +4,24 @@ import SwiftData
 import class UIKit.UIResponder
 import class UIKit.UIApplication
 
+@MainActor
 @Observable
-class SearchViewModel {
+final class SearchViewModel {
+
+  // MARK: - Dependencies
+
+  /// The SDK instance used to fetch Pokémon data.
+  ///
+  /// Injected rather than reached for statically, so tests can drive this view model with
+  /// a stub. `Pokespeare` is already a struct of closures, so a stub needs no protocol.
+  private let pokespeare: Pokespeare
+
+  /// The in-flight search, kept so a new one can cancel it.
+  private var searchTask: Task<Void, Never>?
+
+  init(pokespeare: Pokespeare = .live) {
+    self.pokespeare = pokespeare
+  }
 
   // MARK: - Constants
 
@@ -97,38 +113,46 @@ class SearchViewModel {
       return
     }
 
+    // A previous search must not win the race and overwrite this one's result.
+    searchTask?.cancel()
+
+    let name = searchText
     isLoading = true
 
-    Task {
-      do {
-        let spriteUrl = try await Pokespeare.live.sprite(for: searchText)
-        let description = try await Pokespeare.live.description(for: searchText)
+    searchTask = Task { [weak self] in
+      await self?.search(for: name)
+    }
+  }
 
-        let pokemon = Pokemon(
-          name: searchText.lowercased().capitalized,
-          shakespeareanDescription: description,
-          spriteUrl: spriteUrl
-        )
-
-        if let modelContext {
-          modelContext.insert(pokemon)
-          try? modelContext.save()
-
-          recentlySearched.insert(pokemon, at: .zero)
-        }
-
-        pokemonDetail = pokemon
-
+  /// Fetches sprite and description for `name` and records the result.
+  private func search(for name: String) async {
+    // A cancelled search must not clear the spinner: a newer one already turned it on.
+    defer {
+      if !Task.isCancelled {
         isLoading = false
-      } catch {
-        isLoading = false
-        guard let pokespeareError = error as? Pokespeare.Error else {
-          sdkError = .unknown
-          return
-        }
-
-        sdkError = pokespeareError
       }
+    }
+
+    do {
+      // Two independent PokeAPI endpoints: no reason to wait for one before starting
+      // the other.
+      async let spriteUrl = pokespeare.sprite(for: name)
+      async let description = pokespeare.description(for: name)
+
+      let pokemon = Pokemon(
+        name: name.lowercased().capitalized,
+        shakespeareanDescription: try await description,
+        spriteUrl: try await spriteUrl
+      )
+
+      guard !Task.isCancelled else { return }
+
+      persist(pokemon)
+      pokemonDetail = pokemon
+    } catch {
+      guard !Task.isCancelled, !error.isCancellation else { return }
+
+      sdkError = error as? Pokespeare.Error ?? .unknown
     }
   }
 
@@ -189,6 +213,16 @@ class SearchViewModel {
     .init(name: pokemon.name, description: pokemon.shakespeareanDescription, spriteUrl: pokemon.spriteUrl)
   }
 
+  /// Stores `pokemon` in the history, both in memory and in the model context.
+  private func persist(_ pokemon: Pokemon) {
+    guard let modelContext else { return }
+
+    modelContext.insert(pokemon)
+    try? modelContext.save()
+
+    recentlySearched.insert(pokemon, at: .zero)
+  }
+
   /// Fetches the history from SwiftData persistency container.
   private func fetchHistory() {
     let fetchDescriptor = FetchDescriptor<Pokemon>(sortBy: [SortDescriptor(\.searchDate, order: .reverse)])
@@ -212,5 +246,26 @@ class SearchViewModel {
   private func reset() {
     pokemonDetail = nil
     isErrorVisible = false
+  }
+}
+
+private extension Error {
+  /// Whether this error means "the work was cancelled" rather than "the work failed".
+  ///
+  /// A cancelled search is a normal outcome of typing a new one: it must not raise an alert.
+  var isCancellation: Bool {
+    if self is CancellationError {
+      return true
+    }
+
+    if let urlError = self as? URLError {
+      return urlError.code == .cancelled
+    }
+
+    if case let .networkError(urlError) = self as? Pokespeare.Error {
+      return urlError.code == .cancelled
+    }
+
+    return false
   }
 }

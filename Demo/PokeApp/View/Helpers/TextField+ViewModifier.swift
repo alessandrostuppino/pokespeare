@@ -46,6 +46,7 @@ extension TextField where Label == Text {
   ///   - visibility: The visibility of the clear button. `automatic` by default.
   ///   - text: The text of the `TextField` it is applied to.
   /// - Returns: The text field with a clear button, based on the given `visibility`.
+  @MainActor
   func clearButtonVisibility(_ visibility: Visibility = .automatic, text: Binding<String>) -> some View {
     self.modifier(TextFieldClearButton(visibility: visibility, text: text))
   }
