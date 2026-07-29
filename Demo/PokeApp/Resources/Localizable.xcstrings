@@ -1,0 +1,114 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Are you sure you want to delete all the search history?\n\nThis will require the use of an internet connection even for the Pokémon already displayed." : {
+      "comment" : "Body of the confirmation alert shown before clearing the search history.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi davvero cancellare tutta la cronologia delle ricerche?\n\nServirà una connessione a internet anche per i Pokémon già visualizzati."
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "comment" : "Button that dismisses the history deletion alert without deleting.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulla"
+          }
+        }
+      }
+    },
+    "Confirm" : {
+      "comment" : "Button that confirms the history deletion.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conferma"
+          }
+        }
+      }
+    },
+    "Ok" : {
+      "comment" : "Button that dismisses the error alert.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ok"
+          }
+        }
+      }
+    },
+    "Ops... Something went wrong!" : {
+      "comment" : "Alert body used when the SDK gave no message of its own.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ops... Qualcosa è andato storto!"
+          }
+        }
+      }
+    },
+    "RECENTLY SEARCHED" : {
+      "comment" : "Header of the search history section.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CERCATI DI RECENTE"
+          }
+        }
+      }
+    },
+    "Search" : {
+      "comment" : "Button that starts the search.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca"
+          }
+        }
+      }
+    },
+    "Type a Pokémon name" : {
+      "comment" : "Placeholder of the search field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrivi il nome di un Pokémon"
+          }
+        }
+      }
+    },
+    "Warning" : {
+      "comment" : "Title of both the error alert and the history deletion alert.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attenzione"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

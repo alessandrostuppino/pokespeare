@@ -40,21 +40,36 @@ extension Pokespeare.Error: LocalizedError {
   public var errorDescription: String? {
     switch self {
       case let .networkError(urlError):
-        "Ops... Something went wrong!\nPlease try again in a few minutes.\n(Error code: \(urlError.errorCode))"
+        String(
+          localized: "Ops... Something went wrong!\nPlease try again in a few minutes.\n(Error code: \(urlError.errorCode))",
+          bundle: .module
+        )
       case .pokemonNotFound:
-        "It seems that there's no Pokémon with that name.\nPlease try with a different one."
+        String(
+          localized: "It seems that there's no Pokémon with that name.\nPlease try with a different one.",
+          bundle: .module
+        )
       case let .descriptionUnavailable(pokemonName):
-        "No description available for the Pokémon named \(pokemonName)."
+        String(localized: "No description available for the Pokémon named \(pokemonName).", bundle: .module)
       case let .englishDescriptionUnavailable(pokemonName):
-        "It seems that there's no english description for the Pokémon named \(pokemonName)."
+        String(
+          localized: "It seems that there's no description available in your language for the Pokémon named \(pokemonName).",
+          bundle: .module
+        )
       case let .translationFailed(text):
-        "The translation of the description into Shakespearean style failed.\nDescription: \(text)."
+        String(
+          localized: "The translation of the description into Shakespearean style failed.\nDescription: \(text).",
+          bundle: .module
+        )
       case .spriteUnavailable:
-        "It seems that there's no sprite available for the prompted Pokémon."
+        String(localized: "It seems that there's no sprite available for the prompted Pokémon.", bundle: .module)
       case .rateLimitExceeded:
-        "Maybe you looked for too many Pokémon.\nPlease wait some time before trying again."
+        String(
+          localized: "Maybe you looked for too many Pokémon.\nPlease wait some time before trying again.",
+          bundle: .module
+        )
       case .unknown:
-        "Ops... Something went wrong!\nPlease try again in a few minutes."
+        String(localized: "Ops... Something went wrong!\nPlease try again in a few minutes.", bundle: .module)
     }
   }
 }

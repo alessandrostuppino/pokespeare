@@ -238,7 +238,10 @@ struct ErrorMappingTests {
       }
 
       #expect(try #require(error) == .englishDescriptionUnavailable("pikachu"))
-      #expect(try #require(error).errorDescription?.contains("no english description") == true)
+      // The message names the Pokémon and is not the generic "not found" one, in whatever
+      // language the catalog resolved to.
+      #expect(try #require(error).errorDescription?.contains("pikachu") == true)
+      #expect(try #require(error).errorDescription != Pokespeare.Error.pokemonNotFound.errorDescription)
     }
 
     /// Was C-25: `spriteUnavailable` was equally undeliverable.

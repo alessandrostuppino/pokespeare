@@ -4,19 +4,21 @@
 import PackageDescription
 
 let package = Package(
-	name: "Pokespeare",
-	platforms: [.iOS(.v17)],
-	products: [
-		.library(name: "Pokespeare", targets: ["Pokespeare"]),
-	],
-	targets: [
-		.target(
-			name: "Pokespeare",
-			dependencies: []
-		),
-		.testTarget(
-			name: "PokespeareTests",
-			dependencies: ["Pokespeare"]
-		),
-	]
+  name: "Pokespeare",
+  defaultLocalization: "en",
+  platforms: [.iOS(.v17)],
+  products: [
+    .library(name: "Pokespeare", targets: ["Pokespeare"]),
+  ],
+  targets: [
+    .target(
+      name: "Pokespeare",
+      dependencies: [],
+      resources: [.process("Resources/Localizable.xcstrings")]
+    ),
+    .testTarget(
+      name: "PokespeareTests",
+      dependencies: ["Pokespeare"]
+    ),
+  ]
 )

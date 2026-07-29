@@ -34,20 +34,24 @@ final class SearchViewModel {
 
   // MARK: - Constants
 
+  /// The product name, deliberately not localized.
   let title = "PokéSpeare"
-  let warning = "Warning"
-  let ok = "Ok"
-  let cancel = "Cancel"
-  let confirm = "Confirm"
-  let confirmMessage = """
-    Are you sure you want to delete all the search history?
 
-    This will require the use of an internet connection even for the Pokémon already displayed.
-    """
-  let defaultErrorDescription = "Ops... Something went wrong!"
-  let searchPlaceholder = "Type a Pokémon name"
-  let search = "Search"
-  let sectionHeader = "RECENTLY SEARCHED"
+  let warning = String(localized: "Warning")
+  let ok = String(localized: "Ok")
+  let cancel = String(localized: "Cancel")
+  let confirm = String(localized: "Confirm")
+  let confirmMessage = String(
+    localized: """
+      Are you sure you want to delete all the search history?
+
+      This will require the use of an internet connection even for the Pokémon already displayed.
+      """
+  )
+  let defaultErrorDescription = String(localized: "Ops... Something went wrong!")
+  let searchPlaceholder = String(localized: "Type a Pokémon name")
+  let search = String(localized: "Search")
+  let sectionHeader = String(localized: "RECENTLY SEARCHED")
 
   // MARK: - Stored Properties
 

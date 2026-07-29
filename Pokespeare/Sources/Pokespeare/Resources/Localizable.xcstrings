@@ -1,0 +1,102 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "It seems that there's no description available in your language for the Pokémon named %@." : {
+      "comment" : "Shown when the Pokémon exists but has no description in any language the app asked for.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non c'è una descrizione nella tua lingua per il Pokémon %@."
+          }
+        }
+      }
+    },
+    "It seems that there's no Pokémon with that name.\nPlease try with a different one." : {
+      "comment" : "Shown when the searched name matches no Pokémon.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non esiste un Pokémon con questo nome.\nProvane un altro."
+          }
+        }
+      }
+    },
+    "It seems that there's no sprite available for the prompted Pokémon." : {
+      "comment" : "Shown when the Pokémon has no usable sprite image.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non c'è un'immagine disponibile per questo Pokémon."
+          }
+        }
+      }
+    },
+    "Maybe you looked for too many Pokémon.\nPlease wait some time before trying again." : {
+      "comment" : "Shown when the translation service rate limit is hit.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forse hai cercato troppi Pokémon.\nAspetta un po' prima di riprovare."
+          }
+        }
+      }
+    },
+    "No description available for the Pokémon named %@." : {
+      "comment" : "Shown when the Pokémon species carries no description at all.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna descrizione disponibile per il Pokémon %@."
+          }
+        }
+      }
+    },
+    "Ops... Something went wrong!\nPlease try again in a few minutes." : {
+      "comment" : "Fallback message for an error the SDK could not classify.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ops... Qualcosa è andato storto!\nRiprova tra qualche minuto."
+          }
+        }
+      }
+    },
+    "Ops... Something went wrong!\nPlease try again in a few minutes.\n(Error code: %lld)" : {
+      "comment" : "Shown for a network failure. The placeholder is the underlying URLError code.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ops... Qualcosa è andato storto!\nRiprova tra qualche minuto.\n(Codice errore: %lld)"
+          }
+        }
+      }
+    },
+    "The translation of the description into Shakespearean style failed.\nDescription: %@." : {
+      "comment" : "Shown when the Shakespearean translation could not be produced.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La traduzione della descrizione in stile shakespeariano non è riuscita.\nDescrizione: %@."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
