@@ -44,7 +44,7 @@ extension HTTPRequest {
   }
 
   var timeout: TimeInterval {
-    30
+    Constants.requestTimeout
   }
 
   var urlRequest: URLRequest? {

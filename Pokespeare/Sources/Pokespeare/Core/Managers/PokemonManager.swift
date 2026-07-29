@@ -12,7 +12,7 @@ struct PokemonManager: Sendable {
     /// The Pokémon exists but the species carries no description at all.
     case descriptionUnavailable(String)
 
-    /// The Pokémon has descriptions, but none in the default language.
+    /// The Pokémon has descriptions, but none in any of the requested languages.
     case englishDescriptionUnavailable(String)
 
     /// The Pokémon exists but has no usable sprite URL.
@@ -34,9 +34,14 @@ struct PokemonManager: Sendable {
 // MARK: - Live Implementation
 
 extension PokemonManager {
-  static func live(session: any Session = URLSession.shared) -> Self {
+  /// - Parameter languages: The language codes to look for in a description, most preferred
+  ///   first. Passed in rather than read from `Locale` inside, so tests are deterministic.
+  static func live(
+    session: any Session = URLSession.shared,
+    languages: [String] = Constants.preferredLanguages
+  ) -> Self {
     let client = APIClient(session: session) { statusCode in
-      statusCode == 404 ? Error.pokemonNotFound : nil
+      statusCode == HTTPStatusCode.notFound ? Error.pokemonNotFound : nil
     }
 
     return .init(
@@ -47,7 +52,11 @@ extension PokemonManager {
           throw Error.descriptionUnavailable(pokemon)
         }
 
-        guard let entry = response.flavorTextEntries.first(where: { $0.language == defaultLanguage }) else {
+        let entry = languages.lazy
+          .compactMap { language in response.flavorTextEntries.first { $0.language == language } }
+          .first
+
+        guard let entry else {
           throw Error.englishDescriptionUnavailable(pokemon)
         }
 

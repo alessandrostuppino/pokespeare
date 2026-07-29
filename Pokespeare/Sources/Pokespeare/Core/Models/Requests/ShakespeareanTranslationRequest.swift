@@ -2,7 +2,7 @@
 struct ShakespeareanTranslationRequest: HTTPCodableRequest {
   typealias ResponseType = ShakespeareanTranslationResponse
 
-  var host = translationBaseURLString
+  var host = Constants.Host.translation
 
   var path = [ "translate", "shakespeare.json" ]
 

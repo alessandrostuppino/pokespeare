@@ -2,7 +2,7 @@
 struct PokemonDetailRequest: HTTPCodableRequest {
   typealias ResponseType = PokemonDetailResponse
 
-  var host = pokeAPIBaseURLString
+  var host = Constants.Host.pokeAPI
 
   var path: [String] {
     [ "api", "v2", "pokemon", pokemonName ]

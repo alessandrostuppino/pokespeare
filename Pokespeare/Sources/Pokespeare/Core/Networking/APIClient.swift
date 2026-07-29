@@ -46,7 +46,7 @@ struct APIClient: Sendable {
       throw APIError.invalidResponse
     }
 
-    guard (200..<300) ~= httpResponse.statusCode else {
+    guard HTTPStatusCode.successRange ~= httpResponse.statusCode else {
       throw statusCodeMapper(httpResponse.statusCode) ?? APIError.unacceptableStatusCode(httpResponse.statusCode)
     }
 

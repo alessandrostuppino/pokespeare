@@ -24,7 +24,7 @@ struct TranslationManager: Sendable {
 extension TranslationManager {
   static func live(session: any Session = URLSession.shared) -> Self {
     let client = APIClient(session: session) { statusCode in
-      statusCode == 429 ? Error.rateLimitReached : nil
+      statusCode == HTTPStatusCode.tooManyRequests ? Error.rateLimitReached : nil
     }
 
     return .init(

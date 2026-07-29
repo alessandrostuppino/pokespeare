@@ -82,15 +82,40 @@ struct ErrorMappingTests {
       }
     }
 
-    @Test func species_without_an_english_entry_is_reported_separately() async throws {
+    @Test func species_without_a_requested_language_is_reported_separately() async throws {
       let response = PokemonSpeciesResponse(
         flavorTextEntries: [.init(flavorText: "Descrizione italiana", language: "it")]
       )
-      let manager = PokemonManager.live(session: try MockedSession.responding(with: response))
+      let manager = PokemonManager.live(session: try MockedSession.responding(with: response), languages: ["en"])
 
       await #expect(throws: PokemonManager.Error.englishDescriptionUnavailable("pikachu")) {
         _ = try await manager.description(for: "pikachu")
       }
+    }
+
+    @Test func the_most_preferred_available_language_wins() async throws {
+      let response = PokemonSpeciesResponse(
+        flavorTextEntries: [
+          .init(flavorText: "English description", language: "en"),
+          .init(flavorText: "Descrizione italiana", language: "it")
+        ]
+      )
+      let session = try MockedSession.responding(with: response)
+
+      let italian = PokemonManager.live(session: session, languages: ["it", "en"])
+      let english = PokemonManager.live(session: session, languages: ["en"])
+
+      #expect(try await italian.description(for: "pikachu") == "Descrizione italiana")
+      #expect(try await english.description(for: "pikachu") == "English description")
+    }
+
+    @Test func a_missing_preferred_language_falls_back_to_english() async throws {
+      let response = PokemonSpeciesResponse(
+        flavorTextEntries: [.init(flavorText: "English description", language: "en")]
+      )
+      let manager = PokemonManager.live(session: try MockedSession.responding(with: response), languages: ["de", "en"])
+
+      #expect(try await manager.description(for: "pikachu") == "English description")
     }
 
     @Test func unusable_sprite_url_is_reported_as_sprite_unavailable() async throws {
@@ -105,7 +130,7 @@ struct ErrorMappingTests {
       let response = PokemonSpeciesResponse(
         flavorTextEntries: [.init(flavorText: "Line one\nline\u{c}two", language: "en")]
       )
-      let manager = PokemonManager.live(session: try MockedSession.responding(with: response))
+      let manager = PokemonManager.live(session: try MockedSession.responding(with: response), languages: ["en"])
 
       #expect(try await manager.description(for: "pikachu") == "Line one line two")
     }
@@ -204,7 +229,7 @@ struct ErrorMappingTests {
         flavorTextEntries: [.init(flavorText: "Descrizione italiana", language: "it")]
       )
       let sdk = Pokespeare.live(
-        pokemonManager: .live(session: try MockedSession.responding(with: response)),
+        pokemonManager: .live(session: try MockedSession.responding(with: response), languages: ["en"]),
         translationManager: .live(session: MockedSession.unimplemented())
       )
 
