@@ -52,6 +52,8 @@ final class SearchViewModel {
   let searchPlaceholder = String(localized: "Type a Pokémon name")
   let search = String(localized: "Search")
   let sectionHeader = String(localized: "RECENTLY SEARCHED")
+  let retry = String(localized: "Try again")
+  let clearHistoryAccessibilityLabel = String(localized: "Clear search history")
 
   // MARK: - Stored Properties
 
@@ -112,11 +114,24 @@ final class SearchViewModel {
     sdkError?.errorDescription ?? defaultErrorDescription
   }
 
+  /// Whether the error alert should offer to try the search again.
+  ///
+  /// Only for failures a second attempt could survive: repeating a search for a Pokémon
+  /// that does not exist would just show the same message.
+  var isRetryAvailable: Bool {
+    sdkError?.isRetryable == true
+  }
+
   // MARK: - Interactions
 
   /// The user tapped the button to dismiss the alert.
   func didTapAlertButton() {
     reset()
+  }
+
+  /// The user asked to run the failed search again.
+  func didTapRetryButton() {
+    didTapSearchButton()
   }
 
   /// The user tapped the search button.

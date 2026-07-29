@@ -74,6 +74,31 @@ extension Pokespeare.Error: LocalizedError {
   }
 }
 
+// MARK: - Recovery
+
+extension Pokespeare.Error {
+  /// Whether trying the same request again could plausibly succeed.
+  ///
+  /// Lets a caller offer a retry action only when it would mean something: repeating a
+  /// search for a Pokémon that does not exist never helps, and repeating one that hit the
+  /// translation rate limit only burns more of the hourly budget.
+  public var isRetryable: Bool {
+    switch self {
+      case let .networkError(urlError):
+        urlError.code != .cancelled
+      case .unknown:
+        true
+      case .pokemonNotFound,
+        .descriptionUnavailable,
+        .englishDescriptionUnavailable,
+        .translationFailed,
+        .spriteUnavailable,
+        .rateLimitExceeded:
+        false
+    }
+  }
+}
+
 // MARK: - Mapping
 
 extension Pokespeare.Error {

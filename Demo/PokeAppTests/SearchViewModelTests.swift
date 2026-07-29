@@ -116,6 +116,51 @@ struct SearchViewModelTests {
       #expect(viewModel.isErrorVisible == false)
     }
 
+    /// Retrying only makes sense for failures a second attempt could survive.
+    @Test(arguments: [
+      (Pokespeare.Error.networkError(URLError(.timedOut)), true),
+      (.unknown, true),
+      (.pokemonNotFound, false),
+      (.rateLimitExceeded, false)
+    ])
+    func the_alert_offers_a_retry_only_when_it_could_help(error: Pokespeare.Error, expected: Bool) async throws {
+      let viewModel = SearchViewModel(
+        modelContext: try TemporaryStore.makeContext(),
+        pokespeare: .stub(description: { _ in throw error })
+      )
+      viewModel.searchText = "pikachu"
+
+      await viewModel.performSearchAndWait()
+
+      #expect(viewModel.isRetryAvailable == expected)
+    }
+
+    @Test func retrying_runs_the_search_again_and_can_succeed() async throws {
+      let attempts = Counter()
+      let viewModel = SearchViewModel(
+        modelContext: try TemporaryStore.makeContext(),
+        pokespeare: .stub(
+          description: { _ in
+            guard await attempts.next() > 0 else {
+              throw Pokespeare.Error.networkError(URLError(.timedOut))
+            }
+
+            return Pokespeare.stubDescription
+          }
+        )
+      )
+      viewModel.searchText = "pikachu"
+      await viewModel.performSearchAndWait()
+
+      #expect(viewModel.isErrorVisible)
+
+      viewModel.didTapRetryButton()
+      await viewModel.searchTask?.value
+
+      #expect(viewModel.isErrorVisible == false)
+      #expect(viewModel.pokemonDetail?.name == "Pikachu")
+    }
+
     /// A cancelled search is a normal outcome of typing a new one, not a failure.
     @Test func a_cancellation_does_not_raise_an_alert() async throws {
       let viewModel = SearchViewModel(
@@ -300,6 +345,17 @@ private extension SearchViewModel {
   func performSearchAndWait() async {
     didTapSearchButton()
     await searchTask?.value
+  }
+}
+
+/// Counts how many times a stub was entered.
+actor Counter {
+  private var value = 0
+
+  func next() -> Int {
+    defer { value += 1 }
+
+    return value
   }
 }
 

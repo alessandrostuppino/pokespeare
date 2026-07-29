@@ -5,4 +5,7 @@ enum HTTPStatusCode {
 
   /// The range treated as success.
   static let successRange = 200..<300
+
+  /// The range the server blames on itself, and which a retry could survive.
+  static let serverErrorRange = 500..<600
 }

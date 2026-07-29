@@ -22,8 +22,11 @@ struct TranslationManager: Sendable {
 // MARK: - Live Implementation
 
 extension TranslationManager {
-  static func live(session: any Session = URLSession.shared) -> Self {
-    let client = APIClient(session: session) { statusCode in
+  static func live(
+    session: any Session = URLSession.pokespeare,
+    retryPolicy: RetryPolicy = RetryPolicy()
+  ) -> Self {
+    let client = APIClient(session: session, retryPolicy: retryPolicy) { statusCode in
       statusCode == HTTPStatusCode.tooManyRequests ? Error.rateLimitReached : nil
     }
 

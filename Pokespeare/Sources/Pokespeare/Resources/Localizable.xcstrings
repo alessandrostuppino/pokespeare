@@ -61,6 +61,18 @@
         }
       }
     },
+    "Sprite of %@" : {
+      "comment" : "VoiceOver label for the Pokémon image.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immagine di %@"
+          }
+        }
+      }
+    },
     "Ops... Something went wrong!\nPlease try again in a few minutes." : {
       "comment" : "Fallback message for an error the SDK could not classify.",
       "extractionState" : "manual",

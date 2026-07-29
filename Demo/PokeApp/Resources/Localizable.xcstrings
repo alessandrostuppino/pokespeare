@@ -25,6 +25,30 @@
         }
       }
     },
+    "Clear search history" : {
+      "comment" : "VoiceOver label for the trash button in the history header.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancella la cronologia delle ricerche"
+          }
+        }
+      }
+    },
+    "Try again" : {
+      "comment" : "Button that repeats a search that failed for a transient reason.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprova"
+          }
+        }
+      }
+    },
     "Confirm" : {
       "comment" : "Button that confirms the history deletion.",
       "extractionState" : "manual",

@@ -15,13 +15,21 @@ struct SearchView: View {
       content
     }
     .sheet(item: $viewModel.pokemonDetail) { pokemon in
-      PokemonView(viewModel: viewModel.pokemonViewModel(for: pokemon))
-        .padding()
-        .presentationDetents([.fraction(0.4)])
-        .presentationDragIndicator(.visible)
+      // Scrollable and resizable rather than pinned to a fixed fraction of the screen: at
+      // accessibility text sizes the description no longer fits in 40% of it.
+      ScrollView {
+        PokemonView(viewModel: viewModel.pokemonViewModel(for: pokemon))
+          .padding()
+      }
+      .presentationDetents([.medium, .large])
+      .presentationDragIndicator(.visible)
     }
     .alert(viewModel.warning, isPresented: $viewModel.isErrorVisible) {
       Button(viewModel.ok, action: viewModel.didTapAlertButton)
+
+      if viewModel.isRetryAvailable {
+        Button(viewModel.retry, action: viewModel.didTapRetryButton)
+      }
     } message: {
       Text(viewModel.errorDescription)
     }
@@ -103,6 +111,8 @@ struct SearchView: View {
               Image(systemName: "trash")
             }
             .disabled(viewModel.isLoading)
+            // An icon-only button is unlabelled for VoiceOver without this.
+            .accessibilityLabel(viewModel.clearHistoryAccessibilityLabel)
           }
           .padding(.vertical, 8)
           .padding(.horizontal)
@@ -135,6 +145,8 @@ struct SearchView: View {
             .aspectRatio(contentMode: .fill)
         }
         .frame(maxWidth: 50, maxHeight: 30)
+        // Decorative: the row already reads the name out.
+        .accessibilityHidden(true)
 
         Text(pokemon.name.capitalized)
           .tint(Color.primary)
@@ -147,6 +159,7 @@ struct SearchView: View {
     }
     .disabled(viewModel.isLoading)
     .clipShape(.rect(cornerRadius: 12, style: .continuous))
+    .accessibilityLabel(pokemon.name.capitalized)
   }
 }
 

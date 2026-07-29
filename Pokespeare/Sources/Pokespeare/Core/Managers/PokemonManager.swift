@@ -37,10 +37,11 @@ extension PokemonManager {
   /// - Parameter languages: The language codes to look for in a description, most preferred
   ///   first. Passed in rather than read from `Locale` inside, so tests are deterministic.
   static func live(
-    session: any Session = URLSession.shared,
-    languages: [String] = Constants.preferredLanguages
+    session: any Session = URLSession.pokespeare,
+    languages: [String] = Constants.preferredLanguages,
+    retryPolicy: RetryPolicy = RetryPolicy()
   ) -> Self {
-    let client = APIClient(session: session) { statusCode in
+    let client = APIClient(session: session, retryPolicy: retryPolicy) { statusCode in
       statusCode == HTTPStatusCode.notFound ? Error.pokemonNotFound : nil
     }
 

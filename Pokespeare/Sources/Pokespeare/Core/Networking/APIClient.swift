@@ -13,20 +13,38 @@ struct APIClient: Sendable {
 
   private let session: any Session
   private let statusCodeMapper: StatusCodeMapper
+  private let retryPolicy: RetryPolicy
 
   init(
     session: any Session,
+    retryPolicy: RetryPolicy = RetryPolicy(),
     statusCodeMapper: @escaping StatusCodeMapper = { _ in nil }
   ) {
     self.session = session
+    self.retryPolicy = retryPolicy
     self.statusCodeMapper = statusCodeMapper
   }
 
-  /// Performs `request` and decodes its response body.
+  /// Performs `request` and decodes its response body, retrying transient failures.
   ///
   /// Every failure leaves this method as an ``APIError`` — never as a bare `URLError` — so
   /// callers can tell a transport failure from a server failure from a decoding failure.
   func perform<R: HTTPCodableRequest>(_ request: R) async throws -> R.ResponseType {
+    var attempt = 0
+
+    while true {
+      do {
+        return try await performOnce(request)
+      } catch let error as APIError where retryPolicy.shouldRetry(error, attempt: attempt) {
+        // Throws on cancellation, which is what we want: a cancelled search stops here.
+        try await Task.sleep(for: retryPolicy.delay(forAttempt: attempt))
+
+        attempt += 1
+      }
+    }
+  }
+
+  private func performOnce<R: HTTPCodableRequest>(_ request: R) async throws -> R.ResponseType {
     let urlRequest = try request.makeURLRequest()
 
     let data: Data
