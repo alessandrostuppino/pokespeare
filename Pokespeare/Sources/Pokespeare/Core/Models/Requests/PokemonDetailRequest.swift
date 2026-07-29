@@ -8,8 +8,6 @@ struct PokemonDetailRequest: HTTPCodableRequest {
     [ "api", "v2", "pokemon", pokemonName ]
   }
 
-  var method = HTTPMethod.get
-
   /// The name of the Pokémon to fetch the detail of.
   var pokemonName: String
 }

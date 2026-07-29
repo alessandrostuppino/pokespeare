@@ -27,9 +27,7 @@ struct APIClient: Sendable {
   /// Every failure leaves this method as an ``APIError`` — never as a bare `URLError` — so
   /// callers can tell a transport failure from a server failure from a decoding failure.
   func perform<R: HTTPCodableRequest>(_ request: R) async throws -> R.ResponseType {
-    guard let urlRequest = request.urlRequest else {
-      throw APIError.invalidURL
-    }
+    let urlRequest = try request.makeURLRequest()
 
     let data: Data
     let response: URLResponse
