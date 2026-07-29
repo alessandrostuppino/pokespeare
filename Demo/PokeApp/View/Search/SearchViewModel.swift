@@ -1,8 +1,6 @@
 import Foundation
 import Pokespeare
 import SwiftData
-import class UIKit.UIResponder
-import class UIKit.UIApplication
 
 @MainActor
 @Observable
@@ -52,6 +50,12 @@ final class SearchViewModel {
   let sectionHeader = "RECENTLY SEARCHED"
 
   // MARK: - Stored Properties
+
+  /// Whether the search field should hold keyboard focus.
+  ///
+  /// Mirrored both ways with the view's `@FocusState`: the view reports what the user did,
+  /// the view model asks for focus to be dropped.
+  var isSearchFieldFocused = false
 
   /// The search text prompted by the user.
   var searchText = ""
@@ -197,9 +201,13 @@ final class SearchViewModel {
 
   // MARK: - Functions
 
-  /// The method in charge of dismissing the keyboard.
+  /// Dismisses the keyboard by dropping focus.
+  ///
+  /// The view mirrors this onto its own `@FocusState`. It used to be a
+  /// `UIApplication.sendAction(#selector(UIResponder.resignFirstResponder))`, which pulled
+  /// UIKit into the view model and could not be observed from a test.
   func dismissKeyboard() {
-    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    isSearchFieldFocused = false
   }
 
   /// Invoked when the search text changes, allows only letters and whitespaces characters.

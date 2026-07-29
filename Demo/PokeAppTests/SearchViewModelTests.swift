@@ -259,6 +259,28 @@ struct SearchViewModelTests {
       #expect(viewModel.searchText == expected)
     }
 
+    /// Was C-16: dismissing the keyboard went through UIApplication.sendAction, which meant
+    /// UIKit in the view model and nothing a test could observe.
+    @Test func starting_a_search_drops_keyboard_focus() async throws {
+      let viewModel = SearchViewModel(modelContext: try TemporaryStore.makeContext(), pokespeare: .stub())
+      viewModel.isSearchFieldFocused = true
+      viewModel.searchText = "pikachu"
+
+      await viewModel.performSearchAndWait()
+
+      #expect(viewModel.isSearchFieldFocused == false)
+    }
+
+    @Test func clearing_the_history_drops_keyboard_focus() throws {
+      let viewModel = SearchViewModel(modelContext: try TemporaryStore.makeContext(), pokespeare: .unimplemented())
+      viewModel.isSearchFieldFocused = true
+
+      viewModel.didTapClearHistoryButton()
+
+      #expect(viewModel.isSearchFieldFocused == false)
+      #expect(viewModel.historyAlertConfirmation)
+    }
+
     @Test(arguments: [("pi", false), ("pik", true), ("", false)])
     func the_search_button_needs_at_least_three_characters(input: String, expected: Bool) throws {
       let viewModel = SearchViewModel(modelContext: try TemporaryStore.makeContext(), pokespeare: .unimplemented())

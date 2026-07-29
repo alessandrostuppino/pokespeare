@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SearchView: View {
   @State private var viewModel: SearchViewModel
+  @FocusState private var isSearchFieldFocused: Bool
 
   init(viewModel: SearchViewModel) {
     _viewModel = State(initialValue: viewModel)
@@ -50,6 +51,14 @@ struct SearchView: View {
     HStack(spacing: 16) {
       TextField(viewModel.searchPlaceholder, text: $viewModel.searchText)
         .clearButtonVisibility(text: $viewModel.searchText)
+        .focused($isSearchFieldFocused)
+        // Keyboard focus lives in the view; the view model only asks for it to be dropped.
+        .onChange(of: viewModel.isSearchFieldFocused) { _, focused in
+          isSearchFieldFocused = focused
+        }
+        .onChange(of: isSearchFieldFocused) { _, focused in
+          viewModel.isSearchFieldFocused = focused
+        }
         .onChange(of: viewModel.searchText, viewModel.searchTextDidChange)
         .onSubmit(viewModel.didTapSearchButton)
         .autocorrectionDisabled()
