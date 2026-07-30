@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review Protocol · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="index.html">Curriculum</a></li>
+<li><a href="00-version-map.html">Version Map</a></li>
+<li><a href="00-baseline.html">Baseline</a></li>
+<li class="active"><a href="review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="wwdc22/index.html">WWDC22 — Overview</a></li>
+<li><a href="wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li><a href="wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li><a href="wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li><a href="wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li><a href="wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li><a href="wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="end-of-batch-review-protocol">End-of-Batch Review Protocol</h1>
+<p>Every batch ends with a review. <strong>You decide when.</strong> Say <em>"batch done"</em> (or <em>"batch N finito"</em>) and the review starts. Nothing happens automatically — you are never interrupted mid-batch.</p>
+<p>This page describes exactly what happens, so nothing about the assessment is a surprise.</p>
+<hr>
+<h2 id="what-you-do-first">What you do first</h2>
+<p>Before saying the batch is done, have these ready. Two minutes of preparation makes the review far more useful:</p>
+<ol>
+<li><strong>Your work committed</strong> — ideally one branch or commit per module, so the diffs read cleanly.</li>
+<li><strong>A short note per module</strong> answering:<ul>
+<li>What did you build?</li>
+<li>What did you decide <em>against</em>, and why?</li>
+<li>What did you not finish, and what blocked you?</li>
+<li>Which self-check questions were uncomfortable?</li>
+</ul>
+</li>
+<li><strong>The current test count and suite duration.</strong> Say what it was and what it is now.</li>
+</ol>
+<p>Point 2 matters most. The exercises deliberately contain judgement calls with no single right answer — Module 4 §5a (sheet vs navigation) and Module 2 §6a (SDK vs app placement) are both like this. <strong>The reasoning is the assessed artifact, not the diff.</strong></p>
+<p>If something is half-finished, say so. An honest "I did not understand region-based isolation well enough to attempt it" is more useful to me than a working copy-paste, and it changes what the next batch contains.</p>
+<hr>
+<h2 id="what-i-do">What I do</h2>
+<h3 id="1-read-the-code">1. Read the code</h3>
+<p><code>git diff</code> against the batch start point, every file. Not skimmed.</p>
+<h3 id="2-run-everything">2. Run everything</h3>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<pre><code class="language-bash">swiftlint lint --strict
+</code></pre>
+<p>I report what actually happened. If tests fail, you get the failure output, not a summary of it.</p>
+<h3 id="3-check-the-projects-own-invariants">3. Check the project's own invariants</h3>
+<p>The audit that produced findings C-01…C-25 established rules this codebase now lives by. Every review checks them, because regressing one is worse than not attempting an exercise:</p>
+<table>
+<thead>
+<tr>
+<th>Invariant</th>
+<th>Origin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>APIClient</code> is the only transport</td>
+<td>C-03</td>
+</tr>
+<tr>
+<td>Every failure terminates in <code>Pokespeare.Error</code>; <code>from(error:)</code> ordering intact</td>
+<td>C-01, C-25</td>
+</tr>
+<tr>
+<td>No <code>Optional</code> used as an error channel</td>
+<td>C-05</td>
+</tr>
+<tr>
+<td>Public surface stays deliberate</td>
+<td>C-17</td>
+</tr>
+<tr>
+<td>No assertions inside <code>catch</code></td>
+<td>C-10</td>
+</tr>
+<tr>
+<td>Integration tests gated behind <code>RUN_INTEGRATION_TESTS</code></td>
+<td>C-11</td>
+</tr>
+<tr>
+<td>No UIKit in view models</td>
+<td>C-16</td>
+</tr>
+<tr>
+<td>User-facing strings localized in <strong>both</strong> catalogs</td>
+<td>C-21</td>
+</tr>
+<tr>
+<td>VoiceOver labels and Dynamic Type respected</td>
+<td>C-23</td>
+</tr>
+<tr>
+<td>No <code>@unchecked Sendable</code> in production code</td>
+<td>C-02</td>
+</tr>
+</tbody>
+</table>
+<h3 id="4-probe-the-theory">4. Probe the theory</h3>
+<p>This is the part that is not about the code. For each module I pick the concepts the batch was actually built on and ask you to explain them — usually drawn from the module's self-check questions, sometimes a variation designed to catch a memorized answer.</p>
+<p>A feature can work for the wrong reason. Code that compiles under Swift 6 mode because you sprinkled <code>@MainActor</code> until the errors stopped is not the same as code that is correctly isolated, and the difference does not show up in a test run. It shows up here.</p>
+<hr>
+<h2 id="what-you-get-back">What you get back</h2>
+<h3 id="per-module">Per module</h3>
+<ul>
+<li><strong>Built</strong> — what landed, factually.</li>
+<li><strong>Correct</strong> — what is right, specifically, with <code>file:line</code>. Not encouragement; the parts worth keeping and repeating.</li>
+<li><strong>Wrong</strong> — defects, with the failing scenario spelled out: given this input, this happens, and it should do that.</li>
+<li><strong>Theory gaps</strong> — where the code reveals a misunderstanding rather than a slip. This is the section that drives the next batch.</li>
+<li><strong>Deviations</strong> — where you departed from the project's patterns, and whether the departure is defensible. Sometimes yours is better than what was there. That gets said.</li>
+</ul>
+<h3 id="overall">Overall</h3>
+<ul>
+<li>A judgement on whether the batch's core concepts are <strong>solid</strong>, <strong>shaky</strong>, or <strong>not yet there</strong> — per concept, not one grade for the batch. "Solid on <code>Sendable</code>, shaky on existential cost, not yet there on SE-0338 execution semantics" is a useful sentence; "7/10" is not.</li>
+<li><strong>What to re-read</strong>, pointed at specific sections rather than whole modules.</li>
+<li><strong>What the next batch changes</strong> as a result — extra material where you are shaky, skipped material where you are clearly past it.</li>
+</ul>
+<h3 id="the-two-rules-i-hold-myself-to">The two rules I hold myself to</h3>
+<p><strong>No inflated praise.</strong> If something is wrong you will be told plainly, once, with the reason. If it is right that gets said too — but "good job" with nothing specific attached is noise, and it makes the genuine praise worthless.</p>
+<p><strong>No invented problems.</strong> If a module came out clean, the report says clean. Manufacturing a nitpick to look thorough wastes your time and mine.</p>
+<hr>
+<h2 id="re-review">Re-review</h2>
+<p>Fix things and say <em>"re-review"</em> — you get a focused pass on just the changed parts, not the whole batch again.</p>
+<p>A concept that came back <strong>shaky</strong> twice gets extra material in the next batch instead of a third repetition of the same explanation. If an explanation is not landing, the explanation is the problem.</p>
+<hr>
+<h2 id="what-this-is-not">What this is not</h2>
+<ul>
+<li>Not a gate. You can start the next batch whenever you want; the review is a checkpoint, not a lock.</li>
+<li>Not a code review of the whole repository. Only what the batch touched, plus the invariants above.</li>
+<li>Not a rewrite service. I point at the defect and the reasoning; you fix it. That is the entire point of the arrangement — the code stays yours.</li>
+</ul>
+<nav class="pager"><a class="pager-prev" href="wwdc22/06-build-challenges.html"><span>Previous</span><strong>6 · Build Challenges</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#end-of-batch-review-protocol">End-of-Batch Review Protocol</a><ul>
+<li><a href="#what-you-do-first">What you do first</a></li>
+<li><a href="#what-i-do">What I do</a><ul>
+<li><a href="#1-read-the-code">1. Read the code</a></li>
+<li><a href="#2-run-everything">2. Run everything</a></li>
+<li><a href="#3-check-the-projects-own-invariants">3. Check the project's own invariants</a></li>
+<li><a href="#4-probe-the-theory">4. Probe the theory</a></li>
+</ul>
+</li>
+<li><a href="#what-you-get-back">What you get back</a><ul>
+<li><a href="#per-module">Per module</a></li>
+<li><a href="#overall">Overall</a></li>
+<li><a href="#the-two-rules-i-hold-myself-to">The two rules I hold myself to</a></li>
+</ul>
+</li>
+<li><a href="#re-review">Re-review</a></li>
+<li><a href="#what-this-is-not">What this is not</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="index.html">Programma</a></li>
+<li><a href="00-version-map.html">Mappa delle versioni</a></li>
+<li><a href="00-baseline.html">Punto di partenza</a></li>
+<li class="active"><a href="review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li><a href="wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li><a href="wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li><a href="wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li><a href="wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li><a href="wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li><a href="wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="protocollo-di-revisione-di-fine-batch">Protocollo di revisione di fine batch</h1>
+<p>Ogni batch si chiude con una revisione. <strong>Decidi tu quando.</strong> Di' <em>"batch finito"</em> e la revisione parte. Non succede nulla in automatico — non vieni mai interrotto a metà batch.</p>
+<p>Questa pagina descrive esattamente cosa accade, così nulla della valutazione ti coglie di sorpresa.</p>
+<hr>
+<h2 id="cosa-fai-prima">Cosa fai prima</h2>
+<p>Prima di dire che il batch è finito, prepara queste cose. Due minuti di preparazione rendono la revisione molto più utile:</p>
+<ol>
+<li><strong>Il lavoro committato</strong> — idealmente un branch o un commit per modulo, così i diff si leggono puliti.</li>
+<li><strong>Una nota breve per modulo</strong> che risponda a:<ul>
+<li>Cosa hai costruito?</li>
+<li>Cosa hai deciso di <strong>non</strong> fare, e perché?</li>
+<li>Cosa non hai finito, e cosa ti ha bloccato?</li>
+<li>Quali domande di autovalutazione ti hanno messo a disagio?</li>
+</ul>
+</li>
+<li><strong>Numero di test e durata della suite, attuali.</strong> Di' com'era e com'è adesso.</li>
+</ol>
+<p>Il punto 2 è il più importante. Gli esercizi contengono deliberatamente scelte di giudizio senza una risposta unica — il Modulo 4 §5a (sheet o navigazione) e il Modulo 2 §6a (SDK o app) sono entrambi così. <strong>Il ragionamento è l'artefatto valutato, non il diff.</strong></p>
+<p>Se qualcosa è a metà, dillo. Un onesto "non ho capito abbastanza la region-based isolation per provarci" mi è più utile di un copia-incolla funzionante, e cambia il contenuto del batch successivo.</p>
+<hr>
+<h2 id="cosa-faccio-io">Cosa faccio io</h2>
+<h3 id="1-leggo-il-codice">1. Leggo il codice</h3>
+<p><code>git diff</code> rispetto al punto di partenza del batch, ogni file. Non a campione.</p>
+<h3 id="2-eseguo-tutto">2. Eseguo tutto</h3>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<pre><code class="language-bash">swiftlint lint --strict
+</code></pre>
+<p>Riporto quello che è successo davvero. Se i test falliscono ricevi l'output del fallimento, non un riassunto.</p>
+<h3 id="3-controllo-le-invarianti-del-progetto">3. Controllo le invarianti del progetto</h3>
+<p>L'audit che ha prodotto i finding C-01…C-25 ha stabilito regole secondo cui questo codebase ora vive. Ogni revisione le controlla, perché far regredire una è peggio che non aver tentato un esercizio:</p>
+<table>
+<thead>
+<tr>
+<th>Invariante</th>
+<th>Origine</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>APIClient</code> è l'unico transport</td>
+<td>C-03</td>
+</tr>
+<tr>
+<td>Ogni fallimento termina in <code>Pokespeare.Error</code>; ordinamento di <code>from(error:)</code> intatto</td>
+<td>C-01, C-25</td>
+</tr>
+<tr>
+<td>Nessun <code>Optional</code> usato come canale d'errore</td>
+<td>C-05</td>
+</tr>
+<tr>
+<td>La superficie pubblica resta deliberata</td>
+<td>C-17</td>
+</tr>
+<tr>
+<td>Nessuna assertion dentro <code>catch</code></td>
+<td>C-10</td>
+</tr>
+<tr>
+<td>Test di integrazione dietro <code>RUN_INTEGRATION_TESTS</code></td>
+<td>C-11</td>
+</tr>
+<tr>
+<td>Nessun UIKit nei view model</td>
+<td>C-16</td>
+</tr>
+<tr>
+<td>Stringhe utente localizzate in <strong>entrambi</strong> i cataloghi</td>
+<td>C-21</td>
+</tr>
+<tr>
+<td>Label VoiceOver e Dynamic Type rispettati</td>
+<td>C-23</td>
+</tr>
+<tr>
+<td>Nessun <code>@unchecked Sendable</code> in codice di produzione</td>
+<td>C-02</td>
+</tr>
+</tbody>
+</table>
+<h3 id="4-sondo-la-teoria">4. Sondo la teoria</h3>
+<p>Questa è la parte che non riguarda il codice. Per ogni modulo scelgo i concetti su cui il batch è davvero costruito e ti chiedo di spiegarli — di solito partendo dalle domande di autovalutazione, a volte con una variante pensata per smascherare una risposta imparata a memoria.</p>
+<p>Una feature può funzionare per il motivo sbagliato. Codice che compila in Swift 6 mode perché hai cosparso <code>@MainActor</code> finché gli errori non sono spariti non è la stessa cosa di codice correttamente isolato, e la differenza non emerge da un run di test. Emerge qui.</p>
+<hr>
+<h2 id="cosa-ricevi-indietro">Cosa ricevi indietro</h2>
+<h3 id="per-modulo">Per modulo</h3>
+<ul>
+<li><strong>Costruito</strong> — cosa è atterrato, in modo fattuale.</li>
+<li><strong>Corretto</strong> — cosa è giusto, nello specifico, con <code>file:riga</code>. Non incoraggiamento: le parti che vale la pena tenere e ripetere.</li>
+<li><strong>Sbagliato</strong> — i difetti, con lo scenario di fallimento esplicitato: dato questo input succede questo, e dovrebbe succedere quest'altro.</li>
+<li><strong>Lacune teoriche</strong> — dove il codice rivela un fraintendimento e non una svista. È la sezione che guida il batch successivo.</li>
+<li><strong>Deviazioni</strong> — dove ti sei allontanato dai pattern del progetto, e se la deviazione è difendibile. A volte la tua è migliore di quella che c'era. In quel caso lo dico.</li>
+</ul>
+<h3 id="complessivo">Complessivo</h3>
+<ul>
+<li>Un giudizio su quanto i concetti centrali del batch siano <strong>solidi</strong>, <strong>incerti</strong> o <strong>non ancora acquisiti</strong> — per concetto, non un voto unico. "Solido su <code>Sendable</code>, incerto sul costo degli existential, non ancora acquisita la semantica di esecuzione SE-0338" è una frase utile; "7/10" no.</li>
+<li><strong>Cosa rileggere</strong>, puntato a sezioni specifiche e non a moduli interi.</li>
+<li><strong>Cosa cambia nel batch successivo</strong> di conseguenza — materiale in più dove sei incerto, materiale saltato dove è chiaro che sei già oltre.</li>
+</ul>
+<h3 id="le-due-regole-che-mi-impongo">Le due regole che mi impongo</h3>
+<p><strong>Nessuna lode gonfiata.</strong> Se qualcosa è sbagliato te lo dico chiaramente, una volta, con la motivazione. Se è giusto lo dico altrettanto — ma un "ottimo lavoro" senza nulla di specifico attaccato è rumore, e svaluta la lode genuina.</p>
+<p><strong>Nessun problema inventato.</strong> Se un modulo è venuto pulito, il report dice pulito. Fabbricare un appunto per sembrare scrupoloso spreca il tuo tempo e il mio.</p>
+<hr>
+<h2 id="nuova-revisione">Nuova revisione</h2>
+<p>Sistema le cose e di' <em>"rivedi di nuovo"</em> — ricevi un passaggio mirato solo sulle parti cambiate, non l'intero batch da capo.</p>
+<p>Un concetto che torna <strong>incerto</strong> due volte riceve materiale aggiuntivo nel batch successivo, invece di una terza ripetizione della stessa spiegazione. Se una spiegazione non arriva, il problema è la spiegazione.</p>
+<hr>
+<h2 id="cosa-non-e">Cosa non è</h2>
+<ul>
+<li>Non è un cancello. Puoi iniziare il batch successivo quando vuoi; la revisione è un checkpoint, non un lucchetto.</li>
+<li>Non è una code review dell'intero repository. Solo ciò che il batch ha toccato, più le invarianti qui sopra.</li>
+<li>Non è un servizio di riscrittura. Io indico il difetto e il ragionamento; tu lo sistemi. È esattamente il senso dell'accordo — il codice resta tuo.</li>
+</ul>
+<nav class="pager"><a class="pager-prev" href="wwdc22/06-build-challenges.html"><span>Precedente</span><strong>6 · Sfide di implementazione</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#protocollo-di-revisione-di-fine-batch">Protocollo di revisione di fine batch</a><ul>
+<li><a href="#cosa-fai-prima">Cosa fai prima</a></li>
+<li><a href="#cosa-faccio-io">Cosa faccio io</a><ul>
+<li><a href="#1-leggo-il-codice">1. Leggo il codice</a></li>
+<li><a href="#2-eseguo-tutto">2. Eseguo tutto</a></li>
+<li><a href="#3-controllo-le-invarianti-del-progetto">3. Controllo le invarianti del progetto</a></li>
+<li><a href="#4-sondo-la-teoria">4. Sondo la teoria</a></li>
+</ul>
+</li>
+<li><a href="#cosa-ricevi-indietro">Cosa ricevi indietro</a><ul>
+<li><a href="#per-modulo">Per modulo</a></li>
+<li><a href="#complessivo">Complessivo</a></li>
+<li><a href="#le-due-regole-che-mi-impongo">Le due regole che mi impongo</a></li>
+</ul>
+</li>
+<li><a href="#nuova-revisione">Nuova revisione</a></li>
+<li><a href="#cosa-non-e">Cosa non è</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

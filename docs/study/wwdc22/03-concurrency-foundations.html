@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3 · Concurrency Foundations · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Curriculum</a></li>
+<li><a href="../00-version-map.html">Version Map</a></li>
+<li><a href="../00-baseline.html">Baseline</a></li>
+<li><a href="../review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Overview</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li class="active"><a href="../wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-module-3-concurrency-foundations-sendable-checking-levels-and-clock">WWDC22 · Module 3 — Concurrency Foundations: <code>Sendable</code>, Checking Levels, and <code>Clock</code></h1>
+<p><strong>Swift 5.6 / 5.7</strong> · <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0302-concurrent-value-and-concurrent-closures.md">SE-0302</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0337-support-incremental-migration-to-concurrency-checking.md">SE-0337</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0338-clarify-execution-non-actor-async.md">SE-0338</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0329-clock-instant-duration.md">SE-0329</a></p>
+<blockquote>
+<p>This module is the foundation Batch 3 (Swift 6 data-race safety) and Batch 4 (approachable concurrency) both build on. Read it properly even though the project already uses most of it — the <em>why</em> underneath is what makes those later batches make sense.</p>
+</blockquote>
+<hr>
+<h2 id="1-what-shipped-and-what-problem-it-solves">1. What shipped, and what problem it solves</h2>
+<p>Swift 5.5 (WWDC21) gave us <code>async</code>/<code>await</code>, <code>Task</code>, and actors. But it shipped with a hole: the compiler could not check that the values you passed <em>between</em> concurrency domains were safe to pass. You could hand a mutable class instance to a detached task and race against yourself, with no diagnostic.</p>
+<p>WWDC22's contribution is the <strong>checking machinery</strong>:</p>
+<ul>
+<li><strong><code>Sendable</code></strong> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0302-concurrent-value-and-concurrent-closures.md">SE-0302</a>) — a marker protocol meaning "safe to move across isolation boundaries."</li>
+<li><strong>Staged checking</strong> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0337-support-incremental-migration-to-concurrency-checking.md">SE-0337</a>) — because turning full checking on at once would have broken every codebase in existence, so it arrived as a dial.</li>
+<li><strong>Defined execution semantics for nonisolated async functions</strong> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0338-clarify-execution-non-actor-async.md">SE-0338</a>) — which thread does an <code>async</code> function that belongs to no actor actually run on?</li>
+</ul>
+<p>Plus, separately but landing in the same release: <strong><code>Clock</code>, <code>Instant</code>, <code>Duration</code></strong> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0329-clock-instant-duration.md">SE-0329</a>) — a real time abstraction to replace <code>UInt64</code> nanoseconds.</p>
+<hr>
+<h2 id="2-how-it-actually-works">2. How it actually works</h2>
+<h3 id="sendable-is-a-marker-protocol"><code>Sendable</code> is a marker protocol</h3>
+<p><code>Sendable</code> has <strong>no requirements</strong> — no methods, no properties. It is a <em>marker</em>: it exists only so the compiler can check it, and it is erased before code generation. There is no witness table, no runtime representation, no cost.</p>
+<p>What the compiler checks:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th><code>Sendable</code>?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>struct</code>/<code>enum</code> with all-<code>Sendable</code> stored properties</td>
+<td>✅ <strong>inferred automatically</strong> (if not public — see below)</td>
+</tr>
+<tr>
+<td><code>actor</code></td>
+<td>✅ always — that is what an actor is for</td>
+</tr>
+<tr>
+<td><code>final class</code> with only immutable <code>Sendable</code> stored properties</td>
+<td>✅ if you declare the conformance</td>
+</tr>
+<tr>
+<td>non-<code>final</code> class</td>
+<td>❌ — a subclass could add mutable state</td>
+</tr>
+<tr>
+<td>class with <code>var</code> stored properties</td>
+<td>❌ unless protected by isolation</td>
+</tr>
+<tr>
+<td><code>@MainActor</code>-isolated class</td>
+<td>✅ — isolation <em>is</em> the protection</td>
+</tr>
+<tr>
+<td>function types</td>
+<td>✅ only when marked <code>@Sendable</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>The public-type gotcha.</strong> Automatic inference for structs and enums stops at module boundaries: a <code>public</code> struct does <em>not</em> get an inferred <code>Sendable</code> conformance, because adding one later would be a source-compatible promise you had not made. You must declare it. This is why <code>Pokespeare.swift:3</code> writes it explicitly:</p>
+<pre><code class="language-swift">public struct Pokespeare: Sendable { … }
+</code></pre>
+<h3 id="sendable-closures"><code>@Sendable</code> closures</h3>
+<p>A closure crossing an isolation boundary must be <code>@Sendable</code>, which imposes two rules: everything it captures must itself be <code>Sendable</code>, and it cannot capture anything mutably (no <code>inout</code>, no mutation of captured <code>var</code>s).</p>
+<p>This project uses <code>@Sendable</code> closures as its <em>primary architectural device</em> — <code>Pokespeare.swift:4-5</code>:</p>
+<pre><code class="language-swift">private var _description: @Sendable (_ name: String) async throws -&gt; String
+private var _sprite: @Sendable (_ name: String) async throws -&gt; URL
+</code></pre>
+<p>That is what makes <code>struct Pokespeare: Sendable</code> legal despite storing closures.</p>
+<h3 id="the-escape-hatch-and-its-price">The escape hatch, and its price</h3>
+<p><code>@unchecked Sendable</code> tells the compiler "trust me." It is a promise, not a proof — you have taken responsibility for the synchronization by hand.</p>
+<p>This project uses it exactly twice, both in test code: <code>MockedSession.swift:5</code> and the <code>RequestBox</code> at <code>:104</code>. That is the right density. Two <code>@unchecked</code> in test doubles is a considered decision; twenty across production code is a codebase that turned the compiler off.</p>
+<p>When you write one, write a comment saying <em>what</em> provides the safety. "It's fine" is not a reason. "All mutation happens under <code>lock</code>, and <code>lock</code> is never held across a suspension" is.</p>
+<h3 id="the-checking-dial-se-0337">The checking dial — SE-0337</h3>
+<p>Three levels, historically reached via <code>-strict-concurrency=</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>minimal</code></td>
+<td>Only checks what is explicitly marked. The Swift 5 default.</td>
+</tr>
+<tr>
+<td><code>targeted</code></td>
+<td>Checks code that has already adopted concurrency (async functions, actors), leaves the rest alone.</td>
+</tr>
+<tr>
+<td><code>complete</code></td>
+<td>Checks everything. This is what Swift 6 language mode enforces as <strong>errors</strong> rather than warnings.</td>
+</tr>
+</tbody>
+</table>
+<p>The intended migration path is <code>minimal</code> → <code>targeted</code> → <code>complete</code> as warnings → flip to Swift 6 mode, where they become errors.</p>
+<p><strong>This project is already at the end of that path.</strong> <code>Package.swift:1</code> declares <code>swift-tools-version: 6.0</code> and the app sets <code>SWIFT_VERSION = 6.0</code>, so both compile under complete checking with errors. There is nothing to migrate — which is exactly why Batch 3 can spend its time on the <em>interesting</em> parts (region-based isolation, <code>sending</code>) instead of on migration mechanics.</p>
+<p>One thing to notice: <code>Package.swift</code> has <strong>no <code>swiftSettings</code> at all</strong>. Swift 6 mode is inherited purely from the tools version. In Batch 3 you will make that explicit and add upcoming-feature flags.</p>
+<h3 id="se-0338-where-does-a-nonisolated-async-function-run">SE-0338 — where does a nonisolated <code>async</code> function run?</h3>
+<p>This is the one people get wrong, and it is load-bearing for Batch 4.</p>
+<pre><code class="language-swift">@MainActor
+func caller() async {
+  await work()      // where does work() run?
+}
+
+nonisolated func work() async -&gt; Int { 42 }
+</code></pre>
+<p><strong>Under SE-0338 (the WWDC22 rule):</strong> <code>work()</code> does <strong>not</strong> inherit the caller's actor. It hops to the <strong>global concurrent executor</strong> — a cooperative thread pool. So calling it from <code>@MainActor</code> code means: leave the main actor, run on a pool thread, hop back.</p>
+<p>The reasoning was sound — a nonisolated async function should not silently block a caller's actor. But the consequence was a great deal of unnecessary hopping, and a category of bug where developers assumed their code stayed on the main actor and it did not.</p>
+<p><strong>Swift 6.2 reverses this default</strong> via <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md">SE-0461</a>: nonisolated async functions now run <em>on the caller's actor</em>, and the new <code>@concurrent</code> attribute is the explicit opt-in to the old behaviour. Batch 4 covers it in full.</p>
+<p>Hold both models in your head. Code written between 2022 and 2025 assumes the first; code written now assumes the second; and which one applies depends on a language-mode flag.</p>
+<h3 id="clock-instant-duration-se-0329"><code>Clock</code>, <code>Instant</code>, <code>Duration</code> — SE-0329</h3>
+<p>Before this, you slept with <code>Task.sleep(nanoseconds: 300_000_000)</code> and counted zeros.</p>
+<p><strong><code>Duration</code></strong> is an amount of time, stored as 128 bits — seconds plus attoseconds — so it does not lose precision the way a <code>Double</code> of seconds does. All of these are verified to compile:</p>
+<pre><code class="language-swift">let base: Duration = .milliseconds(300)
+base * 4                  // Duration × Int
+base * 1.5                // Duration × Double
+base + .seconds(1)
+base / 2
+base &lt; .seconds(1)        // Comparable
+base.components           // (seconds: Int64, attoseconds: Int64)
+</code></pre>
+<p><strong><code>Clock</code></strong> is a protocol with two standard implementations, and the difference matters:</p>
+<table>
+<thead>
+<tr>
+<th>Clock</th>
+<th>Behaviour while the device is asleep</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ContinuousClock</code></td>
+<td>Keeps counting. "Wall time elapsed."</td>
+</tr>
+<tr>
+<td><code>SuspendingClock</code></td>
+<td>Pauses. "Time the process was actually running."</td>
+</tr>
+</tbody>
+</table>
+<p>For a network retry backoff you want <code>ContinuousClock</code> — if the user's phone slept for 30 seconds, that time really did pass as far as the server is concerned. <code>Task.sleep(for:)</code> uses <code>ContinuousClock</code> by default.</p>
+<p><code>Clock</code> also gives you <code>measure</code>, which is the honest way to time async work:</p>
+<pre><code class="language-swift">let elapsed = try await ContinuousClock().measure {
+  try await someWork()
+}
+</code></pre>
+<p><strong>Why <code>Clock</code> being a protocol matters:</strong> it is a seam. A custom <code>Clock</code> conformance lets a test drive time forward instantly instead of actually sleeping. Keep that in mind for the exercise.</p>
+<hr>
+<h2 id="3-official-sources">3. Official sources</h2>
+<ul>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0302-concurrent-value-and-concurrent-closures.md">SE-0302 — <code>Sendable</code> and <code>@Sendable</code> closures</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0337-support-incremental-migration-to-concurrency-checking.md">SE-0337 — Incremental migration to concurrency checking</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0338-clarify-execution-non-actor-async.md">SE-0338 — Clarify the Execution of Non-Actor-Isolated Async Functions</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0329-clock-instant-duration.md">SE-0329 — Clock, Instant, and Duration</a></li>
+<li><a href="https://www.swift.org/migration/documentation/migrationguide/">Swift 6 Migration Guide</a> — official, and the reference for Batch 3</li>
+<li><a href="https://developer.apple.com/documentation/swift/sendable">Apple — <code>Sendable</code></a> · <a href="https://developer.apple.com/documentation/swift/duration"><code>Duration</code></a> · <a href="https://developer.apple.com/documentation/swift/clock"><code>Clock</code></a></li>
+</ul>
+<hr>
+<h2 id="4-where-it-lands-in-this-codebase">4. Where it lands in this codebase</h2>
+<p>This is the area the project already does well, so read it as a worked example rather than a list of defects.</p>
+<p><strong>The <code>Sendable</code> surface.</strong> <code>Pokespeare.swift:3</code> (<code>public struct Pokespeare: Sendable</code>), <code>APIClient.swift:9</code>, <code>RetryPolicy.swift:4</code>, <code>PokemonManager.swift:3</code>, <code>TranslationManager.swift:3</code>, and <code>Session.swift:3</code> — <code>protocol Session: Sendable</code>, which is what lets <code>any Session</code> be stored in a <code>Sendable</code> struct at <code>APIClient.swift:14</code>.</p>
+<p><strong><code>@MainActor</code> where it belongs.</strong> <code>SearchViewModel.swift:5</code>. The audit's finding <strong>C-02</strong> is the story of what happens without it: the class was <code>@Observable</code> but not isolated, a detached <code>Task</code> mutated UI state and a non-<code>Sendable</code> <code>ModelContext</code> from a background thread, and it <em>compiled</em> — because the app target was still on <code>SWIFT_VERSION = 5.0</code>. The data race was real; the checking was off. That is the single most valuable thing this repository can teach you about Swift 6 mode, and it happened here.</p>
+<p><strong><code>Duration</code> used properly.</strong> <code>RetryPolicy.swift:9,42</code>:</p>
+<pre><code class="language-swift">var baseDelay: Duration
+func delay(forAttempt attempt: Int) -&gt; Duration {
+  baseDelay * (1 &lt;&lt; attempt)          // 300ms, 600ms, 1200ms
+}
+</code></pre>
+<p>and consumed at <code>APIClient.swift:40</code>:</p>
+<pre><code class="language-swift">try await Task.sleep(for: retryPolicy.delay(forAttempt: attempt))
+</code></pre>
+<p>Note the comment above that line — <code>Task.sleep</code> <strong>throws on cancellation</strong>, which is precisely the desired behaviour: a cancelled search must abandon its backoff rather than finish sleeping first. That is a subtle correctness property expressed for free by using the right API.</p>
+<p><strong>The gap: the clock is not injectable.</strong> <code>RetryPolicy</code> deals in <code>Duration</code> but <code>APIClient</code> calls <code>Task.sleep</code> directly. So the retry tests in <code>RetryTests.swift</code> either really sleep, or test the policy's arithmetic without testing the loop that uses it. <code>HANDOFF.md</code> lists "instrumenting the retry numbers" as unfinished work. This is the exercise.</p>
+<hr>
+<h2 id="5-exercise">5. Exercise</h2>
+<p><strong>Goal:</strong> make time injectable, so the retry loop can be tested without real sleeping.</p>
+<h3 id="5a-read-before-you-write">5a — Read before you write</h3>
+<p>Read <code>APIClient.swift:32-45</code> and <code>RetryPolicy.swift</code> in full, then <code>Pokespeare/Tests/PokespeareTests/RetryTests.swift</code>. Answer for yourself, in writing:</p>
+<ul>
+<li>Which of the 7 retry tests actually exercise the <code>while true</code> loop in <code>perform</code>, and which only test <code>RetryPolicy</code>'s arithmetic in isolation?</li>
+<li>How long does the SDK suite take today? Measure it. Some of that is real backoff sleeping.</li>
+</ul>
+<h3 id="5b-inject-the-clock">5b — Inject the clock</h3>
+<p>Give <code>APIClient</code> a clock dependency, defaulting to <code>ContinuousClock()</code>, and route the backoff sleep through it instead of calling <code>Task.sleep(for:)</code> directly.</p>
+<p>Design constraints to respect:</p>
+<ul>
+<li><code>APIClient</code> is <code>Sendable</code> (<code>:9</code>) and must stay that way — so whatever you inject must be <code>Sendable</code> too.</li>
+<li>The SDK is not <code>@MainActor</code> anywhere. Keep it that way.</li>
+<li>Do not break the cancellation property. A cancelled task must still abandon the wait. Verify this, do not assume it.</li>
+<li>The public surface must not change. <code>Pokespeare</code>, <code>Pokespeare.Error</code>, <code>PokemonView</code>, <code>PokemonViewModel</code> are the whole public API (see <code>README.md</code>) and this is an internal refactor.</li>
+</ul>
+<h3 id="5c-test-with-it">5c — Test with it</h3>
+<p>Write a test clock and use it to assert something the current tests cannot: that three attempts against a <code>500</code> response produce delays of exactly 300ms, then 600ms — without the test taking 900ms.</p>
+<p><strong>Acceptance criteria.</strong></p>
+<ol>
+<li>A new test asserts the actual backoff <em>sequence</em>, not just the policy's arithmetic.</li>
+<li>The SDK suite gets measurably faster. Record both numbers.</li>
+<li>Cancellation still works: a test proves a cancelled request stops during backoff rather than completing it.</li>
+<li>All 53 SDK tests pass; the 18 app tests are untouched and pass.</li>
+<li><code>swiftlint lint --strict</code> clean.</li>
+<li>The public API is byte-for-byte unchanged.</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<p><strong>Hint, not a solution.</strong> There are at least two designs: conform a test type to <code>Clock</code>, or inject a narrower <code>@Sendable (Duration) async throws -&gt; Void</code> sleep closure. The second is smaller and matches the struct-of-closures idiom this SDK already uses everywhere. The first is more conventional and gives you <code>measure</code> for free. Pick one, then write down the argument against the one you rejected — that is the part that teaches.</p>
+<hr>
+<h2 id="6-pitfalls">6. Pitfalls</h2>
+<ul>
+<li><strong><code>public</code> structs do not infer <code>Sendable</code>.</strong> Cross-module inference is deliberately off. Declare it.</li>
+<li><strong><code>@unchecked Sendable</code> is a promise you must be able to state.</strong> If you cannot name the mechanism providing safety, you do not have one.</li>
+<li><strong>A <code>@MainActor</code> class is <code>Sendable</code>;</strong> the isolation is the proof. This is why <code>SearchViewModel</code> needs no <code>Sendable</code> annotation.</li>
+<li><strong>Nonisolated <code>async</code> did not inherit the caller's actor</strong> before Swift 6.2. Every blog post, sample, and Stack Overflow answer from 2022–2025 assumes the old rule. Check the date on anything you read.</li>
+<li><strong><code>SuspendingClock</code> for a network backoff is wrong.</strong> Device sleep does not pause the server's rate limiter.</li>
+<li><strong><code>Task.sleep</code> throwing on cancellation is a feature.</strong> Swallowing that error with <code>try?</code> silently converts "abandon the retry" into "finish the wait, then continue."</li>
+<li><strong><code>Duration</code> is not <code>Double</code> seconds.</strong> Do not round-trip through <code>TimeInterval</code> to do arithmetic — you will lose precision the type exists to preserve.</li>
+</ul>
+<hr>
+<h2 id="7-self-check">7. Self-check</h2>
+<ol>
+<li><code>Sendable</code> has no requirements. What does the compiler actually do with a conformance, and what is its runtime cost?</li>
+<li>Why does a <code>public struct</code> with all-<code>Sendable</code> properties not get an automatic conformance, when an internal one does?</li>
+<li>Name the three strict-concurrency levels and say which one Swift 6 language mode corresponds to.</li>
+<li>Under SE-0338, where does a <code>nonisolated async</code> function run when called from <code>@MainActor</code> code? What did Swift 6.2 change, and what is the new opt-in spelling for the old behaviour?</li>
+<li><code>ContinuousClock</code> vs <code>SuspendingClock</code> — which for a network retry backoff, and what concrete scenario distinguishes them?</li>
+<li>In <code>APIClient.perform</code>, why is it important that <code>Task.sleep</code> throws rather than returns on cancellation?</li>
+<li>Audit finding C-02 was a real data race that compiled. What exactly made the compiler unable to see it, and what single build setting would have surfaced it?</li>
+<li><code>Pokespeare</code> stores two <code>@Sendable</code> closures and is itself <code>Sendable</code>. What would break if the <code>@Sendable</code> on those closure types were removed?</li>
+</ol>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/02-regex-and-string-processing.html"><span>Previous</span><strong>2 · Regex & String Processing</strong></a><a class="pager-next" href="../wwdc22/04-swiftui-navigation-and-layout.html"><span>Next</span><strong>4 · SwiftUI Navigation & Layout</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-module-3-concurrency-foundations-sendable-checking-levels-and-clock">WWDC22 · Module 3 — Concurrency Foundations: Sendable, Checking Levels, and Clock</a><ul>
+<li><a href="#1-what-shipped-and-what-problem-it-solves">1. What shipped, and what problem it solves</a></li>
+<li><a href="#2-how-it-actually-works">2. How it actually works</a><ul>
+<li><a href="#sendable-is-a-marker-protocol">Sendable is a marker protocol</a></li>
+<li><a href="#sendable-closures">@Sendable closures</a></li>
+<li><a href="#the-escape-hatch-and-its-price">The escape hatch, and its price</a></li>
+<li><a href="#the-checking-dial-se-0337">The checking dial — SE-0337</a></li>
+<li><a href="#se-0338-where-does-a-nonisolated-async-function-run">SE-0338 — where does a nonisolated async function run?</a></li>
+<li><a href="#clock-instant-duration-se-0329">Clock, Instant, Duration — SE-0329</a></li>
+</ul>
+</li>
+<li><a href="#3-official-sources">3. Official sources</a></li>
+<li><a href="#4-where-it-lands-in-this-codebase">4. Where it lands in this codebase</a></li>
+<li><a href="#5-exercise">5. Exercise</a><ul>
+<li><a href="#5a-read-before-you-write">5a — Read before you write</a></li>
+<li><a href="#5b-inject-the-clock">5b — Inject the clock</a></li>
+<li><a href="#5c-test-with-it">5c — Test with it</a></li>
+</ul>
+</li>
+<li><a href="#6-pitfalls">6. Pitfalls</a></li>
+<li><a href="#7-self-check">7. Self-check</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Programma</a></li>
+<li><a href="../00-version-map.html">Mappa delle versioni</a></li>
+<li><a href="../00-baseline.html">Punto di partenza</a></li>
+<li><a href="../review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li class="active"><a href="../wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-modulo-3-fondamenta-di-concorrenza-sendable-livelli-di-checking-e-clock">WWDC22 · Modulo 3 — Fondamenta di concorrenza: <code>Sendable</code>, livelli di checking e <code>Clock</code></h1>
+<p><strong>Swift 5.6 / 5.7</strong> · <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0302-concurrent-value-and-concurrent-closures.md">SE-0302</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0337-support-incremental-migration-to-concurrency-checking.md">SE-0337</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0338-clarify-execution-non-actor-async.md">SE-0338</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0329-clock-instant-duration.md">SE-0329</a></p>
+<blockquote>
+<p>Questo modulo è la base su cui si costruiscono sia il Batch 3 (data-race safety di Swift 6) sia il Batch 4 (approachable concurrency). Leggilo bene anche se il progetto usa già quasi tutto — il <em>perché</em> sottostante è ciò che rende sensati quei batch successivi.</p>
+</blockquote>
+<hr>
+<h2 id="1-cosa-e-uscito-e-quale-problema-risolve">1. Cosa è uscito, e quale problema risolve</h2>
+<p>Swift 5.5 (WWDC21) ci ha dato <code>async</code>/<code>await</code>, <code>Task</code> e gli actor. Ma è uscito con un buco: il compilatore non poteva verificare che i valori passati <em>tra</em> domini di concorrenza fossero sicuri da passare. Potevi consegnare un'istanza di classe mutabile a un task distaccato e correre contro te stesso, senza alcuna diagnostica.</p>
+<p>Il contributo di WWDC22 è la <strong>macchina di verifica</strong>:</p>
+<ul>
+<li><strong><code>Sendable</code></strong> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0302-concurrent-value-and-concurrent-closures.md">SE-0302</a>) — un marker protocol che significa "sicuro da spostare attraverso confini di isolamento".</li>
+<li><strong>Verifica a stadi</strong> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0337-support-incremental-migration-to-concurrency-checking.md">SE-0337</a>) — perché accendere la verifica completa tutta insieme avrebbe rotto ogni codebase esistente, quindi è arrivata come una manopola.</li>
+<li><strong>Semantica di esecuzione definita per le funzioni async nonisolated</strong> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0338-clarify-execution-non-actor-async.md">SE-0338</a>) — su quale thread gira davvero una funzione <code>async</code> che non appartiene a nessun actor?</li>
+</ul>
+<p>In più, separatamente ma nella stessa release: <strong><code>Clock</code>, <code>Instant</code>, <code>Duration</code></strong> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0329-clock-instant-duration.md">SE-0329</a>) — un'astrazione del tempo vera al posto di <code>UInt64</code> di nanosecondi.</p>
+<hr>
+<h2 id="2-come-funziona-davvero">2. Come funziona davvero</h2>
+<h3 id="sendable-e-un-marker-protocol"><code>Sendable</code> è un marker protocol</h3>
+<p><code>Sendable</code> <strong>non ha requisiti</strong> — nessun metodo, nessuna proprietà. È un <em>marker</em>: esiste solo perché il compilatore possa verificarlo, e viene cancellato prima della generazione del codice. Nessuna witness table, nessuna rappresentazione a runtime, nessun costo.</p>
+<p>Cosa verifica il compilatore:</p>
+<table>
+<thead>
+<tr>
+<th>Tipo</th>
+<th><code>Sendable</code>?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>struct</code>/<code>enum</code> con tutte le proprietà <code>Sendable</code></td>
+<td>✅ <strong>inferito automaticamente</strong> (se non è public — vedi sotto)</td>
+</tr>
+<tr>
+<td><code>actor</code></td>
+<td>✅ sempre — è a questo che serve un actor</td>
+</tr>
+<tr>
+<td><code>final class</code> con sole proprietà immutabili <code>Sendable</code></td>
+<td>✅ se dichiari la conformance</td>
+</tr>
+<tr>
+<td>classe non <code>final</code></td>
+<td>❌ — una sottoclasse potrebbe aggiungere stato mutabile</td>
+</tr>
+<tr>
+<td>classe con proprietà <code>var</code></td>
+<td>❌ salvo protezione tramite isolamento</td>
+</tr>
+<tr>
+<td>classe isolata <code>@MainActor</code></td>
+<td>✅ — l'isolamento <em>è</em> la protezione</td>
+</tr>
+<tr>
+<td>tipi funzione</td>
+<td>✅ solo se marcati <code>@Sendable</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Il tranello dei tipi public.</strong> L'inferenza automatica per struct ed enum si ferma ai confini di modulo: una struct <code>public</code> <strong>non</strong> ottiene una conformance <code>Sendable</code> inferita, perché aggiungerla dopo sarebbe una promessa source-compatible che non avevi fatto. Devi dichiararla. Ecco perché <code>Pokespeare.swift:3</code> la scrive esplicitamente:</p>
+<pre><code class="language-swift">public struct Pokespeare: Sendable { … }
+</code></pre>
+<h3 id="closure-sendable">Closure <code>@Sendable</code></h3>
+<p>Una closure che attraversa un confine di isolamento deve essere <code>@Sendable</code>, il che impone due regole: tutto ciò che cattura deve essere a sua volta <code>Sendable</code>, e non può catturare nulla in modo mutabile (niente <code>inout</code>, nessuna mutazione di <code>var</code> catturate).</p>
+<p>Questo progetto usa le closure <code>@Sendable</code> come suo <em>dispositivo architetturale principale</em> — <code>Pokespeare.swift:4-5</code>:</p>
+<pre><code class="language-swift">private var _description: @Sendable (_ name: String) async throws -&gt; String
+private var _sprite: @Sendable (_ name: String) async throws -&gt; URL
+</code></pre>
+<p>È ciò che rende legale <code>struct Pokespeare: Sendable</code> pur memorizzando closure.</p>
+<h3 id="la-via-di-fuga-e-il-suo-prezzo">La via di fuga, e il suo prezzo</h3>
+<p><code>@unchecked Sendable</code> dice al compilatore "fidati". È una promessa, non una prova — ti sei preso la responsabilità della sincronizzazione a mano.</p>
+<p>Questo progetto ne usa esattamente due, entrambe nel codice di test: <code>MockedSession.swift:5</code> e il <code>RequestBox</code> a <code>:104</code>. È la densità giusta. Due <code>@unchecked</code> nei test double sono una decisione ponderata; venti sparsi nel codice di produzione sono un codebase che ha spento il compilatore.</p>
+<p>Quando ne scrivi uno, scrivi un commento che dica <em>cosa</em> fornisce la sicurezza. "Va bene" non è una motivazione. "Tutte le mutazioni avvengono sotto <code>lock</code>, e <code>lock</code> non viene mai tenuto attraverso una sospensione" sì.</p>
+<h3 id="la-manopola-della-verifica-se-0337">La manopola della verifica — SE-0337</h3>
+<p>Tre livelli, storicamente raggiunti via <code>-strict-concurrency=</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Livello</th>
+<th>Comportamento</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>minimal</code></td>
+<td>Verifica solo ciò che è marcato esplicitamente. Il default di Swift 5.</td>
+</tr>
+<tr>
+<td><code>targeted</code></td>
+<td>Verifica il codice che ha già adottato la concorrenza (funzioni async, actor), lascia stare il resto.</td>
+</tr>
+<tr>
+<td><code>complete</code></td>
+<td>Verifica tutto. È ciò che lo Swift 6 language mode impone come <strong>errori</strong> invece che warning.</td>
+</tr>
+</tbody>
+</table>
+<p>Il percorso di migrazione previsto è <code>minimal</code> → <code>targeted</code> → <code>complete</code> come warning → passaggio a Swift 6 mode, dove diventano errori.</p>
+<p><strong>Questo progetto è già alla fine di quel percorso.</strong> <code>Package.swift:1</code> dichiara <code>swift-tools-version: 6.0</code> e l'app imposta <code>SWIFT_VERSION = 6.0</code>, quindi entrambi compilano sotto verifica completa con errori. Non c'è niente da migrare — ed è esattamente il motivo per cui il Batch 3 può spendere il suo tempo sulle parti <em>interessanti</em> (region-based isolation, <code>sending</code>) invece che sulla meccanica della migrazione.</p>
+<p>Una cosa da notare: <code>Package.swift</code> non ha <strong>alcun <code>swiftSettings</code></strong>. Swift 6 mode è ereditato puramente dalla tools version. Nel Batch 3 lo renderai esplicito e aggiungerai gli upcoming-feature flag.</p>
+<h3 id="se-0338-dove-gira-una-funzione-async-nonisolated">SE-0338 — dove gira una funzione <code>async</code> nonisolated?</h3>
+<p>È quella che si sbaglia più spesso, ed è portante per il Batch 4.</p>
+<pre><code class="language-swift">@MainActor
+func caller() async {
+  await work()      // dove gira work()?
+}
+
+nonisolated func work() async -&gt; Int { 42 }
+</code></pre>
+<p><strong>Sotto SE-0338 (la regola WWDC22):</strong> <code>work()</code> <strong>non</strong> eredita l'actor del chiamante. Salta sull'<strong>executor concorrente globale</strong> — un pool cooperativo di thread. Quindi chiamarla da codice <code>@MainActor</code> significa: lasciare il main actor, girare su un thread del pool, tornare indietro.</p>
+<p>Il ragionamento era sensato — una funzione async nonisolated non dovrebbe bloccare silenziosamente l'actor del chiamante. Ma la conseguenza è stata una gran quantità di salti inutili, e una categoria di bug in cui gli sviluppatori assumevano che il loro codice restasse sul main actor mentre non era così.</p>
+<p><strong>Swift 6.2 inverte questo default</strong> via <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md">SE-0461</a>: le funzioni async nonisolated ora girano <em>sull'actor del chiamante</em>, e il nuovo attributo <code>@concurrent</code> è l'opt-in esplicito al vecchio comportamento. Il Batch 4 lo copre per intero.</p>
+<p>Tieni entrambi i modelli in testa. Il codice scritto tra il 2022 e il 2025 assume il primo; il codice scritto oggi assume il secondo; e quale dei due valga dipende da un flag di language mode.</p>
+<h3 id="clock-instant-duration-se-0329"><code>Clock</code>, <code>Instant</code>, <code>Duration</code> — SE-0329</h3>
+<p>Prima di questo dormivi con <code>Task.sleep(nanoseconds: 300_000_000)</code> contando gli zeri.</p>
+<p><strong><code>Duration</code></strong> è una quantità di tempo, memorizzata su 128 bit — secondi più attosecondi — quindi non perde precisione come farebbe un <code>Double</code> di secondi. Tutte queste sono verificate come compilanti:</p>
+<pre><code class="language-swift">let base: Duration = .milliseconds(300)
+base * 4                  // Duration × Int
+base * 1.5                // Duration × Double
+base + .seconds(1)
+base / 2
+base &lt; .seconds(1)        // Comparable
+base.components           // (seconds: Int64, attoseconds: Int64)
+</code></pre>
+<p><strong><code>Clock</code></strong> è un protocol con due implementazioni standard, e la differenza conta:</p>
+<table>
+<thead>
+<tr>
+<th>Clock</th>
+<th>Comportamento mentre il dispositivo dorme</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ContinuousClock</code></td>
+<td>Continua a contare. "Tempo di parete trascorso."</td>
+</tr>
+<tr>
+<td><code>SuspendingClock</code></td>
+<td>Si ferma. "Tempo in cui il processo stava davvero girando."</td>
+</tr>
+</tbody>
+</table>
+<p>Per un backoff di rete vuoi <code>ContinuousClock</code> — se il telefono dell'utente ha dormito 30 secondi, quel tempo è davvero passato per quanto riguarda il server. <code>Task.sleep(for:)</code> usa <code>ContinuousClock</code> di default.</p>
+<p><code>Clock</code> ti dà anche <code>measure</code>, che è il modo onesto di cronometrare lavoro asincrono:</p>
+<pre><code class="language-swift">let elapsed = try await ContinuousClock().measure {
+  try await someWork()
+}
+</code></pre>
+<p><strong>Perché conta che <code>Clock</code> sia un protocol:</strong> è una giuntura. Una conformance <code>Clock</code> personalizzata permette a un test di far avanzare il tempo istantaneamente invece di dormire davvero. Tienilo a mente per l'esercizio.</p>
+<hr>
+<h2 id="3-fonti-ufficiali">3. Fonti ufficiali</h2>
+<ul>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0302-concurrent-value-and-concurrent-closures.md">SE-0302 — <code>Sendable</code> and <code>@Sendable</code> closures</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0337-support-incremental-migration-to-concurrency-checking.md">SE-0337 — Incremental migration to concurrency checking</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0338-clarify-execution-non-actor-async.md">SE-0338 — Clarify the Execution of Non-Actor-Isolated Async Functions</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0329-clock-instant-duration.md">SE-0329 — Clock, Instant, and Duration</a></li>
+<li><a href="https://www.swift.org/migration/documentation/migrationguide/">Guida alla migrazione a Swift 6</a> — ufficiale, riferimento per il Batch 3</li>
+<li><a href="https://developer.apple.com/documentation/swift/sendable">Apple — <code>Sendable</code></a> · <a href="https://developer.apple.com/documentation/swift/duration"><code>Duration</code></a> · <a href="https://developer.apple.com/documentation/swift/clock"><code>Clock</code></a></li>
+</ul>
+<hr>
+<h2 id="4-dove-atterra-in-questo-codebase">4. Dove atterra in questo codebase</h2>
+<p>È l'area che il progetto già fa bene, quindi leggila come esempio svolto invece che come lista di difetti.</p>
+<p><strong>La superficie <code>Sendable</code>.</strong> <code>Pokespeare.swift:3</code> (<code>public struct Pokespeare: Sendable</code>), <code>APIClient.swift:9</code>, <code>RetryPolicy.swift:4</code>, <code>PokemonManager.swift:3</code>, <code>TranslationManager.swift:3</code> e <code>Session.swift:3</code> — <code>protocol Session: Sendable</code>, che è ciò che permette a <code>any Session</code> di essere memorizzato in una struct <code>Sendable</code> a <code>APIClient.swift:14</code>.</p>
+<p><strong><code>@MainActor</code> dove serve.</strong> <code>SearchViewModel.swift:5</code>. Il finding <strong>C-02</strong> dell'audit è la storia di cosa succede senza: la classe era <code>@Observable</code> ma non isolata, un <code>Task</code> distaccato mutava stato di UI e un <code>ModelContext</code> non <code>Sendable</code> da un thread di background, e <em>compilava</em> — perché il target app era ancora su <code>SWIFT_VERSION = 5.0</code>. La data race era reale; la verifica era spenta. È la cosa più preziosa che questo repository può insegnarti su Swift 6 mode, ed è successa qui.</p>
+<p><strong><code>Duration</code> usata bene.</strong> <code>RetryPolicy.swift:9,42</code>:</p>
+<pre><code class="language-swift">var baseDelay: Duration
+func delay(forAttempt attempt: Int) -&gt; Duration {
+  baseDelay * (1 &lt;&lt; attempt)          // 300ms, 600ms, 1200ms
+}
+</code></pre>
+<p>e consumata a <code>APIClient.swift:40</code>:</p>
+<pre><code class="language-swift">try await Task.sleep(for: retryPolicy.delay(forAttempt: attempt))
+</code></pre>
+<p>Nota il commento sopra quella riga — <code>Task.sleep</code> <strong>lancia in caso di cancellazione</strong>, che è esattamente il comportamento desiderato: una ricerca cancellata deve abbandonare il suo backoff invece di finire di dormire prima. È una proprietà di correttezza sottile espressa gratis usando l'API giusta.</p>
+<p><strong>Il buco: il clock non è iniettabile.</strong> <code>RetryPolicy</code> ragiona in <code>Duration</code> ma <code>APIClient</code> chiama <code>Task.sleep</code> direttamente. Quindi i test di retry in <code>RetryTests.swift</code> o dormono davvero, o testano l'aritmetica della policy senza testare il ciclo che la usa. <code>HANDOFF.md</code> elenca "strumentare i numeri dei retry" come lavoro non fatto. È questo l'esercizio.</p>
+<hr>
+<h2 id="5-esercizio">5. Esercizio</h2>
+<p><strong>Obiettivo:</strong> rendere il tempo iniettabile, così il ciclo di retry può essere testato senza dormire davvero.</p>
+<h3 id="5a-leggi-prima-di-scrivere">5a — Leggi prima di scrivere</h3>
+<p>Leggi <code>APIClient.swift:32-45</code> e <code>RetryPolicy.swift</code> per intero, poi <code>Pokespeare/Tests/PokespeareTests/RetryTests.swift</code>. Rispondi a te stesso, per iscritto:</p>
+<ul>
+<li>Quali dei 7 test di retry esercitano davvero il ciclo <code>while true</code> in <code>perform</code>, e quali testano solo l'aritmetica di <code>RetryPolicy</code> in isolamento?</li>
+<li>Quanto ci mette oggi la suite SDK? Misuralo. Una parte è backoff reale che dorme.</li>
+</ul>
+<h3 id="5b-inietta-il-clock">5b — Inietta il clock</h3>
+<p>Dai ad <code>APIClient</code> una dipendenza da un clock, con default <code>ContinuousClock()</code>, e fai passare da lì la sleep del backoff invece di chiamare <code>Task.sleep(for:)</code> direttamente.</p>
+<p>Vincoli di design da rispettare:</p>
+<ul>
+<li><code>APIClient</code> è <code>Sendable</code> (<code>:9</code>) e deve restarlo — quindi anche ciò che inietti deve essere <code>Sendable</code>.</li>
+<li>L'SDK non è <code>@MainActor</code> da nessuna parte. Che resti così.</li>
+<li>Non rompere la proprietà di cancellazione. Un task cancellato deve comunque abbandonare l'attesa. Verificalo, non darlo per scontato.</li>
+<li>La superficie pubblica non deve cambiare. <code>Pokespeare</code>, <code>Pokespeare.Error</code>, <code>PokemonView</code>, <code>PokemonViewModel</code> sono tutta l'API pubblica (vedi <code>README.md</code>) e questo è un refactor interno.</li>
+</ul>
+<h3 id="5c-testa-con-esso">5c — Testa con esso</h3>
+<p>Scrivi un clock di test e usalo per asserire qualcosa che i test attuali non possono: che tre tentativi contro una risposta <code>500</code> producono ritardi di esattamente 300ms, poi 600ms — senza che il test impieghi 900ms.</p>
+<p><strong>Criteri di accettazione.</strong></p>
+<ol>
+<li>Un nuovo test asserisce la <em>sequenza</em> effettiva di backoff, non solo l'aritmetica della policy.</li>
+<li>La suite SDK diventa misurabilmente più veloce. Registra entrambi i numeri.</li>
+<li>La cancellazione funziona ancora: un test dimostra che una richiesta cancellata si ferma durante il backoff invece di completarlo.</li>
+<li>Tutti i 53 test SDK passano; i 18 test app sono intatti e passano.</li>
+<li><code>swiftlint lint --strict</code> pulito.</li>
+<li>L'API pubblica è invariata byte per byte.</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<p><strong>Indizio, non soluzione.</strong> Ci sono almeno due design: far conformare un tipo di test a <code>Clock</code>, oppure iniettare una closure di sleep più stretta <code>@Sendable (Duration) async throws -&gt; Void</code>. Il secondo è più piccolo e coerente con l'idioma struct-di-closure che questo SDK usa ovunque. Il primo è più convenzionale e ti dà <code>measure</code> gratis. Scegline uno, poi scrivi l'argomentazione contro quello che hai scartato — è quella la parte che insegna.</p>
+<hr>
+<h2 id="6-trappole">6. Trappole</h2>
+<ul>
+<li><strong>Le struct <code>public</code> non inferiscono <code>Sendable</code>.</strong> L'inferenza cross-modulo è disattivata deliberatamente. Dichiarala.</li>
+<li><strong><code>@unchecked Sendable</code> è una promessa che devi saper enunciare.</strong> Se non sai nominare il meccanismo che fornisce la sicurezza, non ce l'hai.</li>
+<li><strong>Una classe <code>@MainActor</code> è <code>Sendable</code>;</strong> l'isolamento è la prova. Ecco perché <code>SearchViewModel</code> non ha bisogno di annotazione <code>Sendable</code>.</li>
+<li><strong><code>async</code> nonisolated non ereditava l'actor del chiamante</strong> prima di Swift 6.2. Ogni articolo, esempio e risposta Stack Overflow dal 2022 al 2025 assume la vecchia regola. Controlla la data di quello che leggi.</li>
+<li><strong><code>SuspendingClock</code> per un backoff di rete è sbagliato.</strong> Il sonno del dispositivo non mette in pausa il rate limiter del server.</li>
+<li><strong>Che <code>Task.sleep</code> lanci in caso di cancellazione è una feature.</strong> Ingoiare quell'errore con <code>try?</code> converte silenziosamente "abbandona il retry" in "finisci l'attesa, poi continua".</li>
+<li><strong><code>Duration</code> non è un <code>Double</code> di secondi.</strong> Non passare per <code>TimeInterval</code> per fare aritmetica — perderesti la precisione che il tipo esiste per preservare.</li>
+</ul>
+<hr>
+<h2 id="7-autovalutazione">7. Autovalutazione</h2>
+<ol>
+<li><code>Sendable</code> non ha requisiti. Cosa ne fa davvero il compilatore, e qual è il suo costo a runtime?</li>
+<li>Perché una <code>public struct</code> con tutte le proprietà <code>Sendable</code> non ottiene una conformance automatica, mentre una internal sì?</li>
+<li>Nomina i tre livelli di strict concurrency e di' a quale corrisponde lo Swift 6 language mode.</li>
+<li>Sotto SE-0338, dove gira una funzione <code>nonisolated async</code> chiamata da codice <code>@MainActor</code>? Cosa ha cambiato Swift 6.2, e qual è la nuova grafia per l'opt-in al vecchio comportamento?</li>
+<li><code>ContinuousClock</code> vs <code>SuspendingClock</code> — quale per un backoff di rete, e quale scenario concreto li distingue?</li>
+<li>In <code>APIClient.perform</code>, perché è importante che <code>Task.sleep</code> lanci invece di ritornare in caso di cancellazione?</li>
+<li>Il finding C-02 era una data race reale che compilava. Cosa esattamente ha impedito al compilatore di vederla, e quale singola build setting l'avrebbe fatta emergere?</li>
+<li><code>Pokespeare</code> memorizza due closure <code>@Sendable</code> ed è essa stessa <code>Sendable</code>. Cosa si romperebbe se togliessi <code>@Sendable</code> da quei tipi di closure?</li>
+</ol>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/02-regex-and-string-processing.html"><span>Precedente</span><strong>2 · Regex ed elaborazione di stringhe</strong></a><a class="pager-next" href="../wwdc22/04-swiftui-navigation-and-layout.html"><span>Successivo</span><strong>4 · Navigazione e layout in SwiftUI</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-modulo-3-fondamenta-di-concorrenza-sendable-livelli-di-checking-e-clock">WWDC22 · Modulo 3 — Fondamenta di concorrenza: Sendable, livelli di checking e Clock</a><ul>
+<li><a href="#1-cosa-e-uscito-e-quale-problema-risolve">1. Cosa è uscito, e quale problema risolve</a></li>
+<li><a href="#2-come-funziona-davvero">2. Come funziona davvero</a><ul>
+<li><a href="#sendable-e-un-marker-protocol">Sendable è un marker protocol</a></li>
+<li><a href="#closure-sendable">Closure @Sendable</a></li>
+<li><a href="#la-via-di-fuga-e-il-suo-prezzo">La via di fuga, e il suo prezzo</a></li>
+<li><a href="#la-manopola-della-verifica-se-0337">La manopola della verifica — SE-0337</a></li>
+<li><a href="#se-0338-dove-gira-una-funzione-async-nonisolated">SE-0338 — dove gira una funzione async nonisolated?</a></li>
+<li><a href="#clock-instant-duration-se-0329">Clock, Instant, Duration — SE-0329</a></li>
+</ul>
+</li>
+<li><a href="#3-fonti-ufficiali">3. Fonti ufficiali</a></li>
+<li><a href="#4-dove-atterra-in-questo-codebase">4. Dove atterra in questo codebase</a></li>
+<li><a href="#5-esercizio">5. Esercizio</a><ul>
+<li><a href="#5a-leggi-prima-di-scrivere">5a — Leggi prima di scrivere</a></li>
+<li><a href="#5b-inietta-il-clock">5b — Inietta il clock</a></li>
+<li><a href="#5c-testa-con-esso">5c — Testa con esso</a></li>
+</ul>
+</li>
+<li><a href="#6-trappole">6. Trappole</a></li>
+<li><a href="#7-autovalutazione">7. Autovalutazione</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

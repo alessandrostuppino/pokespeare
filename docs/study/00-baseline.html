@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baseline · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="index.html">Curriculum</a></li>
+<li><a href="00-version-map.html">Version Map</a></li>
+<li class="active"><a href="00-baseline.html">Baseline</a></li>
+<li><a href="review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="wwdc22/index.html">WWDC22 — Overview</a></li>
+<li><a href="wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li><a href="wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li><a href="wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li><a href="wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li><a href="wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li><a href="wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="baseline-where-this-codebase-actually-stands">Baseline — where this codebase actually stands</h1>
+<p>Before studying anything, an honest inventory. This matters because roughly a third of the WWDC22→25 surface is <em>already</em> in this project, and re-teaching it from zero would waste your time. What follows separates three things: what you already use well, what you use the old way, and what is simply absent.</p>
+<p>Every reference below was read at the time of writing. Line numbers drift as you do the exercises — treat them as pointers, not addresses.</p>
+<hr>
+<h2 id="the-shape-of-the-repo">The shape of the repo</h2>
+<p>Two artifacts, no workspace:</p>
+<ul>
+<li><strong><code>Pokespeare/</code></strong> — an SPM package, the SDK. <code>swift-tools-version: 6.0</code>, <code>platforms: [.iOS(.v17)]</code>, zero external dependencies.</li>
+<li><strong><code>Demo/PokeApp.xcodeproj</code></strong> — the demo app, consuming the package as a local path reference. <code>SWIFT_VERSION = 6.0</code>, <code>IPHONEOS_DEPLOYMENT_TARGET = 18.1</code>.</li>
+</ul>
+<p>Both compile in <strong>Swift 6 language mode</strong>. That is a genuinely good starting position — most codebases you will meet in the wild are still in mode 5.</p>
+<p>Roughly 1,600 lines of production Swift, 1,300 lines of tests, 71 tests total, all passing, SwiftLint clean, CI on GitHub Actions.</p>
+<hr>
+<h2 id="already-used-well-deepen-dont-re-teach">Already used well — deepen, don't re-teach</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Year</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Swift 6 language mode</td>
+<td>WWDC24</td>
+<td><code>Package.swift:1</code>, pbxproj <code>SWIFT_VERSION = 6.0</code></td>
+</tr>
+<tr>
+<td><code>Sendable</code> / <code>@Sendable</code> discipline</td>
+<td>WWDC22</td>
+<td><code>Pokespeare.swift:3-5</code>, <code>APIClient.swift:9,12</code>, <code>RetryPolicy.swift:4</code>, <code>Session.swift:3</code></td>
+</tr>
+<tr>
+<td><code>@MainActor</code> isolation</td>
+<td>WWDC21/22</td>
+<td><code>SearchViewModel.swift:5</code></td>
+</tr>
+<tr>
+<td><code>async let</code> structured concurrency</td>
+<td>WWDC21</td>
+<td><code>SearchViewModel.swift:172-173</code> — two independent PokeAPI calls in parallel</td>
+</tr>
+<tr>
+<td>Task cancellation, done properly</td>
+<td>WWDC21</td>
+<td><code>SearchViewModel.swift:150,155,164,181,186</code> + the <code>isCancellation</code> unwrapper at <code>:286-304</code></td>
+</tr>
+<tr>
+<td><code>Clock</code> / <code>Duration</code></td>
+<td>WWDC22</td>
+<td><code>RetryPolicy.swift:9,42</code>, <code>APIClient.swift:40</code></td>
+</tr>
+<tr>
+<td><code>if</code> / <code>switch</code> expressions</td>
+<td>WWDC23</td>
+<td><code>RetryPolicy.swift:30</code>, <code>Error.swift:41,110</code>, <code>APIClient.swift:99</code></td>
+</tr>
+<tr>
+<td>Observation (<code>@Observable</code>)</td>
+<td>WWDC23</td>
+<td><code>SearchViewModel.swift:6</code>, held in <code>@State</code> at <code>SearchView.swift:6</code></td>
+</tr>
+<tr>
+<td><code>NavigationStack</code></td>
+<td>WWDC22</td>
+<td><code>SearchView.swift:14</code></td>
+</tr>
+<tr>
+<td>Presentation detents</td>
+<td>WWDC22</td>
+<td><code>SearchView.swift:24-25</code></td>
+</tr>
+<tr>
+<td>Two-parameter <code>onChange</code></td>
+<td>WWDC23</td>
+<td><code>SearchView.swift:64,67</code></td>
+</tr>
+<tr>
+<td>iOS 17 shape statics &amp; animations</td>
+<td>WWDC23</td>
+<td><code>.capsule</code> <code>SearchView.swift:77</code>, <code>.rect</code> <code>:161</code>, <code>.push</code> transition <code>:84-89</code>, <code>.smooth</code> in <code>TextField+ViewModifier.swift:23</code></td>
+</tr>
+<tr>
+<td><code>@ScaledMetric</code></td>
+<td>—</td>
+<td><code>PokemonView.swift:7</code> — sprite scales with Dynamic Type</td>
+</tr>
+<tr>
+<td>Phase-based <code>AsyncImage</code></td>
+<td>—</td>
+<td><code>PokemonView.swift:37-48</code>, with <code>@unknown default</code></td>
+</tr>
+<tr>
+<td><code>#Preview</code> macro</td>
+<td>WWDC23</td>
+<td><code>SearchView.swift:167</code>, <code>PokemonView.swift:64</code></td>
+</tr>
+<tr>
+<td>SwiftData <code>@Model</code></td>
+<td>WWDC23</td>
+<td><code>Pokemon.swift:4-10</code>, container built by hand at <code>PokeApp.swift:27-47</code></td>
+</tr>
+<tr>
+<td>String Catalogs (<code>.xcstrings</code>)</td>
+<td>WWDC23</td>
+<td>Both targets, en + it, via <code>String(localized:bundle:)</code></td>
+</tr>
+<tr>
+<td>Swift Testing, exclusively</td>
+<td>WWDC24</td>
+<td>71 tests, zero XCTest. <code>@Test</code>, <code>@Suite</code>, <code>#expect</code>, <code>#require</code>, <code>@Tag</code>, <code>.serialized</code>, <code>.disabled(if:)</code>, parameterized arguments</td>
+</tr>
+<tr>
+<td>Xcode 16 folder-synced groups</td>
+<td>WWDC24</td>
+<td>pbxproj <code>PBXFileSystemSynchronizedRootGroup</code></td>
+</tr>
+</tbody>
+</table>
+<p>There is also real architectural quality here worth noticing, because several exercises will build on it: the SDK is a <strong>struct of closures</strong> (<code>Pokespeare.swift:3-5</code>) rather than a protocol, which makes substitution free in tests; the transport is a <strong>single generic <code>APIClient</code></strong> parameterised by a <code>StatusCodeMapper</code> closure (<code>APIClient.swift:12</code>) instead of duplicated per manager; and the error model has <strong>exactly one mapping boundary</strong> (<code>Error.swift:109-124</code>) whose case ordering is load-bearing.</p>
+<hr>
+<h2 id="used-the-old-way-the-refactor-surface">Used the old way — the refactor surface</h2>
+<p>These work, but a WWDC22→25 API does the job better. Each becomes an exercise.</p>
+<p><strong>Navigation is sheet-and-alert only.</strong> <code>NavigationStack</code> is present at <code>SearchView.swift:14</code> but there is not a single <code>navigationDestination</code>, <code>NavigationLink</code>, or <code>NavigationPath</code> in the project. The detail view is a <code>.sheet(item:)</code> at <code>:17</code>, and both alerts are boolean-driven at <code>:27</code> and <code>:36</code>. → <em>Batch 1: type-safe routing.</em></p>
+<p><strong>Bindings go through <code>@State</code> dynamic member lookup.</strong> <code>SearchView.swift:6</code> holds the <code>@Observable</code> view model in <code>@State</code> and reaches bindings as <code>$viewModel.searchText</code>. <code>@Bindable</code> is never used, and neither is <code>@Environment</code> — the view model is passed by initializer at <code>PokeApp.swift:17</code>. → <em>Batch 2.</em></p>
+<p><strong>The empty state is a <code>Spacer()</code>.</strong> <code>SearchView.swift:126</code>. <code>ContentUnavailableView</code> (iOS 17) exists precisely for this, and would also give the error path a real presentation instead of an alert. → <em>Batch 2.</em></p>
+<p><strong>Localized strings are pre-resolved <code>String</code> constants.</strong> <code>SearchViewModel.swift:40-56</code> resolves every string at init with <code>String(localized:)</code>, then views render them via <code>Text(String)</code>. That freezes the locale at construction time and gives up the catalog's runtime capabilities. <code>LocalizedStringResource</code> is the modern answer. → <em>Batch 2.</em></p>
+<p><strong>SwiftData is driven imperatively.</strong> <code>FetchDescriptor</code> built by hand at <code>SearchViewModel.swift:256</code>, history filtered in memory with <code>first(where:)</code> at <code>:143</code>. No <code>@Query</code>, no <code>#Predicate</code>, no <code>#Index</code>. And there is no <code>VersionedSchema</code>/<code>MigrationPlan</code> — <code>PokeApp.swift:27-47</code> deletes and rebuilds the store when it cannot be opened, with a <code>fatalError</code> if that also fails. → <em>Batches 2 and 3.</em></p>
+<p><strong>Errors are untyped.</strong> The three-layer model (<code>APIError</code> → manager errors → <code>Pokespeare.Error</code>) is well designed but every function is a bare <code>throws</code>. This is the textbook case for typed throws (SE-0413): <code>APIClient.perform</code> can only ever throw <code>APIError</code>, and the compiler could enforce that. → <em>Batch 3.</em></p>
+<p><strong>Validation is a magic number.</strong> <code>SearchViewModel.swift:88</code> — <code>searchText.count &gt; 2</code> doubles as both button visibility and input validation, and <code>:233-236</code> filters characters with a <code>filter</code> closure. This is what <code>Regex</code> was introduced for. (Recorded as audit finding C-20.) → <em>Batch 1.</em></p>
+<p><strong>The retry loop is a hand-rolled <code>while true</code>.</strong> <code>APIClient.swift:35-44</code>. It works, and the backoff at <code>RetryPolicy.swift:42</code> is clean. But there is no <code>withTaskCancellationHandler</code>, and nothing in the project uses <code>AsyncStream</code>, <code>AsyncSequence</code>, or <code>TaskGroup</code>. → <em>Batch 3.</em></p>
+<p><strong><code>Package.swift</code> has no <code>swiftSettings</code> at all.</strong> No upcoming-feature flags, no explicit language mode, no <code>defaultIsolation</code>. Swift 6 mode comes purely from the tools version. → <em>Batches 3 and 4.</em></p>
+<hr>
+<h2 id="absent-entirely">Absent entirely</h2>
+<p>Nothing in this project uses: macros you wrote yourself · typed throws · <code>Synchronization</code> (<code>Mutex</code>, <code>Atomic</code>) · <code>sending</code> or region-based isolation you had to reason about · actors in production code (only in tests) · <code>@concurrent</code> / <code>nonisolated(nonsending)</code> / default actor isolation · <code>Span</code> / <code>InlineArray</code> · <code>Observations</code> · <code>@Entry</code> / <code>@Previewable</code> · <code>.task</code> / <code>.searchable</code> / <code>.refreshable</code> · custom <code>Layout</code> / <code>Grid</code> / <code>ViewThatFits</code> · <code>PhaseAnimator</code> / <code>KeyframeAnimator</code> / <code>symbolEffect</code> · the scroll API family · <code>MeshGradient</code> / <code>TextRenderer</code> / <code>onGeometryChange</code> · Swift Charts · WidgetKit · App Intents · Liquid Glass · Foundation Models.</p>
+<p>That list is the curriculum.</p>
+<hr>
+<h2 id="the-one-that-makes-the-capstone-worth-doing">The one that makes the capstone worth doing</h2>
+<p>The app is called <strong>PokéSpeare</strong>. Its entire premise is Shakespearean Pokémon descriptions, via the FunTranslations API.</p>
+<p>That endpoint no longer exists. So <code>Pokespeare.swift:45-49</code> ships with <code>isTranslationEnabled: Bool = false</code>, and <code>description(for:)</code> returns raw PokéAPI flavor text. The app currently does not do the thing it is named after.</p>
+<p><strong>Foundation Models</strong> (WWDC25) can do that translation on-device, offline, free, with no API key and no rate limit. That is the Batch 4 capstone — not an exercise invented to practise a framework, but the framework that happens to fix the project's central defect.</p>
+<hr>
+<h2 id="deployment-target-strategy">Deployment-target strategy</h2>
+<p>Current state:</p>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Package</td>
+<td><code>Package.swift:9</code></td>
+<td><code>.iOS(.v17)</code></td>
+</tr>
+<tr>
+<td>App</td>
+<td>pbxproj <code>IPHONEOS_DEPLOYMENT_TARGET</code></td>
+<td><code>18.1</code> (4 occurrences: lines 264, 321, 395, 414)</td>
+</tr>
+</tbody>
+</table>
+<p>Both are compiled by Xcode 26.4.1 against the <strong>iOS 26.4 SDK</strong>.</p>
+<h3 id="staged-bumps">Staged bumps</h3>
+<p>Rather than one jump, the target rises when the curriculum needs it. This is deliberate: each bump is an occasion to practise <code>@available</code> on real code, which is the skill you actually need at work.</p>
+<table>
+<thead>
+<tr>
+<th>When</th>
+<th>Change</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Now — Batch 0</strong></td>
+<td>App <code>18.1</code> → <strong><code>26.0</code></strong></td>
+<td>Unlocks every app-side WWDC24/25 API immediately. The app is the experimentation surface.</td>
+</tr>
+<tr>
+<td><strong>Batch 3</strong></td>
+<td>Package <code>.v17</code> → <strong><code>.v18</code></strong></td>
+<td>Needed for SwiftData <code>#Index</code>/<code>#Unique</code> and the iOS 18 SwiftUI APIs in <code>PokemonView</code>.</td>
+</tr>
+<tr>
+<td><strong>Batch 4</strong></td>
+<td>Package <code>.v18</code> → <strong><code>.v26</code></strong></td>
+<td>Needed for <code>glassEffect</code> inside the shared <code>PokemonView</code>, and for Foundation Models.</td>
+</tr>
+</tbody>
+</table>
+<p>The package deliberately lags the app. An SDK that demands the newest OS is a bad SDK, and keeping it behind forces you to write the availability guards properly instead of raising the floor every time something is inconvenient.</p>
+<h3 id="something-already-true-that-you-should-know">Something already true that you should know</h3>
+<p>Liquid Glass adoption is driven by <strong>the SDK you build against</strong>, not by your deployment target. Because this project is already built with Xcode 26 against the iOS 26 SDK, the app <strong>already renders with Liquid Glass</strong> on iOS 26 devices today — before any bump, and before you write a line of <code>glassEffect</code>.</p>
+<p>The temporary opt-out is the <code>UIDesignRequiresCompatibility</code> Info.plist key. This project sets <code>GENERATE_INFOPLIST_FILE = YES</code> and has no Info.plist file, so it would have to go in as an <code>INFOPLIST_KEY_UIDesignRequiresCompatibility</code> build setting. Apple describes the key as a short-term migration aid that will stop working in a future release, so treat it as a debugging tool, not a strategy.</p>
+<p><em>Sourcing note: the key's existence and behaviour are documented across Apple Developer Forums threads and widely-corroborated third-party write-ups, but I was not able to read Apple's own documentation page for it directly — Apple's docs are JavaScript-rendered and not machine-readable. Verify against the Xcode 26 release notes before relying on it. This is flagged rather than presented as settled.</em></p>
+<h3 id="exercise-0-raise-the-app-target">Exercise 0 — raise the app target</h3>
+<p><strong>Task.</strong> Set the app's deployment target to iOS 26.0, for all four build configurations of both the <code>PokeApp</code> and <code>PokeAppTests</code> targets.</p>
+<p><strong>Acceptance criteria.</strong></p>
+<ol>
+<li><code>grep -c "IPHONEOS_DEPLOYMENT_TARGET = 26" Demo/PokeApp.xcodeproj/project.pbxproj</code> returns <code>4</code>.</li>
+<li>Both test suites pass on an iOS 26 simulator:</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<ol start="3">
+<li>The package still builds untouched at <code>.iOS(.v17)</code> — you are not bumping it yet:</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<ol start="4">
+<li><code>swiftlint lint --strict</code> stays clean.</li>
+</ol>
+<p><strong>Two things to check while you are in there.</strong></p>
+<ul>
+<li><strong><code>knownRegions</code></strong> at <code>project.pbxproj:149</code> lists only <code>(en, Base)</code>, yet <code>Demo/PokeApp/Resources/Localizable.xcstrings</code> carries Italian for all 11 keys. Confirm Italian actually ships: run the app on a simulator set to Italian and check the UI, or inspect the built <code>.app</code> bundle for an <code>it.lproj</code>. If it does not, that is a real localization bug hiding in plain sight.</li>
+<li><strong>CI</strong> (<code>.github/workflows/ci.yml</code>) resolves its simulator by <em>name</em> (<code>PREFERRED_SIMULATOR: iPhone 17 Pro</code>) without pinning a runtime version. An iPhone 17 Pro only exists on iOS 26+, so the bump should be safe — but watch the first CI run after you push.</li>
+</ul>
+<p><strong>Pitfall.</strong> Xcode writes the deployment target into every build configuration separately. Changing it on the project does not necessarily change it on each target — check all four occurrences, not just the two the Project editor shows you.</p>
+<nav class="pager"><a class="pager-prev" href="00-version-map.html"><span>Previous</span><strong>Version Map</strong></a><a class="pager-next" href="wwdc22/index.html"><span>Next</span><strong>WWDC22 — Overview</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#baseline-where-this-codebase-actually-stands">Baseline — where this codebase actually stands</a><ul>
+<li><a href="#the-shape-of-the-repo">The shape of the repo</a></li>
+<li><a href="#already-used-well-deepen-dont-re-teach">Already used well — deepen, don't re-teach</a></li>
+<li><a href="#used-the-old-way-the-refactor-surface">Used the old way — the refactor surface</a></li>
+<li><a href="#absent-entirely">Absent entirely</a></li>
+<li><a href="#the-one-that-makes-the-capstone-worth-doing">The one that makes the capstone worth doing</a></li>
+<li><a href="#deployment-target-strategy">Deployment-target strategy</a><ul>
+<li><a href="#staged-bumps">Staged bumps</a></li>
+<li><a href="#something-already-true-that-you-should-know">Something already true that you should know</a></li>
+<li><a href="#exercise-0-raise-the-app-target">Exercise 0 — raise the app target</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="index.html">Programma</a></li>
+<li><a href="00-version-map.html">Mappa delle versioni</a></li>
+<li class="active"><a href="00-baseline.html">Punto di partenza</a></li>
+<li><a href="review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li><a href="wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li><a href="wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li><a href="wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li><a href="wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li><a href="wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li><a href="wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="punto-di-partenza-dove-sta-davvero-questo-codebase">Punto di partenza — dove sta davvero questo codebase</h1>
+<p>Prima di studiare qualsiasi cosa, un inventario onesto. Conta, perché circa un terzo della superficie WWDC22→25 è <strong>già</strong> in questo progetto, e ri-spiegarla da zero sarebbe tempo sprecato. Quello che segue separa tre cose: cosa già usi bene, cosa usi alla vecchia maniera, e cosa manca del tutto.</p>
+<p>Ogni riferimento qui sotto è stato letto al momento della scrittura. I numeri di riga si spostano man mano che fai gli esercizi — trattali come indicazioni, non come indirizzi.</p>
+<hr>
+<h2 id="la-forma-del-repo">La forma del repo</h2>
+<p>Due artefatti, nessun workspace:</p>
+<ul>
+<li><strong><code>Pokespeare/</code></strong> — un package SPM, l'SDK. <code>swift-tools-version: 6.0</code>, <code>platforms: [.iOS(.v17)]</code>, zero dipendenze esterne.</li>
+<li><strong><code>Demo/PokeApp.xcodeproj</code></strong> — l'app demo, che consuma il package come riferimento locale. <code>SWIFT_VERSION = 6.0</code>, <code>IPHONEOS_DEPLOYMENT_TARGET = 18.1</code>.</li>
+</ul>
+<p>Entrambi compilano in <strong>Swift 6 language mode</strong>. È un punto di partenza genuinamente buono — la maggior parte dei codebase che incontrerai è ancora in mode 5.</p>
+<p>Circa 1.600 righe di Swift di produzione, 1.300 di test, 71 test in totale, tutti verdi, SwiftLint pulito, CI su GitHub Actions.</p>
+<hr>
+<h2 id="gia-usato-bene-approfondire-non-ri-spiegare">Già usato bene — approfondire, non ri-spiegare</h2>
+<table>
+<thead>
+<tr>
+<th>Funzionalità</th>
+<th>Anno</th>
+<th>Dove</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Swift 6 language mode</td>
+<td>WWDC24</td>
+<td><code>Package.swift:1</code>, pbxproj <code>SWIFT_VERSION = 6.0</code></td>
+</tr>
+<tr>
+<td>Disciplina <code>Sendable</code> / <code>@Sendable</code></td>
+<td>WWDC22</td>
+<td><code>Pokespeare.swift:3-5</code>, <code>APIClient.swift:9,12</code>, <code>RetryPolicy.swift:4</code>, <code>Session.swift:3</code></td>
+</tr>
+<tr>
+<td>Isolamento <code>@MainActor</code></td>
+<td>WWDC21/22</td>
+<td><code>SearchViewModel.swift:5</code></td>
+</tr>
+<tr>
+<td>Concorrenza strutturata con <code>async let</code></td>
+<td>WWDC21</td>
+<td><code>SearchViewModel.swift:172-173</code> — due chiamate PokeAPI indipendenti in parallelo</td>
+</tr>
+<tr>
+<td>Cancellazione dei task, fatta bene</td>
+<td>WWDC21</td>
+<td><code>SearchViewModel.swift:150,155,164,181,186</code> + l'unwrapper <code>isCancellation</code> a <code>:286-304</code></td>
+</tr>
+<tr>
+<td><code>Clock</code> / <code>Duration</code></td>
+<td>WWDC22</td>
+<td><code>RetryPolicy.swift:9,42</code>, <code>APIClient.swift:40</code></td>
+</tr>
+<tr>
+<td>Espressioni <code>if</code> / <code>switch</code></td>
+<td>WWDC23</td>
+<td><code>RetryPolicy.swift:30</code>, <code>Error.swift:41,110</code>, <code>APIClient.swift:99</code></td>
+</tr>
+<tr>
+<td>Observation (<code>@Observable</code>)</td>
+<td>WWDC23</td>
+<td><code>SearchViewModel.swift:6</code>, tenuto in <code>@State</code> a <code>SearchView.swift:6</code></td>
+</tr>
+<tr>
+<td><code>NavigationStack</code></td>
+<td>WWDC22</td>
+<td><code>SearchView.swift:14</code></td>
+</tr>
+<tr>
+<td>Presentation detent</td>
+<td>WWDC22</td>
+<td><code>SearchView.swift:24-25</code></td>
+</tr>
+<tr>
+<td><code>onChange</code> a due parametri</td>
+<td>WWDC23</td>
+<td><code>SearchView.swift:64,67</code></td>
+</tr>
+<tr>
+<td>Shape statiche e animazioni iOS 17</td>
+<td>WWDC23</td>
+<td><code>.capsule</code> <code>SearchView.swift:77</code>, <code>.rect</code> <code>:161</code>, transizione <code>.push</code> <code>:84-89</code>, <code>.smooth</code> in <code>TextField+ViewModifier.swift:23</code></td>
+</tr>
+<tr>
+<td><code>@ScaledMetric</code></td>
+<td>—</td>
+<td><code>PokemonView.swift:7</code> — lo sprite scala con il Dynamic Type</td>
+</tr>
+<tr>
+<td><code>AsyncImage</code> basata su fasi</td>
+<td>—</td>
+<td><code>PokemonView.swift:37-48</code>, con <code>@unknown default</code></td>
+</tr>
+<tr>
+<td>Macro <code>#Preview</code></td>
+<td>WWDC23</td>
+<td><code>SearchView.swift:167</code>, <code>PokemonView.swift:64</code></td>
+</tr>
+<tr>
+<td>SwiftData <code>@Model</code></td>
+<td>WWDC23</td>
+<td><code>Pokemon.swift:4-10</code>, container costruito a mano a <code>PokeApp.swift:27-47</code></td>
+</tr>
+<tr>
+<td>String Catalog (<code>.xcstrings</code>)</td>
+<td>WWDC23</td>
+<td>Entrambi i target, en + it, via <code>String(localized:bundle:)</code></td>
+</tr>
+<tr>
+<td>Swift Testing, in esclusiva</td>
+<td>WWDC24</td>
+<td>71 test, zero XCTest. <code>@Test</code>, <code>@Suite</code>, <code>#expect</code>, <code>#require</code>, <code>@Tag</code>, <code>.serialized</code>, <code>.disabled(if:)</code>, argomenti parametrizzati</td>
+</tr>
+<tr>
+<td>Gruppi sincronizzati con le cartelle in Xcode 16</td>
+<td>WWDC24</td>
+<td>pbxproj <code>PBXFileSystemSynchronizedRootGroup</code></td>
+</tr>
+</tbody>
+</table>
+<p>C'è anche qualità architetturale reale che vale la pena notare, perché diversi esercizi ci costruiscono sopra: l'SDK è una <strong>struct di closure</strong> (<code>Pokespeare.swift:3-5</code>) invece di un protocol, il che rende la sostituzione gratuita nei test; il transport è un <strong>unico <code>APIClient</code> generico</strong> parametrizzato da una closure <code>StatusCodeMapper</code> (<code>APIClient.swift:12</code>) invece che duplicato per manager; e il modello degli errori ha <strong>esattamente un punto di mappatura</strong> (<code>Error.swift:109-124</code>) il cui ordinamento dei case è portante.</p>
+<hr>
+<h2 id="usato-alla-vecchia-maniera-la-superficie-di-refactor">Usato alla vecchia maniera — la superficie di refactor</h2>
+<p>Funzionano, ma un'API WWDC22→25 fa il lavoro meglio. Ognuno diventa un esercizio.</p>
+<p><strong>La navigazione è solo sheet e alert.</strong> <code>NavigationStack</code> c'è a <code>SearchView.swift:14</code>, ma non esiste un solo <code>navigationDestination</code>, <code>NavigationLink</code> o <code>NavigationPath</code> nel progetto. Il dettaglio è uno <code>.sheet(item:)</code> a <code>:17</code>, ed entrambi gli alert sono guidati da booleani a <code>:27</code> e <code>:36</code>. → <em>Batch 1: routing type-safe.</em></p>
+<p><strong>I binding passano dal dynamic member lookup di <code>@State</code>.</strong> <code>SearchView.swift:6</code> tiene il view model <code>@Observable</code> in <code>@State</code> e recupera i binding come <code>$viewModel.searchText</code>. <code>@Bindable</code> non è mai usato, e nemmeno <code>@Environment</code> — il view model è passato dall'initializer a <code>PokeApp.swift:17</code>. → <em>Batch 2.</em></p>
+<p><strong>Lo stato vuoto è uno <code>Spacer()</code>.</strong> <code>SearchView.swift:126</code>. <code>ContentUnavailableView</code> (iOS 17) esiste esattamente per questo, e darebbe anche al percorso d'errore una presentazione vera invece di un alert. → <em>Batch 2.</em></p>
+<p><strong>Le stringhe localizzate sono costanti <code>String</code> pre-risolte.</strong> <code>SearchViewModel.swift:40-56</code> risolve ogni stringa all'init con <code>String(localized:)</code>, poi le view le rendono via <code>Text(String)</code>. Questo congela il locale al momento della costruzione e rinuncia alle capacità a runtime del catalog. <code>LocalizedStringResource</code> è la risposta moderna. → <em>Batch 2.</em></p>
+<p><strong>SwiftData è guidato in modo imperativo.</strong> <code>FetchDescriptor</code> costruito a mano a <code>SearchViewModel.swift:256</code>, cronologia filtrata in memoria con <code>first(where:)</code> a <code>:143</code>. Niente <code>@Query</code>, niente <code>#Predicate</code>, niente <code>#Index</code>. E non c'è <code>VersionedSchema</code>/<code>MigrationPlan</code> — <code>PokeApp.swift:27-47</code> cancella e ricostruisce lo store quando non riesce ad aprirlo, con un <code>fatalError</code> se fallisce anche quello. → <em>Batch 2 e 3.</em></p>
+<p><strong>Gli errori non sono tipizzati.</strong> Il modello a tre livelli (<code>APIError</code> → errori dei manager → <code>Pokespeare.Error</code>) è ben progettato, ma ogni funzione è un <code>throws</code> nudo. È il caso da manuale per i typed throws (SE-0413): <code>APIClient.perform</code> può lanciare solo <code>APIError</code>, e il compilatore potrebbe imporlo. → <em>Batch 3.</em></p>
+<p><strong>La validazione è un numero magico.</strong> <code>SearchViewModel.swift:88</code> — <code>searchText.count &gt; 2</code> fa sia da visibilità del bottone sia da validazione dell'input, e <code>:233-236</code> filtra i caratteri con una closure <code>filter</code>. È ciò per cui <code>Regex</code> è stato introdotto. (Registrato come finding di audit C-20.) → <em>Batch 1.</em></p>
+<p><strong>Il ciclo di retry è un <code>while true</code> scritto a mano.</strong> <code>APIClient.swift:35-44</code>. Funziona, e il backoff a <code>RetryPolicy.swift:42</code> è pulito. Ma non c'è <code>withTaskCancellationHandler</code>, e niente nel progetto usa <code>AsyncStream</code>, <code>AsyncSequence</code> o <code>TaskGroup</code>. → <em>Batch 3.</em></p>
+<p><strong><code>Package.swift</code> non ha alcun <code>swiftSettings</code>.</strong> Nessun upcoming-feature flag, nessuna language mode esplicita, nessun <code>defaultIsolation</code>. Swift 6 mode arriva puramente dalla tools version. → <em>Batch 3 e 4.</em></p>
+<hr>
+<h2 id="assente-del-tutto">Assente del tutto</h2>
+<p>Niente in questo progetto usa: macro scritte da te · typed throws · <code>Synchronization</code> (<code>Mutex</code>, <code>Atomic</code>) · <code>sending</code> o region-based isolation su cui ragionare · actor nel codice di produzione (solo nei test) · <code>@concurrent</code> / <code>nonisolated(nonsending)</code> / isolamento di default · <code>Span</code> / <code>InlineArray</code> · <code>Observations</code> · <code>@Entry</code> / <code>@Previewable</code> · <code>.task</code> / <code>.searchable</code> / <code>.refreshable</code> · <code>Layout</code> personalizzati / <code>Grid</code> / <code>ViewThatFits</code> · <code>PhaseAnimator</code> / <code>KeyframeAnimator</code> / <code>symbolEffect</code> · la famiglia di API sullo scroll · <code>MeshGradient</code> / <code>TextRenderer</code> / <code>onGeometryChange</code> · Swift Charts · WidgetKit · App Intents · Liquid Glass · Foundation Models.</p>
+<p>Quella lista è il programma.</p>
+<hr>
+<h2 id="quella-che-rende-il-capstone-degno">Quella che rende il capstone degno</h2>
+<p>L'app si chiama <strong>PokéSpeare</strong>. La sua intera premessa sono descrizioni di Pokémon in stile shakespeariano, via l'API FunTranslations.</p>
+<p>Quell'endpoint non esiste più. Perciò <code>Pokespeare.swift:45-49</code> esce con <code>isTranslationEnabled: Bool = false</code>, e <code>description(for:)</code> restituisce il flavor text grezzo di PokéAPI. L'app al momento non fa la cosa da cui prende il nome.</p>
+<p><strong>Foundation Models</strong> (WWDC25) può fare quella traduzione on-device, offline, gratis, senza API key e senza rate limit. È il capstone del Batch 4 — non un esercizio inventato per esercitarsi su un framework, ma il framework che si dà il caso risolva il difetto centrale del progetto.</p>
+<hr>
+<h2 id="strategia-sui-deployment-target">Strategia sui deployment target</h2>
+<p>Stato attuale:</p>
+<table>
+<thead>
+<tr>
+<th>Artefatto</th>
+<th>Impostazione</th>
+<th>Valore</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Package</td>
+<td><code>Package.swift:9</code></td>
+<td><code>.iOS(.v17)</code></td>
+</tr>
+<tr>
+<td>App</td>
+<td>pbxproj <code>IPHONEOS_DEPLOYMENT_TARGET</code></td>
+<td><code>18.1</code> (4 occorrenze: righe 264, 321, 395, 414)</td>
+</tr>
+</tbody>
+</table>
+<p>Entrambi sono compilati da Xcode 26.4.1 contro l'<strong>SDK iOS 26.4</strong>.</p>
+<h3 id="aumenti-a-tappe">Aumenti a tappe</h3>
+<p>Invece di un salto unico, il target sale quando il programma lo richiede. È deliberato: ogni aumento è un'occasione per esercitarsi con <code>@available</code> su codice reale, che è l'abilità che serve davvero al lavoro.</p>
+<table>
+<thead>
+<tr>
+<th>Quando</th>
+<th>Modifica</th>
+<th>Perché</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ora — Batch 0</strong></td>
+<td>App <code>18.1</code> → <strong><code>26.0</code></strong></td>
+<td>Sblocca subito ogni API WWDC24/25 lato app. L'app è la superficie di sperimentazione.</td>
+</tr>
+<tr>
+<td><strong>Batch 3</strong></td>
+<td>Package <code>.v17</code> → <strong><code>.v18</code></strong></td>
+<td>Serve per SwiftData <code>#Index</code>/<code>#Unique</code> e le API SwiftUI iOS 18 in <code>PokemonView</code>.</td>
+</tr>
+<tr>
+<td><strong>Batch 4</strong></td>
+<td>Package <code>.v18</code> → <strong><code>.v26</code></strong></td>
+<td>Serve per <code>glassEffect</code> dentro il <code>PokemonView</code> condiviso, e per Foundation Models.</td>
+</tr>
+</tbody>
+</table>
+<p>Il package resta deliberatamente indietro rispetto all'app. Un SDK che pretende l'OS più recente è un cattivo SDK, e tenerlo indietro ti costringe a scrivere le guardie di availability per bene invece di alzare il pavimento ogni volta che qualcosa è scomodo.</p>
+<h3 id="una-cosa-gia-vera-che-dovresti-sapere">Una cosa già vera che dovresti sapere</h3>
+<p>L'adozione di Liquid Glass è guidata dall'<strong>SDK con cui compili</strong>, non dal deployment target. Poiché questo progetto è già compilato con Xcode 26 contro l'SDK iOS 26, l'app <strong>rende già con Liquid Glass</strong> sui dispositivi iOS 26, oggi — prima di qualsiasi aumento e prima che tu scriva una riga di <code>glassEffect</code>.</p>
+<p>L'opt-out temporaneo è la chiave Info.plist <code>UIDesignRequiresCompatibility</code>. Questo progetto imposta <code>GENERATE_INFOPLIST_FILE = YES</code> e non ha un file Info.plist, quindi dovrebbe entrare come build setting <code>INFOPLIST_KEY_UIDesignRequiresCompatibility</code>. Apple descrive la chiave come un aiuto di migrazione a breve termine che smetterà di funzionare in una release futura, quindi trattala come strumento di debug, non come strategia.</p>
+<p><em>Nota sulle fonti: l'esistenza e il comportamento della chiave sono documentati in vari thread degli Apple Developer Forums e in resoconti di terze parti ampiamente concordanti, ma non ho potuto leggere direttamente la pagina di documentazione Apple — i doc Apple sono renderizzati in JavaScript e non leggibili da macchina. Verifica contro le release note di Xcode 26 prima di farci affidamento. Questo è segnalato, non presentato come assodato.</em></p>
+<h3 id="esercizio-0-alza-il-target-dellapp">Esercizio 0 — alza il target dell'app</h3>
+<p><strong>Compito.</strong> Imposta il deployment target dell'app a iOS 26.0, per tutte e quattro le build configuration dei target <code>PokeApp</code> e <code>PokeAppTests</code>.</p>
+<p><strong>Criteri di accettazione.</strong></p>
+<ol>
+<li><code>grep -c "IPHONEOS_DEPLOYMENT_TARGET = 26" Demo/PokeApp.xcodeproj/project.pbxproj</code> restituisce <code>4</code>.</li>
+<li>Entrambe le suite passano su un simulatore iOS 26:</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<ol start="3">
+<li>Il package compila ancora intatto a <code>.iOS(.v17)</code> — non lo stai ancora alzando:</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<ol start="4">
+<li><code>swiftlint lint --strict</code> resta pulito.</li>
+</ol>
+<p><strong>Due cose da controllare già che ci sei.</strong></p>
+<ul>
+<li><strong><code>knownRegions</code></strong> a <code>project.pbxproj:149</code> elenca solo <code>(en, Base)</code>, eppure <code>Demo/PokeApp/Resources/Localizable.xcstrings</code> porta l'italiano per tutte e 11 le chiavi. Verifica che l'italiano venga davvero spedito: avvia l'app su un simulatore in italiano e controlla la UI, oppure ispeziona il bundle <code>.app</code> compilato cercando un <code>it.lproj</code>. Se non c'è, è un bug di localizzazione vero nascosto in bella vista.</li>
+<li><strong>La CI</strong> (<code>.github/workflows/ci.yml</code>) risolve il simulatore per <em>nome</em> (<code>PREFERRED_SIMULATOR: iPhone 17 Pro</code>) senza fissare una versione di runtime. Un iPhone 17 Pro esiste solo su iOS 26+, quindi l'aumento dovrebbe reggere — ma tieni d'occhio la prima CI dopo il push.</li>
+</ul>
+<p><strong>Trappola.</strong> Xcode scrive il deployment target in ogni build configuration separatamente. Cambiarlo sul progetto non lo cambia necessariamente su ogni target — controlla tutte e quattro le occorrenze, non solo le due che ti mostra il Project editor.</p>
+<nav class="pager"><a class="pager-prev" href="00-version-map.html"><span>Precedente</span><strong>Mappa delle versioni</strong></a><a class="pager-next" href="wwdc22/index.html"><span>Successivo</span><strong>WWDC22 — Panoramica</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#punto-di-partenza-dove-sta-davvero-questo-codebase">Punto di partenza — dove sta davvero questo codebase</a><ul>
+<li><a href="#la-forma-del-repo">La forma del repo</a></li>
+<li><a href="#gia-usato-bene-approfondire-non-ri-spiegare">Già usato bene — approfondire, non ri-spiegare</a></li>
+<li><a href="#usato-alla-vecchia-maniera-la-superficie-di-refactor">Usato alla vecchia maniera — la superficie di refactor</a></li>
+<li><a href="#assente-del-tutto">Assente del tutto</a></li>
+<li><a href="#quella-che-rende-il-capstone-degno">Quella che rende il capstone degno</a></li>
+<li><a href="#strategia-sui-deployment-target">Strategia sui deployment target</a><ul>
+<li><a href="#aumenti-a-tappe">Aumenti a tappe</a></li>
+<li><a href="#una-cosa-gia-vera-che-dovresti-sapere">Una cosa già vera che dovresti sapere</a></li>
+<li><a href="#esercizio-0-alza-il-target-dellapp">Esercizio 0 — alza il target dell'app</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

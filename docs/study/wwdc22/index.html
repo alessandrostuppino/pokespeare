@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WWDC22 — Overview · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Curriculum</a></li>
+<li><a href="../00-version-map.html">Version Map</a></li>
+<li><a href="../00-baseline.html">Baseline</a></li>
+<li><a href="../review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li class="active"><a href="../wwdc22/index.html">WWDC22 — Overview</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="batch-1-wwdc22-swift-57-ios-16">Batch 1 — WWDC22 · Swift 5.7 · iOS 16</h1>
+<p>The year Swift's generics became usable, regular expressions arrived natively, and SwiftUI replaced <code>NavigationView</code> with something data-driven.</p>
+<p><strong>32 language proposals shipped in Swift 5.7.</strong> This batch covers the ones that changed how you write everyday code, plus the four frameworks that debuted alongside them.</p>
+<hr>
+<h2 id="modules">Modules</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Module</th>
+<th>Core topic</th>
+<th>Exercise size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="01-generics-and-existentials.html">Generics and Existentials</a></td>
+<td><code>any</code> vs <code>some</code>, primary associated types, existential container layout</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="02-regex-and-string-processing.html">Regex and String Processing</a></td>
+<td><code>Regex</code>, literals, <code>RegexBuilder</code>, string algorithms</td>
+<td>Small</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="03-concurrency-foundations.html">Concurrency Foundations</a></td>
+<td><code>Sendable</code>, checking levels, SE-0338 execution semantics, <code>Clock</code>/<code>Duration</code></td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="04-swiftui-navigation-and-layout.html">SwiftUI Navigation and Layout</a></td>
+<td><code>NavigationStack</code>, <code>navigationDestination</code>, <code>Layout</code>, <code>ViewThatFits</code></td>
+<td>Large</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="05-platform-debuts.html">Platform Debuts</a></td>
+<td>App Intents, Swift Charts, Lock Screen widgets, <code>Transferable</code></td>
+<td>Pick one</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="06-build-challenges.html">Build Challenges</a></td>
+<td>Re-implement the WWDC22 tech the project already uses, by building real features</td>
+<td>Pick one to three</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Suggested order: 1 → 2 → 3 → 4 → 5 → 6.</strong> Module 4 depends on nothing, but Module 5's larger exercise and Module 6's Challenges B and C both consume Module 4's navigation work — do not start those first.</p>
+<p>Modules 1 and 3 are the theory-heavy ones. Modules 2, 4 and 5 are where you write the most code. <strong>Module 6 is where it is proven</strong>: three features against live PokéAPI endpoints — evolution chains, type matchups, search filters — sized so you cannot complete them without rebuilding, yourself, the <code>Sendable</code> discipline, the error boundary, the single-transport rule and the <code>Duration</code> handling that the SDK already demonstrates.</p>
+<hr>
+<h2 id="what-this-batch-changes-in-the-project">What this batch changes in the project</h2>
+<p>If you do every exercise, the project ends the batch with:</p>
+<ul>
+<li>A regex-backed, tested name validator replacing the <code>searchText.count &gt; 2</code> magic number (audit finding <strong>C-20</strong>) — <em>Module 2</em></li>
+<li>An injectable clock in <code>APIClient</code>, making the retry backoff testable without real sleeping, and a faster test suite — <em>Module 3</em></li>
+<li>Real navigation replacing the sheet-based detail presentation, with navigation state tested as data — <em>Module 4</em></li>
+<li>History rows that survive accessibility text sizes via <code>ViewThatFits</code> — <em>Module 4</em></li>
+<li>Either sharing, or an App Intent plus a Lock Screen widget — <em>Module 5</em></li>
+<li>At least one new SDK service built end to end — request, response model, manager, error mapping, tests — <em>Module 6</em></li>
+</ul>
+<p>Modules 1 and 3 also produce written analysis rather than only code. Keep those notes — Batch 3 builds directly on them.</p>
+<hr>
+<h2 id="two-things-worth-knowing-before-you-start">Two things worth knowing before you start</h2>
+<p><strong>Every snippet in this batch was compiled.</strong> Not recalled — typechecked against the iOS 26.4 SDK in Swift 6 language mode before being written down. Where a snippet is shown as failing, that error text is real compiler output.</p>
+<p><strong>One finding came out of that process</strong> and is worth flagging up front, because it will cost you twenty minutes otherwise: <strong><code>Regex</code> is not <code>Sendable</code>.</strong> A global <code>let</code> holding one gets <code>@MainActor</code> inferred, and the error only appears when nonisolated code touches it — which in this project means the whole SDK. Module 2 covers it, with both fixes.</p>
+<hr>
+<h2 id="verification">Verification</h2>
+<p>Every exercise ends at the same bar: <strong>all 71 tests green</strong> (53 SDK + 18 app), SwiftLint clean.</p>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<pre><code class="language-bash">swiftlint lint --strict
+</code></pre>
+<p>Leave <code>RUN_INTEGRATION_TESTS</code> unset — those hit live rate-limited APIs.</p>
+<hr>
+<h2 id="when-you-finish">When you finish</h2>
+<p>Say <strong>"batch done"</strong> and the review starts. Nothing is automatic — you decide when.</p>
+<p>Have ready: your work committed, and a short note per module covering what you built, what you decided <em>against</em>, what you did not finish, and which self-check questions were uncomfortable. The judgement calls in Module 4 (§5a), Module 2 (§6a) and Module 6 (A1) are assessed on the reasoning, not the diff.</p>
+<p>See the <a href="../review-protocol.html">Review Protocol</a> for exactly what gets checked and what you get back. Batch 2 (WWDC23: macros, Observation internals, SwiftData depth) is then adjusted based on what actually landed and where the theory was shaky.</p>
+<nav class="pager"><a class="pager-prev" href="../00-baseline.html"><span>Previous</span><strong>Baseline</strong></a><a class="pager-next" href="../wwdc22/01-generics-and-existentials.html"><span>Next</span><strong>1 · Generics & Existentials</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#batch-1-wwdc22-swift-57-ios-16">Batch 1 — WWDC22 · Swift 5.7 · iOS 16</a><ul>
+<li><a href="#modules">Modules</a></li>
+<li><a href="#what-this-batch-changes-in-the-project">What this batch changes in the project</a></li>
+<li><a href="#two-things-worth-knowing-before-you-start">Two things worth knowing before you start</a></li>
+<li><a href="#verification">Verification</a></li>
+<li><a href="#when-you-finish">When you finish</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Programma</a></li>
+<li><a href="../00-version-map.html">Mappa delle versioni</a></li>
+<li><a href="../00-baseline.html">Punto di partenza</a></li>
+<li><a href="../review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li class="active"><a href="../wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="batch-1-wwdc22-swift-57-ios-16">Batch 1 — WWDC22 · Swift 5.7 · iOS 16</h1>
+<p>L'anno in cui i generics di Swift sono diventati usabili, le espressioni regolari sono arrivate native e SwiftUI ha sostituito <code>NavigationView</code> con qualcosa di guidato dai dati.</p>
+<p><strong>32 proposte di linguaggio uscite in Swift 5.7.</strong> Questo batch copre quelle che hanno cambiato il modo di scrivere codice quotidiano, più i quattro framework che hanno debuttato insieme a loro.</p>
+<hr>
+<h2 id="moduli">Moduli</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Modulo</th>
+<th>Argomento centrale</th>
+<th>Dimensione esercizio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="01-generics-and-existentials.html">Generics ed existentials</a></td>
+<td><code>any</code> vs <code>some</code>, primary associated type, layout dell'existential container</td>
+<td>Medio</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="02-regex-and-string-processing.html">Regex ed elaborazione di stringhe</a></td>
+<td><code>Regex</code>, literal, <code>RegexBuilder</code>, algoritmi su stringhe</td>
+<td>Piccolo</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="03-concurrency-foundations.html">Fondamenta di concorrenza</a></td>
+<td><code>Sendable</code>, livelli di checking, semantica di esecuzione SE-0338, <code>Clock</code>/<code>Duration</code></td>
+<td>Medio</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="04-swiftui-navigation-and-layout.html">Navigazione e layout in SwiftUI</a></td>
+<td><code>NavigationStack</code>, <code>navigationDestination</code>, <code>Layout</code>, <code>ViewThatFits</code></td>
+<td>Grande</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="05-platform-debuts.html">Debutti di piattaforma</a></td>
+<td>App Intents, Swift Charts, widget da lock screen, <code>Transferable</code></td>
+<td>Scegline uno</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="06-build-challenges.html">Sfide di implementazione</a></td>
+<td>Re-implementa la tecnologia WWDC22 che il progetto già usa, costruendo feature reali</td>
+<td>Da una a tre</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ordine consigliato: 1 → 2 → 3 → 4 → 5 → 6.</strong> Il Modulo 4 non dipende da nulla, ma l'esercizio grande del Modulo 5 e le Sfide B e C del Modulo 6 consumano tutti il lavoro di navigazione del Modulo 4 — non partire da quelli.</p>
+<p>I Moduli 1 e 3 sono quelli densi di teoria. Nei Moduli 2, 4 e 5 scrivi più codice. <strong>Il Modulo 6 è dove si dimostra</strong>: tre feature contro endpoint PokéAPI reali — catene evolutive, efficacia dei tipi, filtri di ricerca — dimensionate in modo che tu non possa completarle senza ricostruire da solo la disciplina <code>Sendable</code>, il confine degli errori, la regola del transport unico e la gestione di <code>Duration</code> che l'SDK già dimostra.</p>
+<hr>
+<h2 id="cosa-cambia-questo-batch-nel-progetto">Cosa cambia questo batch nel progetto</h2>
+<p>Se fai tutti gli esercizi, alla fine del batch il progetto ha:</p>
+<ul>
+<li>Un validatore di nomi basato su regex e testato, al posto del numero magico <code>searchText.count &gt; 2</code> (finding <strong>C-20</strong>) — <em>Modulo 2</em></li>
+<li>Un clock iniettabile in <code>APIClient</code>, che rende il backoff dei retry testabile senza dormire davvero, e una suite più veloce — <em>Modulo 3</em></li>
+<li>Navigazione vera al posto del dettaglio presentato come sheet, con lo stato di navigazione testato come dato — <em>Modulo 4</em></li>
+<li>Righe della cronologia che sopravvivono alle dimensioni di testo accessibili, tramite <code>ViewThatFits</code> — <em>Modulo 4</em></li>
+<li>La condivisione, oppure un App Intent più un widget da lock screen — <em>Modulo 5</em></li>
+<li>Almeno un nuovo servizio SDK costruito end-to-end — request, modello di risposta, manager, mappatura degli errori, test — <em>Modulo 6</em></li>
+</ul>
+<p>I Moduli 1 e 3 producono anche analisi scritta, non solo codice. Conserva quelle note — il Batch 3 ci costruisce sopra direttamente.</p>
+<hr>
+<h2 id="due-cose-da-sapere-prima-di-iniziare">Due cose da sapere prima di iniziare</h2>
+<p><strong>Ogni frammento di questo batch è stato compilato.</strong> Non ricordato: verificato col typechecker contro l'SDK iOS 26.4 in Swift 6 language mode prima di essere scritto. Dove un frammento è mostrato come fallito, quel testo d'errore è output reale del compilatore.</p>
+<p><strong>Una scoperta è uscita da quel processo</strong> e vale la pena segnalarla subito, perché altrimenti ti costa venti minuti: <strong><code>Regex</code> non è <code>Sendable</code>.</strong> Un <code>let</code> globale che ne contiene uno si prende <code>@MainActor</code> inferito, e l'errore compare solo quando codice <code>nonisolated</code> lo tocca — che in questo progetto significa tutto l'SDK. Il Modulo 2 lo copre, con entrambi i fix.</p>
+<hr>
+<h2 id="verifica">Verifica</h2>
+<p>Ogni esercizio finisce alla stessa asticella: <strong>tutti i 71 test verdi</strong> (53 SDK + 18 app), SwiftLint pulito.</p>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<pre><code class="language-bash">swiftlint lint --strict
+</code></pre>
+<p>Lascia <code>RUN_INTEGRATION_TESTS</code> non impostata — quelli colpiscono API reali con rate limit.</p>
+<hr>
+<h2 id="quando-hai-finito">Quando hai finito</h2>
+<p>Di' <strong>"batch finito"</strong> e parte la revisione. Non c'è nulla di automatico — decidi tu quando.</p>
+<p>Tieni pronti: il lavoro committato e una nota breve per modulo su cosa hai costruito, cosa hai deciso di <strong>non</strong> fare, cosa non hai finito e quali domande di autovalutazione ti hanno messo a disagio. Le scelte di giudizio nel Modulo 4 (§5a), Modulo 2 (§6a) e Modulo 6 (A1) sono valutate sul ragionamento, non sul diff.</p>
+<p>Vedi il <a href="../review-protocol.html">Protocollo di revisione</a> per sapere esattamente cosa viene controllato e cosa ricevi indietro. Il Batch 2 (WWDC23: macro, interni di Observation, SwiftData in profondità) viene poi adattato in base a cosa è davvero atterrato e dove la teoria era incerta.</p>
+<nav class="pager"><a class="pager-prev" href="../00-baseline.html"><span>Precedente</span><strong>Punto di partenza</strong></a><a class="pager-next" href="../wwdc22/01-generics-and-existentials.html"><span>Successivo</span><strong>1 · Generics ed existentials</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#batch-1-wwdc22-swift-57-ios-16">Batch 1 — WWDC22 · Swift 5.7 · iOS 16</a><ul>
+<li><a href="#moduli">Moduli</a></li>
+<li><a href="#cosa-cambia-questo-batch-nel-progetto">Cosa cambia questo batch nel progetto</a></li>
+<li><a href="#due-cose-da-sapere-prima-di-iniziare">Due cose da sapere prima di iniziare</a></li>
+<li><a href="#verifica">Verifica</a></li>
+<li><a href="#quando-hai-finito">Quando hai finito</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

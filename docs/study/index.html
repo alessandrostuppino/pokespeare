@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curriculum · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li class="active"><a href="index.html">Curriculum</a></li>
+<li><a href="00-version-map.html">Version Map</a></li>
+<li><a href="00-baseline.html">Baseline</a></li>
+<li><a href="review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="wwdc22/index.html">WWDC22 — Overview</a></li>
+<li><a href="wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li><a href="wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li><a href="wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li><a href="wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li><a href="wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li><a href="wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="swift-study-curriculum-wwdc22-wwdc25">Swift Study Curriculum — WWDC22 → WWDC25</h1>
+<p>A structured revision of the Swift language and the Apple platform APIs shipped between WWDC22 and WWDC25, taught against a real codebase: this one.</p>
+<p>The goal is not familiarity. The goal is being able to reach for the right tool without looking it up, understand what the compiler and runtime actually do underneath, and then apply it here as a real change.</p>
+<hr>
+<h2 id="how-this-curriculum-is-built">How this curriculum is built</h2>
+<p><strong>Four batches, one per WWDC year</strong>, plus this foundation. Each batch is written only after the previous one has been studied and its exercises implemented, so later material can react to what actually got built.</p>
+<table>
+<thead>
+<tr>
+<th>Batch</th>
+<th>Year</th>
+<th>Swift</th>
+<th>OS</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>✅ written</td>
+</tr>
+<tr>
+<td>1</td>
+<td>WWDC22</td>
+<td>5.7</td>
+<td>iOS 16</td>
+<td>✅ <a href="wwdc22/index.html">written</a> — 6 modules</td>
+</tr>
+<tr>
+<td>2</td>
+<td>WWDC23</td>
+<td>5.9</td>
+<td>iOS 17</td>
+<td>⏳ after Batch 1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>WWDC24</td>
+<td>6.0</td>
+<td>iOS 18</td>
+<td>⏳ after Batch 2</td>
+</tr>
+<tr>
+<td>4</td>
+<td>WWDC25</td>
+<td>6.2</td>
+<td>iOS 26</td>
+<td>⏳ after Batch 3</td>
+</tr>
+</tbody>
+</table>
+<h3 id="foundation-documents">Foundation documents</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="00-version-map.html">Version Map</a></td>
+<td>The lookup table: WWDC year ↔ Swift ↔ Xcode ↔ OS, with the full list of language proposals shipped per version. Consult this whenever you ask "can I use this yet?"</td>
+</tr>
+<tr>
+<td><a href="00-baseline.html">Baseline</a></td>
+<td>An honest inventory of what this codebase already does well, what it does the old way, and the staged deployment-target plan</td>
+</tr>
+<tr>
+<td><a href="review-protocol.html">Review Protocol</a></td>
+<td>What happens at the end of each batch: how the review is triggered, what gets checked, and what you get back</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="two-rules-this-curriculum-follows">Two rules this curriculum follows</h2>
+<p><strong>1. Every claim is sourced.</strong> Nothing here is written from memory. Language features are anchored to their <a href="https://www.swift.org/swift-evolution/">Swift Evolution</a> proposal and verified against the <a href="https://download.swift.org/swift-evolution/v1/evolution.json">official evolution dashboard</a>, which records exactly which Swift release each proposal shipped in. Framework APIs are anchored to Apple's developer documentation. Where something comes from a non-Apple source, it is labelled as such.</p>
+<p><strong>2. You write all the code.</strong> These documents contain Swift only as teaching snippets in fenced blocks. Nothing here is applied to <code>Pokespeare/</code> or <code>Demo/</code> — every implementation is yours. That is the point: reading about <code>sending</code> teaches you nothing, and fighting the compiler over it for twenty minutes teaches you permanently.</p>
+<hr>
+<h2 id="document-structure">Document structure</h2>
+<p>Every module document follows the same seven-part shape:</p>
+<ol>
+<li><strong>What shipped, and what problem it solves</strong> — the motivation, before the syntax.</li>
+<li><strong>How it actually works</strong> — what the compiler emits and what the runtime does. Existential boxes and witness tables, macro expansion phases, where a suspension point really goes, why region-based isolation is a compile-time proof rather than a runtime check.</li>
+<li><strong>Official sources</strong> — verified links and SE numbers.</li>
+<li><strong>Where it lands in this codebase</strong> — concrete <code>file:line</code> references, either to code doing it the old way or to the gap where it belongs.</li>
+<li><strong>Exercise</strong> — a task you implement, with acceptance criteria and the verification command.</li>
+<li><strong>Pitfalls</strong> — the traps, including the ones this project already fell into (see <code>HANDOFF.md</code> and the C-01…C-25 audit findings).</li>
+<li><strong>Self-check</strong> — questions that are uncomfortable to answer if you only skimmed.</li>
+</ol>
+<hr>
+<h2 id="the-study-loop">The study loop</h2>
+<p>For each module:</p>
+<ol>
+<li><strong>Read</strong> the module document end to end before touching Xcode. Sections 1 and 2 are the part that matters; the syntax is the easy half.</li>
+<li><strong>Answer the self-check</strong> from memory. If a question is uncomfortable, re-read section 2 rather than moving on.</li>
+<li><strong>Implement</strong> the exercise on a branch — one branch per module keeps the diffs readable and reversible.</li>
+<li><strong>Verify</strong> — the module's acceptance criteria, plus the full existing suite staying green (see below).</li>
+<li><strong>Commit</strong>, then move to the next module.</li>
+</ol>
+<p>Each batch also ends with a <strong>Build Challenges</strong> module: features large enough that you have to re-implement, from scratch, the WWDC technology the project already contains. Reading <code>RetryPolicy.swift</code> and thinking "yes, <code>Duration</code>, understood" is not the same as designing a new manager and discovering for yourself where <code>Sendable</code> bites.</p>
+<h3 id="end-of-batch">End of batch</h3>
+<p>When <em>you</em> decide a batch is done, say so — nothing is automatic, and you are never interrupted mid-batch. I then read every diff, run the full suite, check the project's invariants, and probe the theory. You get back what is correct, what is wrong with the failing scenario spelled out, and which concepts are solid, shaky, or not yet there.</p>
+<p>Full details, including what to prepare: <strong><a href="review-protocol.html">Review Protocol</a></strong>.</p>
+<h3 id="verification-commands">Verification commands</h3>
+<p>The package declares only an iOS platform, so everything goes through <code>xcodebuild</code> — <code>swift test</code> will not work. This matches CI (<code>.github/workflows/ci.yml</code>).</p>
+<p>SDK tests:</p>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<p>App tests:</p>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<p>Lint, exactly as CI runs it:</p>
+<pre><code class="language-bash">swiftlint lint --strict
+</code></pre>
+<p><strong>The regression bar:</strong> 53 SDK tests + 18 app tests must stay green, and SwiftLint must stay clean, after every exercise. Leave <code>RUN_INTEGRATION_TESTS</code> unset — those tests hit live third-party APIs behind a rate limit.</p>
+<hr>
+<h2 id="scope">Scope</h2>
+<p><strong>In scope:</strong> WWDC22, WWDC23, WWDC24, WWDC25 — the Swift language, SwiftUI, SwiftData, Swift Testing, Swift Charts, WidgetKit, App Intents, Foundation Models, and the surrounding tooling (SwiftPM, Xcode, Instruments).</p>
+<p><strong>Out of scope:</strong> WWDC26 / iOS 27 / Xcode 27. Deliberately excluded — the four years asked for are 22 through 25.</p>
+<p>Swift 6.3 sits after WWDC25 but is what is installed on this machine. It gets a short appendix note in Batch 4, not a module of its own.</p>
+<hr>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>Verified present on this machine:</p>
+<ul>
+<li>Xcode <strong>26.4.1</strong> (build 17E202)</li>
+<li>Swift <strong>6.3.1</strong></li>
+<li>iOS SDK <strong>26.4</strong></li>
+<li>Simulator runtimes: iOS <strong>18.6</strong> and <strong>26.4</strong></li>
+</ul>
+<p>Everything from WWDC22 through WWDC25 compiles here today.</p>
+<nav class="pager"><a class="pager-next" href="00-version-map.html"><span>Next</span><strong>Version Map</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#swift-study-curriculum-wwdc22-wwdc25">Swift Study Curriculum — WWDC22 → WWDC25</a><ul>
+<li><a href="#how-this-curriculum-is-built">How this curriculum is built</a><ul>
+<li><a href="#foundation-documents">Foundation documents</a></li>
+</ul>
+</li>
+<li><a href="#two-rules-this-curriculum-follows">Two rules this curriculum follows</a></li>
+<li><a href="#document-structure">Document structure</a></li>
+<li><a href="#the-study-loop">The study loop</a><ul>
+<li><a href="#end-of-batch">End of batch</a></li>
+<li><a href="#verification-commands">Verification commands</a></li>
+</ul>
+</li>
+<li><a href="#scope">Scope</a></li>
+<li><a href="#prerequisites">Prerequisites</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li class="active"><a href="index.html">Programma</a></li>
+<li><a href="00-version-map.html">Mappa delle versioni</a></li>
+<li><a href="00-baseline.html">Punto di partenza</a></li>
+<li><a href="review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li><a href="wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li><a href="wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li><a href="wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li><a href="wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li><a href="wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li><a href="wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="programma-di-studio-swift-wwdc22-wwdc25">Programma di studio Swift — WWDC22 → WWDC25</h1>
+<p>Un ripasso strutturato del linguaggio Swift e delle API delle piattaforme Apple uscite tra WWDC22 e WWDC25, insegnato su un codebase reale: questo.</p>
+<p>L'obiettivo non è la familiarità. L'obiettivo è saper scegliere lo strumento giusto senza doverlo cercare, capire cosa fanno davvero compilatore e runtime sotto il cofano, e poi applicarlo qui come modifica reale.</p>
+<hr>
+<h2 id="come-e-costruito-questo-programma">Come è costruito questo programma</h2>
+<p><strong>Quattro batch, uno per anno WWDC</strong>, più queste fondamenta. Ogni batch viene scritto solo dopo che il precedente è stato studiato e i suoi esercizi implementati, così il materiale successivo può adattarsi a ciò che hai davvero costruito.</p>
+<table>
+<thead>
+<tr>
+<th>Batch</th>
+<th>Anno</th>
+<th>Swift</th>
+<th>OS</th>
+<th>Stato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>✅ scritto</td>
+</tr>
+<tr>
+<td>1</td>
+<td>WWDC22</td>
+<td>5.7</td>
+<td>iOS 16</td>
+<td>✅ <a href="wwdc22/index.html">scritto</a> — 6 moduli</td>
+</tr>
+<tr>
+<td>2</td>
+<td>WWDC23</td>
+<td>5.9</td>
+<td>iOS 17</td>
+<td>⏳ dopo il Batch 1</td>
+</tr>
+<tr>
+<td>3</td>
+<td>WWDC24</td>
+<td>6.0</td>
+<td>iOS 18</td>
+<td>⏳ dopo il Batch 2</td>
+</tr>
+<tr>
+<td>4</td>
+<td>WWDC25</td>
+<td>6.2</td>
+<td>iOS 26</td>
+<td>⏳ dopo il Batch 3</td>
+</tr>
+</tbody>
+</table>
+<h3 id="documenti-di-base">Documenti di base</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Cos'è</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="00-version-map.html">Mappa delle versioni</a></td>
+<td>La tabella di consultazione: anno WWDC ↔ Swift ↔ Xcode ↔ OS, con l'elenco completo delle proposte di linguaggio uscite in ogni versione. Da consultare ogni volta che ti chiedi "posso già usarlo?"</td>
+</tr>
+<tr>
+<td><a href="00-baseline.html">Punto di partenza</a></td>
+<td>Un inventario onesto di ciò che questo codebase già fa bene, ciò che fa alla vecchia maniera, e il piano a tappe per i deployment target</td>
+</tr>
+<tr>
+<td><a href="review-protocol.html">Protocollo di revisione</a></td>
+<td>Cosa succede alla fine di ogni batch: come si attiva la revisione, cosa viene controllato e cosa ti viene restituito</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="due-regole-che-questo-programma-rispetta">Due regole che questo programma rispetta</h2>
+<p><strong>1. Ogni affermazione ha una fonte.</strong> Niente qui è scritto a memoria. Le funzionalità del linguaggio sono ancorate alla loro proposta <a href="https://www.swift.org/swift-evolution/">Swift Evolution</a> e verificate contro la <a href="https://download.swift.org/swift-evolution/v1/evolution.json">dashboard ufficiale</a>, che registra esattamente in quale release Swift ogni proposta è arrivata. Le API dei framework sono ancorate alla documentazione Apple. Dove qualcosa viene da una fonte non Apple, è etichettato come tale.</p>
+<p><strong>2. Il codice lo scrivi tu.</strong> Questi documenti contengono Swift solo come frammenti didattici in blocchi di codice. Niente qui viene applicato a <code>Pokespeare/</code> o <code>Demo/</code> — ogni implementazione è tua. Ed è il punto: leggere di <code>sending</code> non insegna nulla, litigarci col compilatore per venti minuti insegna per sempre.</p>
+<hr>
+<h2 id="struttura-dei-documenti">Struttura dei documenti</h2>
+<p>Ogni modulo segue la stessa forma in sette parti:</p>
+<ol>
+<li><strong>Cosa è uscito, e quale problema risolve</strong> — la motivazione, prima della sintassi.</li>
+<li><strong>Come funziona davvero</strong> — cosa emette il compilatore e cosa fa il runtime. Existential box e witness table, fasi di espansione delle macro, dove finisce davvero un punto di sospensione, perché la region-based isolation è una prova a compile-time e non un controllo a runtime.</li>
+<li><strong>Fonti ufficiali</strong> — link verificati e numeri SE.</li>
+<li><strong>Dove atterra in questo codebase</strong> — riferimenti concreti <code>file:riga</code>, o al codice che lo fa alla vecchia maniera, o al buco dove dovrebbe stare.</li>
+<li><strong>Esercizio</strong> — un compito che implementi tu, con criteri di accettazione e comando di verifica.</li>
+<li><strong>Trappole</strong> — gli inciampi, inclusi quelli in cui questo progetto è già caduto (vedi <code>HANDOFF.md</code> e i finding C-01…C-25 dell'audit).</li>
+<li><strong>Autovalutazione</strong> — domande a cui è scomodo rispondere se hai solo scorso il testo.</li>
+</ol>
+<hr>
+<h2 id="il-ciclo-di-studio">Il ciclo di studio</h2>
+<p>Per ogni modulo:</p>
+<ol>
+<li><strong>Leggi</strong> il documento da cima a fondo prima di toccare Xcode. Le sezioni 1 e 2 sono la parte che conta; la sintassi è la metà facile.</li>
+<li><strong>Rispondi all'autovalutazione</strong> a memoria. Se una domanda è scomoda, rileggi la sezione 2 invece di andare avanti.</li>
+<li><strong>Implementa</strong> l'esercizio su un branch — un branch per modulo tiene i diff leggibili e reversibili.</li>
+<li><strong>Verifica</strong> — i criteri di accettazione del modulo, più l'intera suite esistente che resta verde (vedi sotto).</li>
+<li><strong>Committa</strong>, poi passa al modulo successivo.</li>
+</ol>
+<p>Ogni batch si chiude anche con un modulo di <strong>Sfide di implementazione</strong>: feature abbastanza grandi da costringerti a re-implementare da zero la tecnologia WWDC che il progetto già contiene. Leggere <code>RetryPolicy.swift</code> e pensare "sì, <code>Duration</code>, chiaro" non è la stessa cosa che progettare un nuovo manager e scoprire da solo dove <code>Sendable</code> morde.</p>
+<h3 id="fine-del-batch">Fine del batch</h3>
+<p>Quando <strong>tu</strong> decidi che un batch è finito, dillo — non c'è nulla di automatico e non vieni mai interrotto a metà. A quel punto leggo ogni diff, eseguo l'intera suite, controllo le invarianti del progetto e sondo la teoria. Ti torna indietro cosa è corretto, cosa è sbagliato con lo scenario di fallimento esplicitato, e quali concetti sono solidi, incerti o non ancora acquisiti.</p>
+<p>Dettagli completi, incluso cosa preparare: <strong><a href="review-protocol.html">Protocollo di revisione</a></strong>.</p>
+<h3 id="comandi-di-verifica">Comandi di verifica</h3>
+<p>Il package dichiara solo una piattaforma iOS, quindi tutto passa da <code>xcodebuild</code> — <code>swift test</code> non funziona. Coincide con la CI (<code>.github/workflows/ci.yml</code>).</p>
+<p>Test dell'SDK:</p>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<p>Test dell'app:</p>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<p>Lint, esattamente come lo esegue la CI:</p>
+<pre><code class="language-bash">swiftlint lint --strict
+</code></pre>
+<p><strong>L'asticella anti-regressione:</strong> 53 test SDK + 18 test app devono restare verdi, e SwiftLint pulito, dopo ogni esercizio. Lascia <code>RUN_INTEGRATION_TESTS</code> non impostata — quei test colpiscono API di terze parti dietro un rate limit.</p>
+<hr>
+<h2 id="perimetro">Perimetro</h2>
+<p><strong>Dentro:</strong> WWDC22, WWDC23, WWDC24, WWDC25 — il linguaggio Swift, SwiftUI, SwiftData, Swift Testing, Swift Charts, WidgetKit, App Intents, Foundation Models e la toolchain attorno (SwiftPM, Xcode, Instruments).</p>
+<p><strong>Fuori:</strong> WWDC26 / iOS 27 / Xcode 27. Escluso deliberatamente — i quattro anni richiesti sono dal 22 al 25.</p>
+<p>Swift 6.3 è successivo a WWDC25 ma è quello installato su questa macchina. Riceve una breve nota in appendice nel Batch 4, non un modulo suo.</p>
+<hr>
+<h2 id="prerequisiti">Prerequisiti</h2>
+<p>Verificati presenti su questa macchina:</p>
+<ul>
+<li>Xcode <strong>26.4.1</strong> (build 17E202)</li>
+<li>Swift <strong>6.3.1</strong></li>
+<li>SDK iOS <strong>26.4</strong></li>
+<li>Runtime simulatore: iOS <strong>18.6</strong> e <strong>26.4</strong></li>
+</ul>
+<p>Tutto ciò che va da WWDC22 a WWDC25 compila qui, oggi.</p>
+<nav class="pager"><a class="pager-next" href="00-version-map.html"><span>Successivo</span><strong>Mappa delle versioni</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#programma-di-studio-swift-wwdc22-wwdc25">Programma di studio Swift — WWDC22 → WWDC25</a><ul>
+<li><a href="#come-e-costruito-questo-programma">Come è costruito questo programma</a><ul>
+<li><a href="#documenti-di-base">Documenti di base</a></li>
+</ul>
+</li>
+<li><a href="#due-regole-che-questo-programma-rispetta">Due regole che questo programma rispetta</a></li>
+<li><a href="#struttura-dei-documenti">Struttura dei documenti</a></li>
+<li><a href="#il-ciclo-di-studio">Il ciclo di studio</a><ul>
+<li><a href="#fine-del-batch">Fine del batch</a></li>
+<li><a href="#comandi-di-verifica">Comandi di verifica</a></li>
+</ul>
+</li>
+<li><a href="#perimetro">Perimetro</a></li>
+<li><a href="#prerequisiti">Prerequisiti</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

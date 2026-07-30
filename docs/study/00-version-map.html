@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Version Map · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="index.html">Curriculum</a></li>
+<li class="active"><a href="00-version-map.html">Version Map</a></li>
+<li><a href="00-baseline.html">Baseline</a></li>
+<li><a href="review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="wwdc22/index.html">WWDC22 — Overview</a></li>
+<li><a href="wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li><a href="wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li><a href="wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li><a href="wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li><a href="wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li><a href="wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="version-map-wwdc-year-swift-xcode-os">Version Map — WWDC year ↔ Swift ↔ Xcode ↔ OS</h1>
+<p>The lookup table for "when can I use this, and what do I have to guard?"</p>
+<p><strong>Sourcing note.</strong> The Swift-version-per-proposal data below comes from the <a href="https://download.swift.org/swift-evolution/v1/evolution.json">official Swift Evolution dashboard</a> (<code>implementationVersions</code> + per-proposal <code>status.version</code>), snapshot of 2026-07-28. It is authoritative: it is generated from the swift-evolution repository itself. The Swift↔Xcode column has no single official table published by Apple; the row for this machine was measured directly (<code>xcodebuild -version</code> → Xcode 26.4.1, <code>swift --version</code> → Swift 6.3.1), and the rest comes from Apple's Xcode release notes.</p>
+<hr>
+<h2 id="the-master-table">The master table</h2>
+<table>
+<thead>
+<tr>
+<th>WWDC</th>
+<th>Swift</th>
+<th>Xcode</th>
+<th>iOS</th>
+<th>Shipped</th>
+<th>Language headline</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2022</strong></td>
+<td><strong>5.7</strong></td>
+<td>14</td>
+<td><strong>16</strong></td>
+<td>Sept 2022</td>
+<td>Existentials &amp; generics finally usable; Regex; <code>Clock</code>/<code>Duration</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td>5.8</td>
+<td>14.3</td>
+<td>—</td>
+<td>Mar 2023</td>
+<td>Consolidation release</td>
+</tr>
+<tr>
+<td><strong>2023</strong></td>
+<td><strong>5.9</strong></td>
+<td>15</td>
+<td><strong>17</strong></td>
+<td>Sept 2023</td>
+<td><strong>Macros</strong>; Observation; ownership; parameter packs</td>
+</tr>
+<tr>
+<td>—</td>
+<td>5.10</td>
+<td>15.3</td>
+<td>—</td>
+<td>Mar 2024</td>
+<td>Full data isolation under <code>-strict-concurrency=complete</code></td>
+</tr>
+<tr>
+<td><strong>2024</strong></td>
+<td><strong>6.0</strong></td>
+<td>16</td>
+<td><strong>18</strong></td>
+<td>Sept 2024</td>
+<td><strong>Swift 6 language mode</strong>; typed throws; region-based isolation; <code>Synchronization</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td>6.1</td>
+<td>16.3</td>
+<td>—</td>
+<td>Mar 2025</td>
+<td>Trailing-comma support, package traits</td>
+</tr>
+<tr>
+<td><strong>2025</strong></td>
+<td><strong>6.2</strong></td>
+<td>26</td>
+<td><strong>26</strong></td>
+<td>Sept 2025</td>
+<td><strong>Approachable concurrency</strong>; <code>Span</code>; <code>InlineArray</code>; <code>Observations</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td>6.3</td>
+<td>26.4</td>
+<td>26.4</td>
+<td>2026</td>
+<td>Current toolchain here. After WWDC25 — appendix only</td>
+</tr>
+</tbody>
+</table>
+<p><strong>On the version jump:</strong> iOS went 18 → 26 and Xcode 16 → 26 because Apple unified all OS and tooling version numbers onto a year-based scheme in September 2025. There is no iOS 19–25. Xcode 26 is the September 2025 through September 2026 release window.</p>
+<p><strong>The three numbers that are independent.</strong> Keep these apart — conflating them is the most common source of confusion:</p>
+<ul>
+<li><strong>Swift language mode</strong> (<code>swiftLanguageMode</code> / <code>SWIFT_VERSION</code>) — which <em>dialect</em> the compiler enforces. <code>6</code> turns on complete data-race safety as errors.</li>
+<li><strong>Swift toolchain version</strong> — which compiler binary you have. Swift 6.3.1 here. A 6.3 toolchain can still compile in language mode 5.</li>
+<li><strong>Deployment target</strong> (<code>platforms:</code> / <code>IPHONEOS_DEPLOYMENT_TARGET</code>) — which OS the <em>runtime</em> APIs must exist on. Independent of both of the above.</li>
+</ul>
+<p>You can use a Swift 6.2 language feature while deploying to iOS 17, because language features are compile-time. You cannot use <code>glassEffect</code> while deploying to iOS 17 without an <code>#available</code> guard, because that is a runtime API.</p>
+<hr>
+<h2 id="what-each-year-brought">What each year brought</h2>
+<h3 id="wwdc22-swift-57-ios-16">WWDC22 · Swift 5.7 · iOS 16</h3>
+<p><strong>Language</strong> — 32 proposals. The theme is <em>generics and existentials becoming usable</em>, plus string processing.</p>
+<p>The generics story: <code>any</code> became mandatory spelling for existentials (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0335-existential-any.md">SE-0335</a>, actually Swift 5.6), then 5.7 removed the restrictions that made existentials painful — <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0309-unlock-existential-types-for-all-protocols.md">SE-0309</a> unlocked existentials for protocols with associated types, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0346-light-weight-same-type-syntax.md">SE-0346</a> added primary associated types (<code>some Collection&lt;Int&gt;</code>), <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0341-opaque-parameters.md">SE-0341</a> allowed <code>some</code> in parameter position, and <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0352-implicit-open-existentials.md">SE-0352</a> let the compiler implicitly open an existential to call a generic function on it.</p>
+<p>Also: <strong>Regex</strong> — a five-proposal package (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0350-regex-type-overview.md">SE-0350</a> type, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0351-regex-builder.md">SE-0351</a> builder DSL, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0354-regex-literals.md">SE-0354</a> literals, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0355-regex-syntax-run-time-construction.md">SE-0355</a> syntax, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0357-algorithms-string-processing.md">SE-0357</a> algorithms). <strong>Clock/Instant/Duration</strong> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0329-clock-instant-duration.md">SE-0329</a>) — already used in this repo at <code>RetryPolicy.swift:9</code>. <code>if let x {</code> shorthand (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0345-if-let-shorthand.md">SE-0345</a>). <code>Sendable</code> and <code>@Sendable</code> closures (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0302-concurrent-value-and-concurrent-closures.md">SE-0302</a>). Distributed actors (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0336-distributed-actor-isolation.md">SE-0336</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0344-distributed-actor-runtime.md">SE-0344</a>).</p>
+<p><strong>Frameworks</strong> — <code>NavigationStack</code> / <code>NavigationSplitView</code> replacing <code>NavigationView</code>; the <code>Layout</code> protocol, <code>Grid</code>, <code>ViewThatFits</code>; presentation detents; <code>ShareLink</code> and <code>Transferable</code>; <strong>Swift Charts</strong> debut; <strong>App Intents</strong> debut; WidgetKit lock-screen widgets; WeatherKit.</p>
+<h3 id="wwdc23-swift-59-ios-17">WWDC23 · Swift 5.9 · iOS 17</h3>
+<p><strong>Language</strong> — 23 proposals. The theme is <em>macros</em> and <em>ownership</em>.</p>
+<p><strong>Macros</strong> are the flagship: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0382-expression-macros.md">SE-0382</a> expression macros, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0389-attached-macros.md">SE-0389</a> attached macros, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0397-freestanding-declaration-macros.md">SE-0397</a> freestanding declaration macros, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0394-swiftpm-expression-macros.md">SE-0394</a> SwiftPM support. This repo uses three macros daily without ever seeing inside one: <code>@Observable</code>, <code>@Model</code>, <code>#Preview</code>.</p>
+<p>Ownership: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0366-move-function.md">SE-0366</a> <code>consume</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0377-parameter-ownership-modifiers.md">SE-0377</a> <code>borrowing</code>/<code>consuming</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0390-noncopyable-structs-and-enums.md">SE-0390</a> noncopyable types. Generics: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0393-parameter-packs.md">SE-0393</a> value and type parameter packs. Also <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0380-if-switch-expressions.md">SE-0380</a> <code>if</code>/<code>switch</code> expressions (used throughout this repo — e.g. <code>RetryPolicy.swift:30</code>, <code>Error.swift:110</code>), <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0395-observability.md">SE-0395</a> <strong>Observation</strong>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0386-package-access-modifier.md">SE-0386</a> the <code>package</code> access level, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0392-custom-actor-executors.md">SE-0392</a> custom actor executors.</p>
+<p><strong>Frameworks</strong> — <strong>SwiftData</strong>; Observation in SwiftUI (<code>@Observable</code>, <code>@Bindable</code>); <code>PhaseAnimator</code> and <code>KeyframeAnimator</code>; the scroll API family (<code>scrollTargetBehavior</code>, <code>scrollPosition</code>, <code>containerRelativeFrame</code>, <code>visualEffect</code>); <code>ContentUnavailableView</code>; <code>Inspector</code>; <code>symbolEffect</code>; <code>#Preview</code>; <strong>String Catalogs</strong>; TipKit; StoreKit views; interactive widgets.</p>
+<h3 id="wwdc24-swift-60-ios-18">WWDC24 · Swift 6.0 · iOS 18</h3>
+<p><strong>Language</strong> — 33 proposals. The theme is <em>complete data-race safety</em>.</p>
+<p>Swift 6 language mode makes data-race safety a compile-time guarantee rather than a warning. The supporting cast: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0414-region-based-isolation.md">SE-0414</a> <strong>region-based isolation</strong> (the compiler proves a value is not referenced elsewhere, so it may cross an isolation boundary even if not <code>Sendable</code>), <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md">SE-0430</a> <code>sending</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0431-isolated-any-functions.md">SE-0431</a> <code>@isolated(any)</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0420-inheritance-of-actor-isolation.md">SE-0420</a> inheritance of actor isolation, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md">SE-0423</a> dynamic isolation enforcement, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0434-global-actor-isolated-types-usability.md">SE-0434</a> usability of global-actor-isolated types.</p>
+<p>Beyond concurrency: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0413-typed-throws.md">SE-0413</a> <strong>typed throws</strong>; <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0433-mutex.md">SE-0433</a> <code>Mutex</code> and <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0410-atomics.md">SE-0410</a> <code>Atomic</code> in the new <code>Synchronization</code> module; <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0427-noncopyable-generics.md">SE-0427</a> noncopyable generics; <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0408-pack-iteration.md">SE-0408</a> pack iteration; <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0435-swiftpm-per-target-swift-language-version-setting.md">SE-0435</a> per-target language version; <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0425-int128.md">SE-0425</a> 128-bit integers.</p>
+<p><strong>Frameworks</strong> — <strong>Swift Testing</strong> debut (this repo already uses it exclusively); <code>@Entry</code> and <code>@Previewable</code> macros; custom SwiftUI containers; zoom navigation transitions; <code>MeshGradient</code>; <code>TextRenderer</code>; <code>onGeometryChange</code>; the new <code>Tab</code> API; SwiftData <code>#Index</code>, <code>#Unique</code>, custom <code>DataStore</code>, history tracking; Control Widgets.</p>
+<h3 id="wwdc25-swift-62-ios-26">WWDC25 · Swift 6.2 · iOS 26</h3>
+<p><strong>Language</strong> — 32 proposals. The theme is <em>approachable concurrency</em> — walking back the parts of Swift 6 that punished code which was never concurrent to begin with.</p>
+<p><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0466-control-default-actor-isolation.md">SE-0466</a> <strong>control default actor isolation</strong> — opt a whole module into <code>@MainActor</code> by default, so single-threaded UI code stops paying for concurrency it never asked for. <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md">SE-0461</a> <strong>run nonisolated async functions on the caller's actor by default</strong> — and with it the <code>@concurrent</code> attribute, the explicit opt-in to leaving the caller's actor. <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0472-task-start-synchronously-on-caller-context.md">SE-0472</a> starting tasks synchronously. <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0470-isolated-conformances.md">SE-0470</a> global-actor-isolated conformances.</p>
+<p>Performance and safety: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0447-span-access-shared-contiguous-storage.md">SE-0447</a> <code>Span</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0453-vector.md">SE-0453</a> <code>InlineArray</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0446-non-escapable.md">SE-0446</a> nonescapable types, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0458-strict-memory-safety.md">SE-0458</a> opt-in strict memory safety. Observation: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0475-observed.md">SE-0475</a> <strong>transactional observation of values</strong> — the <code>Observations</code> async sequence. Tooling: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0486-adopting-swift-features.md">SE-0486</a> migration tooling for Swift features, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0480-warning-control-flags.md">SE-0480</a> warning control in SwiftPM.</p>
+<p><strong>Frameworks</strong> — <strong>Liquid Glass</strong> (<code>glassEffect</code>, <code>GlassEffectContainer</code>, <code>.buttonStyle(.glass)</code>); <strong>Foundation Models</strong> — the on-device LLM, with <code>@Generable</code> guided generation; <code>WebView</code>/<code>WebPage</code>; the <code>AttributedString</code> rich text editor; <code>@Animatable</code>; 3D Swift Charts; Swift Testing exit tests and attachments; Icon Composer.</p>
+<hr>
+<h2 id="availability-in-practice">Availability in practice</h2>
+<p>Language features are compile-time and need no guard. Runtime APIs do. The two forms:</p>
+<pre><code class="language-swift">// Guard an expression.
+if #available(iOS 26, *) {
+  content.glassEffect()
+} else {
+  content.background(.regularMaterial)
+}
+
+// Guard a whole declaration.
+@available(iOS 26, *)
+struct GlassCard: View { /* … */ }
+</code></pre>
+<p>For view modifiers specifically, the branch above duplicates the view's type on each side. When only the modifier differs, prefer a conditional modifier helper so the view identity stays stable — SwiftUI treats the two branches of an <code>if</code> as <em>different views</em>, which resets state and breaks animations.</p>
+<p><code>@available</code> also carries deprecation and obsolescence, which is what you will meet when reading Apple headers:</p>
+<pre><code class="language-swift">@available(iOS, introduced: 13.0, deprecated: 16.0, message: &quot;Use NavigationStack&quot;)
+</code></pre>
+<p>See <a href="00-baseline.html"><code>00-baseline.md</code></a> for this project's staged deployment-target plan.</p>
+<hr>
+<h2 id="full-proposal-index">Full proposal index</h2>
+<p>Every proposal that shipped in each of the four target versions, from the evolution dashboard. Use this to check whether something you half-remember is real, and which version it landed in.</p>
+<details>
+<summary><b>Swift 5.7 — 32 proposals (WWDC22)</b></summary>
+
+SE-0292 Package Registry Service · SE-0302 `Sendable` and `@Sendable` closures · SE-0309 Unlock existentials for all protocols · SE-0326 Multi-statement closure type inference · SE-0328 Structural opaque result types · SE-0329 Clock, Instant, and Duration · SE-0333 Expand usability of `withMemoryRebound` · SE-0334 Pointer API usability · SE-0336 Distributed Actor Isolation · SE-0338 Execution of non-actor-isolated async functions · SE-0339 Module aliasing · SE-0340 Unavailable from async · SE-0341 Opaque parameter declarations · SE-0343 Concurrency in top-level code · SE-0344 Distributed Actor Runtime · SE-0345 `if let` shorthand · SE-0346 Lightweight same-type requirements · SE-0347 Type inference from default expressions · SE-0348 `buildPartialBlock` · SE-0349 Unaligned loads and stores · SE-0350 Regex type · SE-0351 Regex builder DSL · SE-0352 Implicitly opened existentials · SE-0353 Constrained existential types · SE-0354 Regex literals · SE-0355 Regex syntax · SE-0356 Swift Snippets · SE-0357 Regex-powered string algorithms · SE-0358 Primary associated types in the stdlib · SE-0360 Opaque result types with limited availability · SE-0361 Extensions on bound generic types · SE-0363 Unicode for string processing
+
+</details>
+
+<details>
+<summary><b>Swift 5.9 — 23 proposals (WWDC23)</b></summary>
+
+SE-0366 `consume` operator · SE-0374 `sleep(for:)` on Clock · SE-0377 `borrowing`/`consuming` · SE-0380 `if`/`switch` expressions · SE-0381 DiscardingTaskGroups · SE-0382 Expression Macros · SE-0384 Forward-declared Obj-C interfaces · SE-0386 `package` access modifier · SE-0388 `AsyncStream.makeStream` · SE-0389 Attached Macros · SE-0390 Noncopyable structs and enums · SE-0391 Package Registry Publish · SE-0392 Custom Actor Executors · SE-0393 Value and Type Parameter Packs · SE-0394 SwiftPM custom macros · SE-0395 Observation · SE-0396 `Never: Codable` · SE-0397 Freestanding Declaration Macros · SE-0398 Generic types abstracting over packs · SE-0399 Tuple of value pack expansion · SE-0400 Init accessors · SE-0401 Remove actor isolation inference from property wrappers · SE-0402 `extension` macros
+
+</details>
+
+<details>
+<summary><b>Swift 6.0 — 33 proposals (WWDC24)</b></summary>
+
+SE-0220 `count(where:)` · SE-0270 Collection ops on noncontiguous elements · SE-0301 Package editor commands · SE-0364 Retroactive conformance warning · SE-0405 String initializers with encoding validation · SE-0408 Pack iteration · SE-0409 Access-level modifiers on imports · SE-0410 Low-Level Atomic Operations · SE-0413 Typed throws · SE-0414 Region based Isolation · SE-0415 Function Body Macros · SE-0416 Keypath literals as functions · SE-0417 Task Executor Preference · SE-0418 Inferring `Sendable` for methods and key paths · SE-0420 Inheritance of actor isolation · SE-0421 Effect polymorphism for `AsyncSequence` · SE-0422 Expression macro as default argument · SE-0423 Dynamic actor isolation enforcement · SE-0424 Custom isolation checking for SerialExecutor · SE-0425 128-bit Integer Types · SE-0426 BitwiseCopyable · SE-0427 Noncopyable Generics · SE-0428 Resolve DistributedActor protocols · SE-0429 Partial consumption of noncopyable values · SE-0430 `sending` parameters and results · SE-0431 `@isolated(any)` function types · SE-0432 Borrowing/consuming pattern matching · SE-0433 Synchronous Mutual Exclusion Lock · SE-0434 Usability of global-actor-isolated types · SE-0435 Swift language version per target · SE-0437 Noncopyable stdlib primitives · SE-0440 DebugDescription macro
+
+</details>
+
+<details>
+<summary><b>Swift 6.2 — 32 proposals (WWDC25)</b></summary>
+
+SE-0371 Isolated synchronous deinit · SE-0419 Swift Backtrace API · SE-0446 Nonescapable Types · SE-0447 Span · SE-0451 Raw identifiers · SE-0452 Integer Generic Parameters · SE-0453 InlineArray · SE-0456 `Span`-providing properties · SE-0457 Attosecond representation of `Duration` · SE-0458 Opt-in Strict Memory Safety · SE-0459 `Collection` conformance for `enumerated()` · SE-0461 Nonisolated async on caller's actor · SE-0462 Task Priority Escalation · SE-0463 Obj-C completion handlers as `@Sendable` · SE-0464 UTF8Span · SE-0465 Stdlib primitives for nonescapable types · SE-0466 Control default actor isolation · SE-0467 MutableSpan / MutableRawSpan · SE-0468 `Hashable` for AsyncStream.Continuation · SE-0469 Task Naming · SE-0470 Global-actor isolated conformances · SE-0471 Custom SerialExecutor isolation checking · SE-0472 Starting tasks synchronously · SE-0475 Transactional Observation of Values · SE-0476 Controlling function ABI · SE-0477 Default value in string interpolations · SE-0480 Warning control for SwiftPM · SE-0482 Binary static library dependencies · SE-0483 `InlineArray` type sugar · SE-0485 OutputSpan · SE-0486 Migration tooling for Swift features · SE-0488 `extracting()` slicing pattern
+
+</details>
+
+<hr>
+<h2 id="reference-links">Reference links</h2>
+<ul>
+<li><a href="https://www.swift.org/swift-evolution/">Swift Evolution dashboard</a> — searchable, filterable by version</li>
+<li><a href="https://download.swift.org/swift-evolution/v1/evolution.json">Machine-readable dashboard JSON</a> — what this table was built from</li>
+<li><a href="https://github.com/swiftlang/swift-evolution/tree/main/proposals">swift-evolution proposals</a> — the full text of every proposal</li>
+<li><a href="https://github.com/swiftlang/swift/blob/main/CHANGELOG.md">Swift CHANGELOG</a> — language changes per release, with examples</li>
+<li><a href="https://developer.apple.com/documentation/updates">Apple Developer — Updates</a> — per-framework, per-release API changes. The best official "what's new in framework X" index</li>
+<li><a href="https://www.swift.org/migration/documentation/migrationguide/">Swift 6 migration guide</a> — official, for Batch 3</li>
+</ul>
+<nav class="pager"><a class="pager-prev" href="index.html"><span>Previous</span><strong>Curriculum</strong></a><a class="pager-next" href="00-baseline.html"><span>Next</span><strong>Baseline</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#version-map-wwdc-year-swift-xcode-os">Version Map — WWDC year ↔ Swift ↔ Xcode ↔ OS</a><ul>
+<li><a href="#the-master-table">The master table</a></li>
+<li><a href="#what-each-year-brought">What each year brought</a><ul>
+<li><a href="#wwdc22-swift-57-ios-16">WWDC22 · Swift 5.7 · iOS 16</a></li>
+<li><a href="#wwdc23-swift-59-ios-17">WWDC23 · Swift 5.9 · iOS 17</a></li>
+<li><a href="#wwdc24-swift-60-ios-18">WWDC24 · Swift 6.0 · iOS 18</a></li>
+<li><a href="#wwdc25-swift-62-ios-26">WWDC25 · Swift 6.2 · iOS 26</a></li>
+</ul>
+</li>
+<li><a href="#availability-in-practice">Availability in practice</a></li>
+<li><a href="#full-proposal-index">Full proposal index</a></li>
+<li><a href="#reference-links">Reference links</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="index.html">Programma</a></li>
+<li class="active"><a href="00-version-map.html">Mappa delle versioni</a></li>
+<li><a href="00-baseline.html">Punto di partenza</a></li>
+<li><a href="review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li><a href="wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li><a href="wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li><a href="wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li><a href="wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li><a href="wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li><a href="wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="mappa-delle-versioni-anno-wwdc-swift-xcode-os">Mappa delle versioni — anno WWDC ↔ Swift ↔ Xcode ↔ OS</h1>
+<p>La tabella da consultare per "quando posso usarlo, e cosa devo proteggere con una guardia?"</p>
+<p><strong>Nota sulle fonti.</strong> I dati "quale proposta in quale versione di Swift" vengono dalla <a href="https://download.swift.org/swift-evolution/v1/evolution.json">dashboard ufficiale Swift Evolution</a> (<code>implementationVersions</code> + <code>status.version</code> per proposta), snapshot del 2026-07-28. È autorevole: è generata dal repository swift-evolution stesso. La colonna Swift↔Xcode non ha una tabella ufficiale pubblicata da Apple; la riga di questa macchina è stata misurata direttamente (<code>xcodebuild -version</code> → Xcode 26.4.1, <code>swift --version</code> → Swift 6.3.1), il resto viene dalle release note di Xcode.</p>
+<hr>
+<h2 id="la-tabella-principale">La tabella principale</h2>
+<table>
+<thead>
+<tr>
+<th>WWDC</th>
+<th>Swift</th>
+<th>Xcode</th>
+<th>iOS</th>
+<th>Uscita</th>
+<th>Titolo del linguaggio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2022</strong></td>
+<td><strong>5.7</strong></td>
+<td>14</td>
+<td><strong>16</strong></td>
+<td>Set 2022</td>
+<td>Existential e generics finalmente usabili; Regex; <code>Clock</code>/<code>Duration</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td>5.8</td>
+<td>14.3</td>
+<td>—</td>
+<td>Mar 2023</td>
+<td>Release di consolidamento</td>
+</tr>
+<tr>
+<td><strong>2023</strong></td>
+<td><strong>5.9</strong></td>
+<td>15</td>
+<td><strong>17</strong></td>
+<td>Set 2023</td>
+<td><strong>Macro</strong>; Observation; ownership; parameter pack</td>
+</tr>
+<tr>
+<td>—</td>
+<td>5.10</td>
+<td>15.3</td>
+<td>—</td>
+<td>Mar 2024</td>
+<td>Isolamento dati completo sotto <code>-strict-concurrency=complete</code></td>
+</tr>
+<tr>
+<td><strong>2024</strong></td>
+<td><strong>6.0</strong></td>
+<td>16</td>
+<td><strong>18</strong></td>
+<td>Set 2024</td>
+<td><strong>Swift 6 language mode</strong>; typed throws; region-based isolation; <code>Synchronization</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td>6.1</td>
+<td>16.3</td>
+<td>—</td>
+<td>Mar 2025</td>
+<td>Virgola finale, package traits</td>
+</tr>
+<tr>
+<td><strong>2025</strong></td>
+<td><strong>6.2</strong></td>
+<td>26</td>
+<td><strong>26</strong></td>
+<td>Set 2025</td>
+<td><strong>Approachable concurrency</strong>; <code>Span</code>; <code>InlineArray</code>; <code>Observations</code></td>
+</tr>
+<tr>
+<td>—</td>
+<td>6.3</td>
+<td>26.4</td>
+<td>26.4</td>
+<td>2026</td>
+<td>Toolchain attuale qui. Successiva a WWDC25 — solo appendice</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sul salto di versione:</strong> iOS è passato da 18 a 26 e Xcode da 16 a 26 perché a settembre 2025 Apple ha unificato i numeri di versione di tutti gli OS e della toolchain su uno schema basato sull'anno. Non esistono iOS 19–25. Xcode 26 è la finestra di release da settembre 2025 a settembre 2026.</p>
+<p><strong>I tre numeri indipendenti.</strong> Tienili separati — confonderli è la fonte di confusione più comune:</p>
+<ul>
+<li><strong>Swift language mode</strong> (<code>swiftLanguageMode</code> / <code>SWIFT_VERSION</code>) — quale <em>dialetto</em> il compilatore impone. <code>6</code> accende la data-race safety completa come errori.</li>
+<li><strong>Versione della toolchain Swift</strong> — quale binario del compilatore hai. Qui Swift 6.3.1. Una toolchain 6.3 può comunque compilare in language mode 5.</li>
+<li><strong>Deployment target</strong> (<code>platforms:</code> / <code>IPHONEOS_DEPLOYMENT_TARGET</code>) — su quale OS devono esistere le API a <em>runtime</em>. Indipendente dagli altri due.</li>
+</ul>
+<p>Puoi usare una funzionalità di linguaggio di Swift 6.2 con deployment a iOS 17, perché le funzionalità di linguaggio sono compile-time. Non puoi usare <code>glassEffect</code> con deployment a iOS 17 senza una guardia <code>#available</code>, perché quella è un'API a runtime.</p>
+<hr>
+<h2 id="cosa-ha-portato-ogni-anno">Cosa ha portato ogni anno</h2>
+<h3 id="wwdc22-swift-57-ios-16">WWDC22 · Swift 5.7 · iOS 16</h3>
+<p><strong>Linguaggio</strong> — 32 proposte. Il tema è <em>generics ed existential che diventano usabili</em>, più l'elaborazione di stringhe.</p>
+<p>La storia dei generics: <code>any</code> è diventata la grafia obbligatoria per gli existential (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0335-existential-any.md">SE-0335</a>, in realtà Swift 5.6), poi 5.7 ha rimosso le restrizioni che li rendevano dolorosi — <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0309-unlock-existential-types-for-all-protocols.md">SE-0309</a> ha sbloccato gli existential per i protocol con associated type, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0346-light-weight-same-type-syntax.md">SE-0346</a> ha aggiunto i primary associated type (<code>some Collection&lt;Int&gt;</code>), <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0341-opaque-parameters.md">SE-0341</a> ha permesso <code>some</code> in posizione di parametro, e <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0352-implicit-open-existentials.md">SE-0352</a> ha lasciato che il compilatore apra implicitamente un existential per chiamarci sopra una funzione generica.</p>
+<p>Inoltre: <strong>Regex</strong> — un pacchetto di cinque proposte (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0350-regex-type-overview.md">SE-0350</a> tipo, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0351-regex-builder.md">SE-0351</a> DSL builder, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0354-regex-literals.md">SE-0354</a> literal, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0355-regex-syntax-run-time-construction.md">SE-0355</a> sintassi, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0357-algorithms-string-processing.md">SE-0357</a> algoritmi). <strong>Clock/Instant/Duration</strong> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0329-clock-instant-duration.md">SE-0329</a>) — già usato in questo repo a <code>RetryPolicy.swift:9</code>. La forma abbreviata <code>if let x {</code> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0345-if-let-shorthand.md">SE-0345</a>). <code>Sendable</code> e closure <code>@Sendable</code> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0302-concurrent-value-and-concurrent-closures.md">SE-0302</a>). Distributed actor (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0336-distributed-actor-isolation.md">SE-0336</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0344-distributed-actor-runtime.md">SE-0344</a>).</p>
+<p><strong>Framework</strong> — <code>NavigationStack</code> / <code>NavigationSplitView</code> al posto di <code>NavigationView</code>; il protocol <code>Layout</code>, <code>Grid</code>, <code>ViewThatFits</code>; i presentation detent; <code>ShareLink</code> e <code>Transferable</code>; debutto di <strong>Swift Charts</strong>; debutto di <strong>App Intents</strong>; widget da lock screen in WidgetKit; WeatherKit.</p>
+<h3 id="wwdc23-swift-59-ios-17">WWDC23 · Swift 5.9 · iOS 17</h3>
+<p><strong>Linguaggio</strong> — 23 proposte. Il tema è <em>macro</em> e <em>ownership</em>.</p>
+<p>Le <strong>macro</strong> sono il pezzo forte: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0382-expression-macros.md">SE-0382</a> macro di espressione, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0389-attached-macros.md">SE-0389</a> macro attached, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0397-freestanding-declaration-macros.md">SE-0397</a> macro di dichiarazione freestanding, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0394-swiftpm-expression-macros.md">SE-0394</a> supporto SwiftPM. Questo repo usa tre macro ogni giorno senza averne mai visto l'interno: <code>@Observable</code>, <code>@Model</code>, <code>#Preview</code>.</p>
+<p>Ownership: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0366-move-function.md">SE-0366</a> <code>consume</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0377-parameter-ownership-modifiers.md">SE-0377</a> <code>borrowing</code>/<code>consuming</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0390-noncopyable-structs-and-enums.md">SE-0390</a> tipi noncopyable. Generics: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0393-parameter-packs.md">SE-0393</a> value e type parameter pack. Inoltre <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0380-if-switch-expressions.md">SE-0380</a> espressioni <code>if</code>/<code>switch</code> (usate ovunque in questo repo — ad es. <code>RetryPolicy.swift:30</code>, <code>Error.swift:110</code>), <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0395-observability.md">SE-0395</a> <strong>Observation</strong>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0386-package-access-modifier.md">SE-0386</a> il livello di accesso <code>package</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0392-custom-actor-executors.md">SE-0392</a> executor di actor personalizzati.</p>
+<p><strong>Framework</strong> — <strong>SwiftData</strong>; Observation in SwiftUI (<code>@Observable</code>, <code>@Bindable</code>); <code>PhaseAnimator</code> e <code>KeyframeAnimator</code>; la famiglia di API sullo scroll (<code>scrollTargetBehavior</code>, <code>scrollPosition</code>, <code>containerRelativeFrame</code>, <code>visualEffect</code>); <code>ContentUnavailableView</code>; <code>Inspector</code>; <code>symbolEffect</code>; <code>#Preview</code>; <strong>String Catalog</strong>; TipKit; view StoreKit; widget interattivi.</p>
+<h3 id="wwdc24-swift-60-ios-18">WWDC24 · Swift 6.0 · iOS 18</h3>
+<p><strong>Linguaggio</strong> — 33 proposte. Il tema è <em>data-race safety completa</em>.</p>
+<p>Lo Swift 6 language mode rende la data-race safety una garanzia a compile-time invece di un warning. Il contorno: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0414-region-based-isolation.md">SE-0414</a> <strong>region-based isolation</strong> (il compilatore dimostra che un valore non è referenziato altrove, quindi può attraversare un confine di isolamento anche se non è <code>Sendable</code>), <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0430-transferring-parameters-and-results.md">SE-0430</a> <code>sending</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0431-isolated-any-functions.md">SE-0431</a> <code>@isolated(any)</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0420-inheritance-of-actor-isolation.md">SE-0420</a> ereditarietà dell'isolamento, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0423-dynamic-actor-isolation.md">SE-0423</a> enforcement dinamico, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0434-global-actor-isolated-types-usability.md">SE-0434</a> usabilità dei tipi isolati su global actor.</p>
+<p>Oltre la concorrenza: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0413-typed-throws.md">SE-0413</a> <strong>typed throws</strong>; <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0433-mutex.md">SE-0433</a> <code>Mutex</code> e <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0410-atomics.md">SE-0410</a> <code>Atomic</code> nel nuovo modulo <code>Synchronization</code>; <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0427-noncopyable-generics.md">SE-0427</a> generics noncopyable; <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0408-pack-iteration.md">SE-0408</a> iterazione sui pack; <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0435-swiftpm-per-target-swift-language-version-setting.md">SE-0435</a> versione di linguaggio per target; <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0425-int128.md">SE-0425</a> interi a 128 bit.</p>
+<p><strong>Framework</strong> — debutto di <strong>Swift Testing</strong> (questo repo lo usa già in esclusiva); macro <code>@Entry</code> e <code>@Previewable</code>; container SwiftUI personalizzati; transizioni di navigazione zoom; <code>MeshGradient</code>; <code>TextRenderer</code>; <code>onGeometryChange</code>; la nuova API <code>Tab</code>; SwiftData <code>#Index</code>, <code>#Unique</code>, <code>DataStore</code> personalizzato, history tracking; Control Widget.</p>
+<h3 id="wwdc25-swift-62-ios-26">WWDC25 · Swift 6.2 · iOS 26</h3>
+<p><strong>Linguaggio</strong> — 32 proposte. Il tema è <em>approachable concurrency</em> — fare marcia indietro sulle parti di Swift 6 che punivano codice che non era mai stato concorrente.</p>
+<p><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0466-control-default-actor-isolation.md">SE-0466</a> <strong>controllo dell'isolamento di default</strong> — porta un intero modulo a <code>@MainActor</code> di default, così il codice UI a thread singolo smette di pagare per una concorrenza che non ha mai chiesto. <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0461-async-function-isolation.md">SE-0461</a> <strong>le funzioni async nonisolated girano sull'actor del chiamante di default</strong> — e con essa l'attributo <code>@concurrent</code>, l'opt-in esplicito per lasciare l'actor del chiamante. <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0472-task-start-synchronously-on-caller-context.md">SE-0472</a> avvio sincrono dei task. <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0470-isolated-conformances.md">SE-0470</a> conformance isolate su global actor.</p>
+<p>Performance e sicurezza: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0447-span-access-shared-contiguous-storage.md">SE-0447</a> <code>Span</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0453-vector.md">SE-0453</a> <code>InlineArray</code>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0446-non-escapable.md">SE-0446</a> tipi nonescapable, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0458-strict-memory-safety.md">SE-0458</a> strict memory safety opt-in. Observation: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0475-observed.md">SE-0475</a> <strong>osservazione transazionale dei valori</strong> — la sequenza asincrona <code>Observations</code>. Toolchain: <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0486-adopting-swift-features.md">SE-0486</a> tooling di migrazione, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0480-warning-control-flags.md">SE-0480</a> controllo dei warning in SwiftPM.</p>
+<p><strong>Framework</strong> — <strong>Liquid Glass</strong> (<code>glassEffect</code>, <code>GlassEffectContainer</code>, <code>.buttonStyle(.glass)</code>); <strong>Foundation Models</strong> — l'LLM on-device, con guided generation via <code>@Generable</code>; <code>WebView</code>/<code>WebPage</code>; l'editor di testo ricco basato su <code>AttributedString</code>; <code>@Animatable</code>; Swift Charts 3D; exit test e attachment in Swift Testing; Icon Composer.</p>
+<hr>
+<h2 id="lavailability-in-pratica">L'availability in pratica</h2>
+<p>Le funzionalità di linguaggio sono compile-time e non richiedono guardie. Le API a runtime sì. Le due forme:</p>
+<pre><code class="language-swift">// Proteggere un'espressione.
+if #available(iOS 26, *) {
+  content.glassEffect()
+} else {
+  content.background(.regularMaterial)
+}
+
+// Proteggere un'intera dichiarazione.
+@available(iOS 26, *)
+struct GlassCard: View { /* … */ }
+</code></pre>
+<p>Per i view modifier in particolare, il ramo qui sopra duplica il tipo della view su entrambi i lati. Quando cambia solo il modifier, preferisci un helper per modifier condizionali così l'identità della view resta stabile — SwiftUI tratta i due rami di un <code>if</code> come <em>view diverse</em>, il che azzera lo stato e rompe le animazioni.</p>
+<p><code>@available</code> porta anche deprecazione e obsolescenza, che è ciò che incontrerai leggendo gli header Apple:</p>
+<pre><code class="language-swift">@available(iOS, introduced: 13.0, deprecated: 16.0, message: &quot;Use NavigationStack&quot;)
+</code></pre>
+<p>Vedi <a href="00-baseline.html">Punto di partenza</a> per il piano a tappe dei deployment target di questo progetto.</p>
+<hr>
+<h2 id="indice-completo-delle-proposte">Indice completo delle proposte</h2>
+<p>Tutte le proposte uscite in ciascuna delle quattro versioni target, dalla dashboard. Usalo per verificare se una cosa che ricordi a metà esiste davvero, e in quale versione è arrivata.</p>
+<details>
+<summary><b>Swift 5.7 — 32 proposte (WWDC22)</b></summary>
+
+SE-0292 Package Registry Service · SE-0302 `Sendable` e closure `@Sendable` · SE-0309 Existential per tutti i protocol · SE-0326 Inferenza di tipo in closure multi-statement · SE-0328 Opaque result type strutturali · SE-0329 Clock, Instant e Duration · SE-0333 Usabilità di `withMemoryRebound` · SE-0334 Usabilità delle API sui puntatori · SE-0336 Distributed Actor Isolation · SE-0338 Esecuzione delle funzioni async non isolate · SE-0339 Module aliasing · SE-0340 Unavailable from async · SE-0341 Opaque parameter declaration · SE-0343 Concorrenza nel top-level code · SE-0344 Distributed Actor Runtime · SE-0345 Forma abbreviata `if let` · SE-0346 Same-type requirement leggeri · SE-0347 Inferenza di tipo da espressioni di default · SE-0348 `buildPartialBlock` · SE-0349 Load e store non allineati · SE-0350 Tipo Regex · SE-0351 DSL regex builder · SE-0352 Existential aperti implicitamente · SE-0353 Existential vincolati · SE-0354 Literal regex · SE-0355 Sintassi regex · SE-0356 Swift Snippets · SE-0357 Algoritmi su stringhe basati su regex · SE-0358 Primary associated type nella stdlib · SE-0360 Opaque result type con availability limitata · SE-0361 Extension su tipi generici vincolati · SE-0363 Unicode per l'elaborazione di stringhe
+
+</details>
+
+<details>
+<summary><b>Swift 5.9 — 23 proposte (WWDC23)</b></summary>
+
+SE-0366 Operatore `consume` · SE-0374 `sleep(for:)` su Clock · SE-0377 `borrowing`/`consuming` · SE-0380 Espressioni `if`/`switch` · SE-0381 DiscardingTaskGroup · SE-0382 Macro di espressione · SE-0384 Interfacce Obj-C dichiarate in avanti · SE-0386 Modificatore di accesso `package` · SE-0388 `AsyncStream.makeStream` · SE-0389 Macro attached · SE-0390 Struct ed enum noncopyable · SE-0391 Package Registry Publish · SE-0392 Executor di actor personalizzati · SE-0393 Value e Type Parameter Pack · SE-0394 Macro personalizzate in SwiftPM · SE-0395 Observation · SE-0396 `Never: Codable` · SE-0397 Macro di dichiarazione freestanding · SE-0398 Tipi generici che astraggono sui pack · SE-0399 Tupla da espansione di value pack · SE-0400 Init accessor · SE-0401 Rimozione dell'inferenza di isolamento dai property wrapper · SE-0402 Macro `extension`
+
+</details>
+
+<details>
+<summary><b>Swift 6.0 — 33 proposte (WWDC24)</b></summary>
+
+SE-0220 `count(where:)` · SE-0270 Operazioni su elementi non contigui · SE-0301 Comandi package editor · SE-0364 Warning per conformance retroattive · SE-0405 Inizializzatori String con validazione dell'encoding · SE-0408 Iterazione sui pack · SE-0409 Modificatori di accesso sulle import · SE-0410 Operazioni atomiche di basso livello · SE-0413 Typed throws · SE-0414 Region based Isolation · SE-0415 Macro sul corpo di funzione · SE-0416 Literal keypath come funzioni · SE-0417 Preferenza di Task Executor · SE-0418 Inferenza di `Sendable` per metodi e keypath · SE-0420 Ereditarietà dell'isolamento · SE-0421 Polimorfismo degli effetti per `AsyncSequence` · SE-0422 Macro di espressione come argomento di default · SE-0423 Enforcement dinamico dell'isolamento · SE-0424 Controllo dell'isolamento per SerialExecutor · SE-0425 Tipi interi a 128 bit · SE-0426 BitwiseCopyable · SE-0427 Generics noncopyable · SE-0428 Risoluzione dei protocol DistributedActor · SE-0429 Consumo parziale di valori noncopyable · SE-0430 Parametri e risultati `sending` · SE-0431 Tipi di funzione `@isolated(any)` · SE-0432 Pattern matching borrowing/consuming · SE-0433 Lock di mutua esclusione sincrono · SE-0434 Usabilità dei tipi isolati su global actor · SE-0435 Versione di linguaggio per target · SE-0437 Primitive stdlib noncopyable · SE-0440 Macro DebugDescription
+
+</details>
+
+<details>
+<summary><b>Swift 6.2 — 32 proposte (WWDC25)</b></summary>
+
+SE-0371 Deinit sincrono isolato · SE-0419 API Swift Backtrace · SE-0446 Tipi nonescapable · SE-0447 Span · SE-0451 Identificatori raw · SE-0452 Parametri generici interi · SE-0453 InlineArray · SE-0456 Proprietà che forniscono `Span` · SE-0457 Rappresentazione in attosecondi di `Duration` · SE-0458 Strict Memory Safety opt-in · SE-0459 Conformance `Collection` per `enumerated()` · SE-0461 Async nonisolated sull'actor del chiamante · SE-0462 Escalation di priorità dei task · SE-0463 Completion handler Obj-C come `@Sendable` · SE-0464 UTF8Span · SE-0465 Primitive stdlib per tipi nonescapable · SE-0466 Controllo dell'isolamento di default · SE-0467 MutableSpan / MutableRawSpan · SE-0468 `Hashable` per AsyncStream.Continuation · SE-0469 Naming dei task · SE-0470 Conformance isolate su global actor · SE-0471 Controllo dell'isolamento per SerialExecutor personalizzati · SE-0472 Avvio sincrono dei task · SE-0475 Osservazione transazionale dei valori · SE-0476 Controllo dell'ABI di una funzione · SE-0477 Valore di default nelle interpolazioni di stringa · SE-0480 Controllo dei warning per SwiftPM · SE-0482 Dipendenze da librerie statiche binarie · SE-0483 Zucchero sintattico per `InlineArray` · SE-0485 OutputSpan · SE-0486 Tooling di migrazione per le feature Swift · SE-0488 Pattern di slicing `extracting()`
+
+</details>
+
+<hr>
+<h2 id="link-di-riferimento">Link di riferimento</h2>
+<ul>
+<li><a href="https://www.swift.org/swift-evolution/">Dashboard Swift Evolution</a> — ricercabile, filtrabile per versione</li>
+<li><a href="https://download.swift.org/swift-evolution/v1/evolution.json">JSON della dashboard</a> — da cui è costruita questa tabella</li>
+<li><a href="https://github.com/swiftlang/swift-evolution/tree/main/proposals">Proposte swift-evolution</a> — il testo completo di ogni proposta</li>
+<li><a href="https://github.com/swiftlang/swift/blob/main/CHANGELOG.md">CHANGELOG di Swift</a> — modifiche al linguaggio per release, con esempi</li>
+<li><a href="https://developer.apple.com/documentation/updates">Apple Developer — Updates</a> — modifiche alle API per framework e per release. Il miglior indice ufficiale "cosa c'è di nuovo nel framework X"</li>
+<li><a href="https://www.swift.org/migration/documentation/migrationguide/">Guida alla migrazione a Swift 6</a> — ufficiale, riferimento per il Batch 3</li>
+</ul>
+<nav class="pager"><a class="pager-prev" href="index.html"><span>Precedente</span><strong>Programma</strong></a><a class="pager-next" href="00-baseline.html"><span>Successivo</span><strong>Punto di partenza</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#mappa-delle-versioni-anno-wwdc-swift-xcode-os">Mappa delle versioni — anno WWDC ↔ Swift ↔ Xcode ↔ OS</a><ul>
+<li><a href="#la-tabella-principale">La tabella principale</a></li>
+<li><a href="#cosa-ha-portato-ogni-anno">Cosa ha portato ogni anno</a><ul>
+<li><a href="#wwdc22-swift-57-ios-16">WWDC22 · Swift 5.7 · iOS 16</a></li>
+<li><a href="#wwdc23-swift-59-ios-17">WWDC23 · Swift 5.9 · iOS 17</a></li>
+<li><a href="#wwdc24-swift-60-ios-18">WWDC24 · Swift 6.0 · iOS 18</a></li>
+<li><a href="#wwdc25-swift-62-ios-26">WWDC25 · Swift 6.2 · iOS 26</a></li>
+</ul>
+</li>
+<li><a href="#lavailability-in-pratica">L'availability in pratica</a></li>
+<li><a href="#indice-completo-delle-proposte">Indice completo delle proposte</a></li>
+<li><a href="#link-di-riferimento">Link di riferimento</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

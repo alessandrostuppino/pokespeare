@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>4 · SwiftUI Navigation & Layout · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Curriculum</a></li>
+<li><a href="../00-version-map.html">Version Map</a></li>
+<li><a href="../00-baseline.html">Baseline</a></li>
+<li><a href="../review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Overview</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li class="active"><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-module-4-swiftui-navigation-and-layout">WWDC22 · Module 4 — SwiftUI Navigation and Layout</h1>
+<p><strong>iOS 16</strong> · <code>NavigationStack</code>, <code>NavigationSplitView</code>, <code>navigationDestination</code>, <code>NavigationPath</code>, the <code>Layout</code> protocol, <code>Grid</code>, <code>ViewThatFits</code>, presentation detents, <code>ShareLink</code>/<code>Transferable</code></p>
+<blockquote>
+<p>Every snippet here was typechecked against the iOS 26.4 SDK in Swift 6 language mode.</p>
+</blockquote>
+<hr>
+<h2 id="1-what-shipped-and-what-problem-it-solves">1. What shipped, and what problem it solves</h2>
+<p><strong>Navigation.</strong> <code>NavigationView</code> was declarative in appearance and imperative in reality. Pushing a screen meant flipping a <code>Binding&lt;Bool&gt;</code> attached to a <code>NavigationLink</code> that had to already exist in the hierarchy. Consequences everyone hit: you could not push two screens at once, you could not restore a deep link into a nested stack, you could not pop to root without threading booleans through every level, and the whole thing behaved differently on iPad.</p>
+<p>iOS 16 replaced it with a <strong>data-driven</strong> model. The stack is a value — an array — and navigating means mutating that array. Deep linking becomes assignment. Pop-to-root becomes <code>removeAll()</code>. State restoration becomes <code>Codable</code>.</p>
+<p><strong>Layout.</strong> Before iOS 16, custom layout meant <code>GeometryReader</code> and arithmetic, which fought the layout system rather than joining it. The <code>Layout</code> protocol lets your type participate in SwiftUI's actual negotiation.</p>
+<hr>
+<h2 id="2-how-it-actually-works">2. How it actually works</h2>
+<h3 id="the-layout-negotiation-read-this-first">The layout negotiation — read this first</h3>
+<p>Every SwiftUI layout is a three-step conversation, and understanding it explains more bugs than any other single fact about SwiftUI:</p>
+<ol>
+<li>The parent <strong>proposes</strong> a size to the child (<code>ProposedViewSize</code> — width and height, each of which may be <code>nil</code> meaning "unspecified", <code>0</code> meaning "smallest you can", or <code>.infinity</code> meaning "largest you can").</li>
+<li>The child <strong>replies</strong> with the size it actually wants (<code>sizeThatFits</code>).</li>
+<li>The parent <strong>places</strong> the child, and must respect the child's reply.</li>
+</ol>
+<p>The child chooses. The parent proposes, it does not impose. This is why <code>.frame(width:)</code> does not "set the width" — it inserts a view that proposes that width to its child and then reports the child's answer upward.</p>
+<p>The <code>Layout</code> protocol exposes exactly these two steps:</p>
+<pre><code class="language-swift">struct Equal: Layout {
+  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -&gt; CGSize {
+    proposal.replacingUnspecifiedDimensions()
+  }
+
+  func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+    let w = bounds.width / CGFloat(max(subviews.count, 1))
+    for (i, sv) in subviews.enumerated() {
+      sv.place(
+        at: CGPoint(x: bounds.minX + CGFloat(i) * w, y: bounds.minY),
+        proposal: .init(width: w, height: bounds.height)
+      )
+    }
+  }
+}
+</code></pre>
+<p><code>Subviews</code> is a collection of proxies. You can ask each for <code>sizeThatFits(_:)</code> before deciding, and read per-subview <code>LayoutValueKey</code> data. The <code>cache</code> parameter exists so you can memoize expensive measurement across the multiple passes SwiftUI may run.</p>
+<p><strong><code>AnyLayout</code></strong> lets you swap layout algorithms <em>without changing view identity</em> — which means the transition animates instead of snapping:</p>
+<pre><code class="language-swift">AnyLayout(wide ? AnyLayout(HStackLayout()) : AnyLayout(VStackLayout())) {
+  Text(&quot;a&quot;); Text(&quot;b&quot;)
+}
+</code></pre>
+<p>Compare with the naive <code>if wide { HStack { … } } else { VStack { … } }</code>, which produces two structurally different view trees, destroys and rebuilds the children, and loses their state.</p>
+<h3 id="viewthatfits-the-accessibility-workhorse"><code>ViewThatFits</code> — the accessibility workhorse</h3>
+<pre><code class="language-swift">ViewThatFits(in: .horizontal) {
+  HStack { Text(&quot;a&quot;); Text(&quot;b&quot;) }     // tried first
+  VStack { Text(&quot;a&quot;); Text(&quot;b&quot;) }     // fallback
+}
+</code></pre>
+<p>It measures each child in order and uses the first that fits the proposal. The last child is used unconditionally if none fit, so put your most-compressed version last.</p>
+<p>This is the single most useful iOS 16 API for Dynamic Type. At accessibility text sizes, a horizontal arrangement that works at default size becomes unreadable — <code>ViewThatFits</code> handles it declaratively instead of with a <code>@Environment(\.dynamicTypeSize)</code> branch.</p>
+<h3 id="grid-the-two-dimensional-one"><code>Grid</code> — the two-dimensional one</h3>
+<p><code>Grid</code>/<code>GridRow</code> differs from <code>LazyVGrid</code> in a way that matters: <code>Grid</code> aligns cells <strong>across both axes</strong> (column widths are consistent down the whole grid), and it is <strong>eager</strong> — it measures everything. <code>LazyVGrid</code> is lazy and does not align across rows. Use <code>Grid</code> for forms and small tabular layouts; use <code>LazyVGrid</code> for scrolling collections of unknown length.</p>
+<h3 id="navigation-the-data-driven-model">Navigation: the data-driven model</h3>
+<p><strong>Homogeneous stack — a typed array.</strong> Use this when every destination is the same type. It is the simplest and most testable form:</p>
+<pre><code class="language-swift">enum Route: Hashable { case detail(String), settings }
+
+struct Typed: View {
+  @State private var path: [Route] = []
+
+  var body: some View {
+    NavigationStack(path: $path) {
+      Button(&quot;go&quot;) { path.append(.detail(&quot;pikachu&quot;)) }
+        .navigationDestination(for: Route.self) { r in Text(String(describing: r)) }
+    }
+  }
+}
+</code></pre>
+<p><code>path</code> is an ordinary array. <code>path.append</code> pushes. <code>path.removeLast()</code> pops. <code>path.removeAll()</code> pops to root. <code>path = [.settings, .detail("pikachu")]</code> deep-links two levels in one assignment. Because it is just a value, you can unit-test navigation logic without a view at all.</p>
+<p><strong>Heterogeneous stack — <code>NavigationPath</code>.</strong> A type-erased path when destinations are of different types:</p>
+<pre><code class="language-swift">@State private var path = NavigationPath()
+// path.append(Route.settings); path.append(42)
+// with a .navigationDestination(for:) for each type
+</code></pre>
+<p><code>NavigationPath</code> is <code>Codable</code> when its elements are, which is what makes state restoration tractable. It costs you type safety and random access — you cannot inspect element 2 — so prefer the typed array unless you genuinely need mixed types.</p>
+<p><strong><code>navigationDestination(item:)</code></strong> (iOS 17) is the optional-driven form, and it is the direct analogue of <code>.sheet(item:)</code>:</p>
+<pre><code class="language-swift">@State private var selected: String?
+
+NavigationStack {
+  Button(&quot;go&quot;) { selected = &quot;pikachu&quot; }
+    .navigationDestination(item: $selected) { name in Text(name) }
+}
+</code></pre>
+<p>This matters for this project specifically — see section 4.</p>
+<h3 id="the-placement-rule-that-bites-everyone">The placement rule that bites everyone</h3>
+<p><code>navigationDestination(for:)</code> must be <strong>inside</strong> the <code>NavigationStack</code>, attached to a view that is currently in the hierarchy. Put it on a view inside a lazy container that has not been created yet, and the destination is not registered, and the push silently does nothing.</p>
+<p>Corollary: do not attach it inside a <code>List</code> row's <code>ForEach</code> body. Attach it to the <code>List</code> itself, or to the stack's root content.</p>
+<hr>
+<h2 id="3-official-sources">3. Official sources</h2>
+<ul>
+<li><a href="https://developer.apple.com/documentation/swiftui/navigationstack">Apple — <code>NavigationStack</code></a> · <a href="https://developer.apple.com/documentation/swiftui/navigationpath"><code>NavigationPath</code></a> · <a href="https://developer.apple.com/documentation/swiftui/view/navigationdestination(for:destination:)"><code>navigationDestination(for:destination:)</code></a></li>
+<li><a href="https://developer.apple.com/documentation/swiftui/navigationsplitview">Apple — <code>NavigationSplitView</code></a></li>
+<li><a href="https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types">Apple — Migrating to new navigation types</a> — the official migration guide from <code>NavigationView</code></li>
+<li><a href="https://developer.apple.com/documentation/swiftui/layout">Apple — <code>Layout</code></a> · <a href="https://developer.apple.com/documentation/swiftui/proposedviewsize"><code>ProposedViewSize</code></a> · <a href="https://developer.apple.com/documentation/swiftui/viewthatfits"><code>ViewThatFits</code></a> · <a href="https://developer.apple.com/documentation/swiftui/grid"><code>Grid</code></a></li>
+<li><a href="https://developer.apple.com/documentation/swiftui/sharelink">Apple — <code>ShareLink</code></a> · <a href="https://developer.apple.com/documentation/coretransferable/transferable"><code>Transferable</code></a></li>
+<li><a href="https://developer.apple.com/documentation/updates/swiftui">Apple — SwiftUI updates</a> — the per-release index</li>
+</ul>
+<hr>
+<h2 id="4-where-it-lands-in-this-codebase">4. Where it lands in this codebase</h2>
+<p><strong>The stack is present and completely unused.</strong> <code>SearchView.swift:14</code>:</p>
+<pre><code class="language-swift">NavigationStack {
+  content
+}
+</code></pre>
+<p>There is not a single <code>navigationDestination</code>, <code>NavigationLink</code>, or <code>NavigationPath</code> in the project. The stack wraps <code>content</code> to get a navigation title (<code>:54</code>) and nothing else.</p>
+<p><strong>All navigation is modal.</strong> The detail screen is <code>.sheet(item: $viewModel.pokemonDetail)</code> at <code>:17-26</code>. Both alerts are boolean-driven at <code>:27</code> and <code>:36</code>.</p>
+<p>Is that wrong? Not necessarily — a sheet is a legitimate choice for a detail view. But it has consequences that are worth being able to name:</p>
+<ul>
+<li><strong>No back navigation, no hierarchy.</strong> The sheet is a leaf. There is nowhere to go from it.</li>
+<li><strong>Not deep-linkable.</strong> There is no path to restore. A URL scheme or an App Intent (Batch 1, Module 5) opening straight to a Pokémon has nothing to assign to.</li>
+<li><strong>No state restoration.</strong> Kill the app with a sheet open and it comes back to root.</li>
+<li><strong>Awkward on iPad and Mac,</strong> where a split view is the platform-native shape for search-plus-detail.</li>
+</ul>
+<p><strong>The detail state is already the right shape.</strong> <code>SearchViewModel.swift:70</code>:</p>
+<pre><code class="language-swift">var pokemonDetail: Pokemon?
+</code></pre>
+<p>An optional driving a sheet. That is <em>exactly</em> the shape <code>navigationDestination(item:)</code> wants. The migration is genuinely small — which is what makes it a good first exercise.</p>
+<p><strong>The empty state is a <code>Spacer()</code>.</strong> <code>SearchView.swift:126</code>. Held for Batch 2 (<code>ContentUnavailableView</code>), but notice it now.</p>
+<p><strong><code>ViewThatFits</code> has an obvious home.</strong> <code>PokemonView.swift:16-28</code> stacks sprite, name and description vertically always. <code>SearchView.swift:137-155</code> lays out each history row horizontally always — sprite, then name — which at accessibility text sizes squeezes the name into a narrow column. The accessibility commit (<code>9f787fc</code>) already fixed the <em>sheet</em> for large text by making it scrollable with <code>[.medium, .large]</code> detents; the rows were not addressed.</p>
+<hr>
+<h2 id="5-exercise">5. Exercise</h2>
+<p><strong>Goal:</strong> convert the detail presentation to real navigation, and make the history rows survive accessibility text sizes.</p>
+<h3 id="5a-decide-then-justify">5a — Decide, then justify</h3>
+<p>Before writing anything, choose between three options and write a paragraph defending your choice:</p>
+<ol>
+<li><strong>Keep the sheet.</strong> Defensible — but then write down what you are giving up and why it does not matter here.</li>
+<li><strong><code>navigationDestination(item:)</code></strong> with the existing <code>pokemonDetail</code> optional. Smallest diff, gets you hierarchy and deep-linking.</li>
+<li><strong>A typed <code>[Route]</code> path.</strong> Most capable, biggest change, sets up Batch 1 Module 5 (App Intents) properly.</li>
+</ol>
+<p>This is the real skill. The API knowledge is the easy part.</p>
+<h3 id="5b-implement-it">5b — Implement it</h3>
+<p>If you chose 2 or 3: migrate the detail presentation. Constraints:</p>
+<ul>
+<li><code>SearchViewModel</code> is <code>@MainActor @Observable</code> and must stay UIKit-free — audit finding <strong>C-16</strong> was UIKit leaking into this view model, do not undo it.</li>
+<li>Navigation state belongs in the view model, not the view, so it stays testable. The 18 app tests exercise the view model directly.</li>
+<li>Keep the sheet's accessibility work: the scrollable content and the large-text behaviour from commit <code>9f787fc</code> must not regress.</li>
+</ul>
+<h3 id="5c-test-navigation-as-data">5c — Test navigation as data</h3>
+<p>This is the payoff. Add tests to <code>Demo/PokeAppTests/SearchViewModelTests.swift</code> asserting navigation <em>without a view</em>:</p>
+<ul>
+<li>Tapping a history item sets the destination.</li>
+<li>Dismissing clears it.</li>
+<li>A search that fails does <strong>not</strong> set a destination (guard against the C-25 class of bug, where an error path silently looked like success).</li>
+<li>If you chose option 3: assigning a two-element path deep-links correctly.</li>
+</ul>
+<h3 id="5d-viewthatfits-for-the-rows">5d — <code>ViewThatFits</code> for the rows</h3>
+<p>Wrap the history row layout so it falls back to a vertical arrangement when horizontal does not fit.</p>
+<p><strong>Acceptance criteria.</strong></p>
+<ol>
+<li>All 18 app tests pass, plus at least 3 new navigation tests.</li>
+<li>All 53 SDK tests still pass.</li>
+<li>Manually verify at accessibility text size: Settings → Accessibility → Display &amp; Text Size → Larger Text, at maximum. History rows must remain readable and the name must not truncate to two characters.</li>
+<li>VoiceOver still reads each row as one element with the Pokémon's name (<code>SearchView.swift:149,162</code>).</li>
+<li><code>swiftlint lint --strict</code> clean.</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<h3 id="5e-optional-a-custom-layout">5e — Optional: a custom <code>Layout</code></h3>
+<p>Write one <code>Layout</code> conformance, even a throwaway, purely to feel <code>sizeThatFits</code>/<code>placeSubviews</code>. Print the incoming <code>ProposedViewSize</code> and observe how many times and with what values SwiftUI calls you. It will be more times, and with stranger values (<code>nil</code>, <code>0</code>, <code>.infinity</code>), than you expect. That observation is the point of the exercise.</p>
+<hr>
+<h2 id="6-pitfalls">6. Pitfalls</h2>
+<ul>
+<li><strong><code>navigationDestination</code> must be inside the stack and in the live hierarchy.</strong> Registered from inside a lazy container that has not materialized, it silently does nothing.</li>
+<li><strong>One <code>navigationDestination(for:)</code> per type per stack.</strong> Two for the same type is undefined behaviour, not an error.</li>
+<li><strong>Path elements must be <code>Hashable</code>,</strong> and for restoration <code>Codable</code>. A SwiftData <code>@Model</code> class is a reference type — pushing the object rather than its identifier will bite you. Push the name or the <code>PersistentIdentifier</code>.</li>
+<li><strong><code>if</code>/<code>else</code> around a whole view changes its type, hence its identity, hence resets its state.</strong> Use <code>AnyLayout</code> for layout switches and conditional <em>modifiers</em> rather than conditional <em>views</em> wherever possible.</li>
+<li><strong><code>ViewThatFits</code> measures children eagerly.</strong> Do not put expensive views in the branches you expect not to be used.</li>
+<li><strong><code>Grid</code> is eager, <code>LazyVGrid</code> is lazy.</strong> A <code>Grid</code> with a thousand rows measures a thousand rows.</li>
+<li><strong><code>NavigationPath</code> gives up random access.</strong> If you need to inspect or mutate the middle of the stack, use a typed array.</li>
+</ul>
+<hr>
+<h2 id="7-self-check">7. Self-check</h2>
+<ol>
+<li>Describe the three steps of SwiftUI's layout negotiation. Who decides the final size — parent or child?</li>
+<li>What are the three meaningful values a <code>ProposedViewSize</code> dimension can take, and what does each ask of the child?</li>
+<li>Why does <code>AnyLayout</code> animate a layout switch when an <code>if</code>/<code>else</code> between <code>HStack</code> and <code>VStack</code> does not?</li>
+<li>When does <code>ViewThatFits</code> use its last child regardless of fit, and what does that imply about ordering?</li>
+<li><code>Grid</code> vs <code>LazyVGrid</code> — name two concrete differences and a case for each.</li>
+<li>Give three things a <code>.sheet(item:)</code> cannot do that a <code>navigationDestination</code> can.</li>
+<li>Why must <code>navigationDestination(for:)</code> be inside the <code>NavigationStack</code>, and what is the observable symptom when it is not?</li>
+<li><code>SearchViewModel.pokemonDetail</code> is a <code>Pokemon?</code>. Why is that already the right shape for <code>navigationDestination(item:)</code>, and what is the hazard in pushing the <code>@Model</code> object itself onto a path?</li>
+</ol>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/03-concurrency-foundations.html"><span>Previous</span><strong>3 · Concurrency Foundations</strong></a><a class="pager-next" href="../wwdc22/05-platform-debuts.html"><span>Next</span><strong>5 · Platform Debuts</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-module-4-swiftui-navigation-and-layout">WWDC22 · Module 4 — SwiftUI Navigation and Layout</a><ul>
+<li><a href="#1-what-shipped-and-what-problem-it-solves">1. What shipped, and what problem it solves</a></li>
+<li><a href="#2-how-it-actually-works">2. How it actually works</a><ul>
+<li><a href="#the-layout-negotiation-read-this-first">The layout negotiation — read this first</a></li>
+<li><a href="#viewthatfits-the-accessibility-workhorse">ViewThatFits — the accessibility workhorse</a></li>
+<li><a href="#grid-the-two-dimensional-one">Grid — the two-dimensional one</a></li>
+<li><a href="#navigation-the-data-driven-model">Navigation: the data-driven model</a></li>
+<li><a href="#the-placement-rule-that-bites-everyone">The placement rule that bites everyone</a></li>
+</ul>
+</li>
+<li><a href="#3-official-sources">3. Official sources</a></li>
+<li><a href="#4-where-it-lands-in-this-codebase">4. Where it lands in this codebase</a></li>
+<li><a href="#5-exercise">5. Exercise</a><ul>
+<li><a href="#5a-decide-then-justify">5a — Decide, then justify</a></li>
+<li><a href="#5b-implement-it">5b — Implement it</a></li>
+<li><a href="#5c-test-navigation-as-data">5c — Test navigation as data</a></li>
+<li><a href="#5d-viewthatfits-for-the-rows">5d — ViewThatFits for the rows</a></li>
+<li><a href="#5e-optional-a-custom-layout">5e — Optional: a custom Layout</a></li>
+</ul>
+</li>
+<li><a href="#6-pitfalls">6. Pitfalls</a></li>
+<li><a href="#7-self-check">7. Self-check</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Programma</a></li>
+<li><a href="../00-version-map.html">Mappa delle versioni</a></li>
+<li><a href="../00-baseline.html">Punto di partenza</a></li>
+<li><a href="../review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li class="active"><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-modulo-4-navigazione-e-layout-in-swiftui">WWDC22 · Modulo 4 — Navigazione e layout in SwiftUI</h1>
+<p><strong>iOS 16</strong> · <code>NavigationStack</code>, <code>NavigationSplitView</code>, <code>navigationDestination</code>, <code>NavigationPath</code>, il protocol <code>Layout</code>, <code>Grid</code>, <code>ViewThatFits</code>, presentation detent, <code>ShareLink</code>/<code>Transferable</code></p>
+<blockquote>
+<p>Ogni frammento qui è stato verificato col typechecker contro l'SDK iOS 26.4 in Swift 6 language mode.</p>
+</blockquote>
+<hr>
+<h2 id="1-cosa-e-uscito-e-quale-problema-risolve">1. Cosa è uscito, e quale problema risolve</h2>
+<p><strong>Navigazione.</strong> <code>NavigationView</code> era dichiarativo nell'aspetto e imperativo nella sostanza. Fare push di una schermata significava ribaltare un <code>Binding&lt;Bool&gt;</code> attaccato a un <code>NavigationLink</code> che doveva già esistere nella gerarchia. Conseguenze incontrate da tutti: non potevi fare push di due schermate insieme, non potevi ripristinare un deep link dentro uno stack annidato, non potevi tornare alla radice senza infilare booleani a ogni livello, e su iPad il tutto si comportava diversamente.</p>
+<p>iOS 16 l'ha sostituito con un modello <strong>guidato dai dati</strong>. Lo stack è un valore — un array — e navigare significa mutare quell'array. Il deep linking diventa un'assegnazione. Il pop-to-root diventa <code>removeAll()</code>. Il ripristino dello stato diventa <code>Codable</code>.</p>
+<p><strong>Layout.</strong> Prima di iOS 16 il layout personalizzato significava <code>GeometryReader</code> e aritmetica, il che combatteva il sistema di layout invece di parteciparvi. Il protocol <code>Layout</code> permette al tuo tipo di partecipare alla vera negoziazione di SwiftUI.</p>
+<hr>
+<h2 id="2-come-funziona-davvero">2. Come funziona davvero</h2>
+<h3 id="la-negoziazione-del-layout-leggi-prima-questo">La negoziazione del layout — leggi prima questo</h3>
+<p>Ogni layout SwiftUI è una conversazione in tre passi, e capirlo spiega più bug di qualsiasi altro singolo fatto su SwiftUI:</p>
+<ol>
+<li>Il parent <strong>propone</strong> una dimensione al child (<code>ProposedViewSize</code> — larghezza e altezza, ciascuna delle quali può essere <code>nil</code> cioè "non specificata", <code>0</code> cioè "la più piccola che puoi", o <code>.infinity</code> cioè "la più grande che puoi").</li>
+<li>Il child <strong>risponde</strong> con la dimensione che vuole davvero (<code>sizeThatFits</code>).</li>
+<li>Il parent <strong>colloca</strong> il child, e deve rispettare la risposta del child.</li>
+</ol>
+<p>Sceglie il child. Il parent propone, non impone. È il motivo per cui <code>.frame(width:)</code> non "imposta la larghezza" — inserisce una view che propone quella larghezza al proprio child e poi riporta verso l'alto la risposta del child.</p>
+<p>Il protocol <code>Layout</code> espone esattamente questi due passi:</p>
+<pre><code class="language-swift">struct Equal: Layout {
+  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -&gt; CGSize {
+    proposal.replacingUnspecifiedDimensions()
+  }
+
+  func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+    let w = bounds.width / CGFloat(max(subviews.count, 1))
+    for (i, sv) in subviews.enumerated() {
+      sv.place(
+        at: CGPoint(x: bounds.minX + CGFloat(i) * w, y: bounds.minY),
+        proposal: .init(width: w, height: bounds.height)
+      )
+    }
+  }
+}
+</code></pre>
+<p><code>Subviews</code> è una collection di proxy. Puoi chiedere a ciascuno <code>sizeThatFits(_:)</code> prima di decidere, e leggere dati <code>LayoutValueKey</code> per subview. Il parametro <code>cache</code> esiste per memoizzare misurazioni costose attraverso i molteplici passaggi che SwiftUI può eseguire.</p>
+<p><strong><code>AnyLayout</code></strong> ti permette di scambiare algoritmi di layout <em>senza cambiare l'identità della view</em> — il che significa che la transizione si anima invece di scattare:</p>
+<pre><code class="language-swift">AnyLayout(wide ? AnyLayout(HStackLayout()) : AnyLayout(VStackLayout())) {
+  Text(&quot;a&quot;); Text(&quot;b&quot;)
+}
+</code></pre>
+<p>Confronta con l'ingenuo <code>if wide { HStack { … } } else { VStack { … } }</code>, che produce due alberi di view strutturalmente diversi, distrugge e ricostruisce i figli, e ne perde lo stato.</p>
+<h3 id="viewthatfits-il-cavallo-da-tiro-dellaccessibilita"><code>ViewThatFits</code> — il cavallo da tiro dell'accessibilità</h3>
+<pre><code class="language-swift">ViewThatFits(in: .horizontal) {
+  HStack { Text(&quot;a&quot;); Text(&quot;b&quot;) }     // provata per prima
+  VStack { Text(&quot;a&quot;); Text(&quot;b&quot;) }     // ripiego
+}
+</code></pre>
+<p>Misura ogni figlio in ordine e usa il primo che sta nella proposta. L'ultimo figlio viene usato incondizionatamente se nessuno ci sta, quindi metti in fondo la versione più compressa.</p>
+<p>È l'API iOS 16 più utile per il Dynamic Type. Alle dimensioni di testo accessibili una disposizione orizzontale che funziona alla dimensione di default diventa illeggibile — <code>ViewThatFits</code> lo gestisce dichiarativamente invece che con un ramo su <code>@Environment(\.dynamicTypeSize)</code>.</p>
+<h3 id="grid-quello-bidimensionale"><code>Grid</code> — quello bidimensionale</h3>
+<p><code>Grid</code>/<code>GridRow</code> differisce da <code>LazyVGrid</code> in un modo che conta: <code>Grid</code> allinea le celle <strong>su entrambi gli assi</strong> (le larghezze delle colonne sono coerenti lungo tutta la griglia), ed è <strong>eager</strong> — misura tutto. <code>LazyVGrid</code> è lazy e non allinea tra righe. Usa <code>Grid</code> per form e piccoli layout tabellari; usa <code>LazyVGrid</code> per collection scrollabili di lunghezza ignota.</p>
+<h3 id="navigazione-il-modello-guidato-dai-dati">Navigazione: il modello guidato dai dati</h3>
+<p><strong>Stack omogeneo — un array tipizzato.</strong> Usalo quando ogni destinazione è dello stesso tipo. È la forma più semplice e testabile:</p>
+<pre><code class="language-swift">enum Route: Hashable { case detail(String), settings }
+
+struct Typed: View {
+  @State private var path: [Route] = []
+
+  var body: some View {
+    NavigationStack(path: $path) {
+      Button(&quot;go&quot;) { path.append(.detail(&quot;pikachu&quot;)) }
+        .navigationDestination(for: Route.self) { r in Text(String(describing: r)) }
+    }
+  }
+}
+</code></pre>
+<p><code>path</code> è un array ordinario. <code>path.append</code> fa push. <code>path.removeLast()</code> fa pop. <code>path.removeAll()</code> torna alla radice. <code>path = [.settings, .detail("pikachu")]</code> fa deep link di due livelli in un'assegnazione. Poiché è solo un valore, puoi testare la logica di navigazione senza alcuna view.</p>
+<p><strong>Stack eterogeneo — <code>NavigationPath</code>.</strong> Un path con tipo cancellato quando le destinazioni sono di tipi diversi:</p>
+<pre><code class="language-swift">@State private var path = NavigationPath()
+// path.append(Route.settings); path.append(42)
+// con un .navigationDestination(for:) per ciascun tipo
+</code></pre>
+<p><code>NavigationPath</code> è <code>Codable</code> quando lo sono i suoi elementi, ed è ciò che rende trattabile il ripristino dello stato. Ti costa type safety e accesso casuale — non puoi ispezionare l'elemento 2 — quindi preferisci l'array tipizzato a meno che tu non abbia davvero bisogno di tipi misti.</p>
+<p><strong><code>navigationDestination(item:)</code></strong> (iOS 17) è la forma guidata da un opzionale, ed è l'analogo diretto di <code>.sheet(item:)</code>:</p>
+<pre><code class="language-swift">@State private var selected: String?
+
+NavigationStack {
+  Button(&quot;go&quot;) { selected = &quot;pikachu&quot; }
+    .navigationDestination(item: $selected) { name in Text(name) }
+}
+</code></pre>
+<p>Questo conta specificamente per questo progetto — vedi la sezione 4.</p>
+<h3 id="la-regola-di-collocazione-che-frega-tutti">La regola di collocazione che frega tutti</h3>
+<p><code>navigationDestination(for:)</code> deve stare <strong>dentro</strong> il <code>NavigationStack</code>, attaccato a una view attualmente nella gerarchia. Mettilo su una view dentro un container lazy non ancora creato, e la destinazione non viene registrata, e il push non fa silenziosamente nulla.</p>
+<p>Corollario: non attaccarlo dentro il body di un <code>ForEach</code> in una riga di <code>List</code>. Attaccalo alla <code>List</code> stessa, o al contenuto radice dello stack.</p>
+<hr>
+<h2 id="3-fonti-ufficiali">3. Fonti ufficiali</h2>
+<ul>
+<li><a href="https://developer.apple.com/documentation/swiftui/navigationstack">Apple — <code>NavigationStack</code></a> · <a href="https://developer.apple.com/documentation/swiftui/navigationpath"><code>NavigationPath</code></a> · <a href="https://developer.apple.com/documentation/swiftui/view/navigationdestination(for:destination:)"><code>navigationDestination(for:destination:)</code></a></li>
+<li><a href="https://developer.apple.com/documentation/swiftui/navigationsplitview">Apple — <code>NavigationSplitView</code></a></li>
+<li><a href="https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types">Apple — Migrating to new navigation types</a> — la guida ufficiale di migrazione da <code>NavigationView</code></li>
+<li><a href="https://developer.apple.com/documentation/swiftui/layout">Apple — <code>Layout</code></a> · <a href="https://developer.apple.com/documentation/swiftui/proposedviewsize"><code>ProposedViewSize</code></a> · <a href="https://developer.apple.com/documentation/swiftui/viewthatfits"><code>ViewThatFits</code></a> · <a href="https://developer.apple.com/documentation/swiftui/grid"><code>Grid</code></a></li>
+<li><a href="https://developer.apple.com/documentation/swiftui/sharelink">Apple — <code>ShareLink</code></a> · <a href="https://developer.apple.com/documentation/coretransferable/transferable"><code>Transferable</code></a></li>
+<li><a href="https://developer.apple.com/documentation/updates/swiftui">Apple — SwiftUI updates</a> — l'indice per release</li>
+</ul>
+<hr>
+<h2 id="4-dove-atterra-in-questo-codebase">4. Dove atterra in questo codebase</h2>
+<p><strong>Lo stack c'è ed è completamente inutilizzato.</strong> <code>SearchView.swift:14</code>:</p>
+<pre><code class="language-swift">NavigationStack {
+  content
+}
+</code></pre>
+<p>Non c'è un solo <code>navigationDestination</code>, <code>NavigationLink</code> o <code>NavigationPath</code> nel progetto. Lo stack avvolge <code>content</code> per ottenere un titolo di navigazione (<code>:54</code>) e nient'altro.</p>
+<p><strong>Tutta la navigazione è modale.</strong> La schermata di dettaglio è <code>.sheet(item: $viewModel.pokemonDetail)</code> a <code>:17-26</code>. Entrambi gli alert sono guidati da booleani a <code>:27</code> e <code>:36</code>.</p>
+<p>È sbagliato? Non necessariamente — uno sheet è una scelta legittima per una view di dettaglio. Ma ha conseguenze che vale la pena saper nominare:</p>
+<ul>
+<li><strong>Niente navigazione indietro, niente gerarchia.</strong> Lo sheet è una foglia. Da lì non si va da nessuna parte.</li>
+<li><strong>Non deep-linkabile.</strong> Non c'è un path da ripristinare. Uno schema URL o un App Intent (Batch 1, Modulo 5) che apre direttamente su un Pokémon non ha nulla a cui assegnare.</li>
+<li><strong>Nessun ripristino dello stato.</strong> Chiudi l'app con uno sheet aperto e torna alla radice.</li>
+<li><strong>Scomodo su iPad e Mac,</strong> dove una split view è la forma nativa della piattaforma per ricerca-più-dettaglio.</li>
+</ul>
+<p><strong>Lo stato del dettaglio ha già la forma giusta.</strong> <code>SearchViewModel.swift:70</code>:</p>
+<pre><code class="language-swift">var pokemonDetail: Pokemon?
+</code></pre>
+<p>Un opzionale che guida uno sheet. È <em>esattamente</em> la forma che vuole <code>navigationDestination(item:)</code>. La migrazione è genuinamente piccola — ed è ciò che ne fa un buon primo esercizio.</p>
+<p><strong>Lo stato vuoto è uno <code>Spacer()</code>.</strong> <code>SearchView.swift:126</code>. Rimandato al Batch 2 (<code>ContentUnavailableView</code>), ma notalo adesso.</p>
+<p><strong><code>ViewThatFits</code> ha una casa ovvia.</strong> <code>PokemonView.swift:16-28</code> impila sprite, nome e descrizione verticalmente sempre. <code>SearchView.swift:137-155</code> dispone ogni riga della cronologia orizzontalmente sempre — sprite, poi nome — il che alle dimensioni di testo accessibili schiaccia il nome in una colonna stretta. Il commit sull'accessibilità (<code>9f787fc</code>) ha già sistemato lo <em>sheet</em> per il testo grande rendendolo scrollabile con detent <code>[.medium, .large]</code>; le righe non sono state toccate.</p>
+<hr>
+<h2 id="5-esercizio">5. Esercizio</h2>
+<p><strong>Obiettivo:</strong> convertire la presentazione del dettaglio in navigazione vera, e far sopravvivere le righe della cronologia alle dimensioni di testo accessibili.</p>
+<h3 id="5a-decidi-poi-giustifica">5a — Decidi, poi giustifica</h3>
+<p>Prima di scrivere qualsiasi cosa, scegli tra tre opzioni e scrivi un paragrafo a difesa della tua scelta:</p>
+<ol>
+<li><strong>Tieni lo sheet.</strong> Difendibile — ma allora scrivi a cosa rinunci e perché qui non conta.</li>
+<li><strong><code>navigationDestination(item:)</code></strong> con l'opzionale <code>pokemonDetail</code> esistente. Diff minimo, ti dà gerarchia e deep linking.</li>
+<li><strong>Un path tipizzato <code>[Route]</code>.</strong> Il più capace, la modifica più grande, prepara come si deve il Modulo 5 del Batch 1 (App Intents).</li>
+</ol>
+<p>È questa la vera abilità. La conoscenza dell'API è la parte facile.</p>
+<h3 id="5b-implementalo">5b — Implementalo</h3>
+<p>Se hai scelto 2 o 3: migra la presentazione del dettaglio. Vincoli:</p>
+<ul>
+<li><code>SearchViewModel</code> è <code>@MainActor @Observable</code> e deve restare libero da UIKit — il finding <strong>C-16</strong> era UIKit che filtrava in questo view model, non annullarlo.</li>
+<li>Lo stato di navigazione appartiene al view model, non alla view, così resta testabile. I 18 test app esercitano direttamente il view model.</li>
+<li>Mantieni il lavoro di accessibilità dello sheet: il contenuto scrollabile e il comportamento con testo grande dal commit <code>9f787fc</code> non devono regredire.</li>
+</ul>
+<h3 id="5c-testa-la-navigazione-come-dato">5c — Testa la navigazione come dato</h3>
+<p>È qui che si raccoglie. Aggiungi test a <code>Demo/PokeAppTests/SearchViewModelTests.swift</code> che asseriscono la navigazione <em>senza una view</em>:</p>
+<ul>
+<li>Toccare un elemento della cronologia imposta la destinazione.</li>
+<li>Il dismiss la azzera.</li>
+<li>Una ricerca che fallisce <strong>non</strong> imposta una destinazione (guardia contro la classe di bug C-25, dove un percorso d'errore sembrava silenziosamente un successo).</li>
+<li>Se hai scelto l'opzione 3: assegnare un path di due elementi fa deep link correttamente.</li>
+</ul>
+<h3 id="5d-viewthatfits-per-le-righe">5d — <code>ViewThatFits</code> per le righe</h3>
+<p>Avvolgi il layout della riga della cronologia così che ripieghi su una disposizione verticale quando quella orizzontale non ci sta.</p>
+<p><strong>Criteri di accettazione.</strong></p>
+<ol>
+<li>Tutti i 18 test app passano, più almeno 3 nuovi test di navigazione.</li>
+<li>Tutti i 53 test SDK passano ancora.</li>
+<li>Verifica manualmente a dimensione di testo accessibile: Impostazioni → Accessibilità → Schermo e dimensioni testo → Testo più grande, al massimo. Le righe della cronologia devono restare leggibili e il nome non deve troncarsi a due caratteri.</li>
+<li>VoiceOver legge ancora ogni riga come un elemento unico col nome del Pokémon (<code>SearchView.swift:149,162</code>).</li>
+<li><code>swiftlint lint --strict</code> pulito.</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<h3 id="5e-facoltativo-un-layout-personalizzato">5e — Facoltativo: un <code>Layout</code> personalizzato</h3>
+<p>Scrivi una conformance <code>Layout</code>, anche usa e getta, solo per sentire <code>sizeThatFits</code>/<code>placeSubviews</code>. Stampa il <code>ProposedViewSize</code> in ingresso e osserva quante volte e con quali valori SwiftUI ti chiama. Saranno più volte, e con valori più strani (<code>nil</code>, <code>0</code>, <code>.infinity</code>), di quanto ti aspetti. Quell'osservazione è il senso dell'esercizio.</p>
+<hr>
+<h2 id="6-trappole">6. Trappole</h2>
+<ul>
+<li><strong><code>navigationDestination</code> deve stare dentro lo stack e nella gerarchia viva.</strong> Registrato dentro un container lazy non ancora materializzato, non fa silenziosamente nulla.</li>
+<li><strong>Un <code>navigationDestination(for:)</code> per tipo per stack.</strong> Due per lo stesso tipo è comportamento indefinito, non un errore.</li>
+<li><strong>Gli elementi del path devono essere <code>Hashable</code>,</strong> e per il ripristino <code>Codable</code>. Una classe <code>@Model</code> di SwiftData è un reference type — fare push dell'oggetto invece del suo identificativo ti morderà. Fai push del nome o del <code>PersistentIdentifier</code>.</li>
+<li><strong>Un <code>if</code>/<code>else</code> attorno a un'intera view ne cambia il tipo, quindi l'identità, quindi ne azzera lo stato.</strong> Usa <code>AnyLayout</code> per gli scambi di layout e <em>modifier</em> condizionali invece di <em>view</em> condizionali dove possibile.</li>
+<li><strong><code>ViewThatFits</code> misura i figli in modo eager.</strong> Non mettere view costose nei rami che ti aspetti non vengano usati.</li>
+<li><strong><code>Grid</code> è eager, <code>LazyVGrid</code> è lazy.</strong> Un <code>Grid</code> con mille righe misura mille righe.</li>
+<li><strong><code>NavigationPath</code> rinuncia all'accesso casuale.</strong> Se devi ispezionare o mutare il centro dello stack, usa un array tipizzato.</li>
+</ul>
+<hr>
+<h2 id="7-autovalutazione">7. Autovalutazione</h2>
+<ol>
+<li>Descrivi i tre passi della negoziazione del layout di SwiftUI. Chi decide la dimensione finale, parent o child?</li>
+<li>Quali sono i tre valori significativi che una dimensione di <code>ProposedViewSize</code> può assumere, e cosa chiede ciascuno al child?</li>
+<li>Perché <code>AnyLayout</code> anima uno scambio di layout mentre un <code>if</code>/<code>else</code> tra <code>HStack</code> e <code>VStack</code> no?</li>
+<li>Quando <code>ViewThatFits</code> usa il suo ultimo figlio indipendentemente dall'ingombro, e cosa implica sull'ordinamento?</li>
+<li><code>Grid</code> vs <code>LazyVGrid</code> — nomina due differenze concrete e un caso d'uso per ciascuno.</li>
+<li>Dai tre cose che uno <code>.sheet(item:)</code> non può fare e un <code>navigationDestination</code> sì.</li>
+<li>Perché <code>navigationDestination(for:)</code> deve stare dentro il <code>NavigationStack</code>, e qual è il sintomo osservabile quando non lo è?</li>
+<li><code>SearchViewModel.pokemonDetail</code> è un <code>Pokemon?</code>. Perché è già la forma giusta per <code>navigationDestination(item:)</code>, e qual è il pericolo nel fare push dell'oggetto <code>@Model</code> stesso su un path?</li>
+</ol>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/03-concurrency-foundations.html"><span>Precedente</span><strong>3 · Fondamenta di concorrenza</strong></a><a class="pager-next" href="../wwdc22/05-platform-debuts.html"><span>Successivo</span><strong>5 · Debutti di piattaforma</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-modulo-4-navigazione-e-layout-in-swiftui">WWDC22 · Modulo 4 — Navigazione e layout in SwiftUI</a><ul>
+<li><a href="#1-cosa-e-uscito-e-quale-problema-risolve">1. Cosa è uscito, e quale problema risolve</a></li>
+<li><a href="#2-come-funziona-davvero">2. Come funziona davvero</a><ul>
+<li><a href="#la-negoziazione-del-layout-leggi-prima-questo">La negoziazione del layout — leggi prima questo</a></li>
+<li><a href="#viewthatfits-il-cavallo-da-tiro-dellaccessibilita">ViewThatFits — il cavallo da tiro dell'accessibilità</a></li>
+<li><a href="#grid-quello-bidimensionale">Grid — quello bidimensionale</a></li>
+<li><a href="#navigazione-il-modello-guidato-dai-dati">Navigazione: il modello guidato dai dati</a></li>
+<li><a href="#la-regola-di-collocazione-che-frega-tutti">La regola di collocazione che frega tutti</a></li>
+</ul>
+</li>
+<li><a href="#3-fonti-ufficiali">3. Fonti ufficiali</a></li>
+<li><a href="#4-dove-atterra-in-questo-codebase">4. Dove atterra in questo codebase</a></li>
+<li><a href="#5-esercizio">5. Esercizio</a><ul>
+<li><a href="#5a-decidi-poi-giustifica">5a — Decidi, poi giustifica</a></li>
+<li><a href="#5b-implementalo">5b — Implementalo</a></li>
+<li><a href="#5c-testa-la-navigazione-come-dato">5c — Testa la navigazione come dato</a></li>
+<li><a href="#5d-viewthatfits-per-le-righe">5d — ViewThatFits per le righe</a></li>
+<li><a href="#5e-facoltativo-un-layout-personalizzato">5e — Facoltativo: un Layout personalizzato</a></li>
+</ul>
+</li>
+<li><a href="#6-trappole">6. Trappole</a></li>
+<li><a href="#7-autovalutazione">7. Autovalutazione</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

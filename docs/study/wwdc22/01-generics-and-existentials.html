@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1 · Generics & Existentials · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Curriculum</a></li>
+<li><a href="../00-version-map.html">Version Map</a></li>
+<li><a href="../00-baseline.html">Baseline</a></li>
+<li><a href="../review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Overview</a></li>
+<li class="active"><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-module-1-generics-and-existentials">WWDC22 · Module 1 — Generics and Existentials</h1>
+<p><strong>Swift 5.7</strong> · <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0335-existential-any.md">SE-0335</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0309-unlock-existential-types-for-all-protocols.md">SE-0309</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0341-opaque-parameters.md">SE-0341</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0346-light-weight-same-type-syntax.md">SE-0346</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0352-implicit-open-existentials.md">SE-0352</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0353-constrained-existential-types.md">SE-0353</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0358-primary-associated-types-in-stdlib.md">SE-0358</a></p>
+<hr>
+<h2 id="1-what-shipped-and-what-problem-it-solves">1. What shipped, and what problem it solves</h2>
+<p>Before Swift 5.7, generics and protocols had a usability cliff. Two symptoms everyone hit:</p>
+<p><strong>"Protocol can only be used as a generic constraint."</strong> The moment a protocol had an associated type, you could not write it as a type. <code>any Collection</code> was illegal. Your options were a type eraser you hand-wrote, or restructuring the whole call site around generics.</p>
+<p><strong><code>some</code> and <code>any</code> looked identical but weren't.</strong> Both spelled as a bare protocol name — <code>func f(_ x: Shape)</code> — even though one is a compile-time-resolved concrete type and the other is a runtime box. Beginners could not tell them apart because the syntax gave them nothing to tell apart.</p>
+<p>Swift 5.7 fixed both, plus the ergonomics around them. The through-line: <strong>make the distinction between "one specific type, chosen by the caller" and "any type, decided at runtime" visible in the source, then remove the artificial restrictions on the second one.</strong></p>
+<hr>
+<h2 id="2-how-it-actually-works">2. How it actually works</h2>
+<p>This is the section that matters. If you only remember one thing from this module, make it the layout diagram.</p>
+<h3 id="some-opaque-types-resolved-at-compile-time"><code>some</code> — opaque types, resolved at compile time</h3>
+<pre><code class="language-swift">func makeShape() -&gt; some Shape { Circle() }
+</code></pre>
+<p><code>some Shape</code> means: <em>there is exactly one concrete type here, the compiler knows it, the caller does not.</em> The caller learns "this conforms to <code>Shape</code>" and nothing more.</p>
+<p>Because the type is known at compile time, the compiler can <strong>specialize</strong>: it emits a version of the function with <code>Circle</code> baked in. Method calls are direct, the value is stored inline, no boxing, no indirection. The cost of <code>some</code> at runtime is <em>zero</em> — it is an information-hiding tool, not a performance tool.</p>
+<p>The rule that trips people: a function returning <code>some Shape</code> must return <strong>the same</strong> concrete type on every path. This does not compile:</p>
+<pre><code class="language-swift">func makeShape(circular: Bool) -&gt; some Shape {
+  circular ? Circle() : Square()   // ❌ two different concrete types
+}
+</code></pre>
+<h3 id="any-existentials-resolved-at-runtime"><code>any</code> — existentials, resolved at runtime</h3>
+<pre><code class="language-swift">let shapes: [any Shape] = [Circle(), Square()]
+</code></pre>
+<p><code>any Shape</code> means: <em>some type conforming to <code>Shape</code>, possibly different for each value, decided at runtime.</em> The heterogeneous array above is only possible with <code>any</code>.</p>
+<p>This costs something, and the cost is precisely specified in Swift's ABI documentation. From <a href="https://github.com/swiftlang/swift/blob/main/docs/ABI/TypeLayout.rst">the official type layout document</a>:</p>
+<blockquote>
+<p>If there is no class constraint on a protocol or protocol composition type, the existential container has to accommodate a value of arbitrary size and alignment. It does this using a <strong>fixed-size buffer</strong>, which is three pointers in size and pointer-aligned.</p>
+</blockquote>
+<p>The layout, quoted from that same document:</p>
+<pre><code class="language-c">struct OpaqueExistentialContainer {
+  void *fixedSizeBuffer[3];              // 24 bytes on 64-bit
+  Metadata *type;                         // what type is actually in there
+  WitnessTable *witnessTables[NUM_WITNESS_TABLES];  // how to call its methods
+};
+</code></pre>
+<p>Read that carefully, because three consequences fall straight out of it:</p>
+<ol>
+<li><strong>Values ≤ 3 words fit inline.</strong> A <code>struct Point { var x, y: Double }</code> is 2 words — it lives directly in the buffer. Free.</li>
+<li><strong>Values &gt; 3 words get heap-allocated.</strong> A struct with four <code>Double</code>s does not fit, so the existential stores a pointer to a <strong>side allocation</strong>. Putting one in an array means one heap allocation <em>per element</em>. This is the hidden cost of <code>[any Shape]</code>.</li>
+<li><strong>Method calls go through a witness table.</strong> Not a direct call, not even a vtable — a table of function pointers looked up by protocol conformance. Not free, and not inlinable across the boundary.</li>
+</ol>
+<p>There is a cheaper case, also from the ABI doc: if a protocol is class-constrained (<code>protocol P: AnyObject</code>), the compiler uses a <code>ClassExistentialContainer</code> — a single pointer, since class instances are already one pointer and already carry their own metadata. No fixed-size buffer, no side allocation.</p>
+<p><strong>The rule of thumb:</strong> reach for <code>some</code> by default. Reach for <code>any</code> when you genuinely need heterogeneity or runtime-varying types — and know that you are paying for it.</p>
+<h3 id="why-any-became-mandatory">Why <code>any</code> became mandatory</h3>
+<p><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0335-existential-any.md">SE-0335</a> made the keyword required (in Swift 6 language mode; a warning before that). The motivation is exactly the confusion above: the expensive thing looked identical to the free thing. Now the expensive thing is spelled longer, which is a deliberate design signal.</p>
+<p>This project already follows the rule — <code>APIClient.swift:14</code> writes <code>private let session: any Session</code>, and <code>:12</code> writes <code>@Sendable (Int) -&gt; (any Swift.Error)?</code>.</p>
+<h3 id="primary-associated-types-se-0346">Primary associated types — SE-0346</h3>
+<p>The problem: <code>any Collection</code> tells you nothing about the element type. Before 5.7 you had no way to say "a collection of <code>Int</code>" without full generics.</p>
+<p>A protocol now nominates some of its associated types as <em>primary</em>:</p>
+<pre><code class="language-swift">protocol Collection&lt;Element&gt;: Sequence {   // Element is primary
+  associatedtype Element
+}
+</code></pre>
+<p>and callers constrain them positionally:</p>
+<pre><code class="language-swift">func sum(_ xs: some Collection&lt;Int&gt;) -&gt; Int { xs.reduce(0, +) }
+func sumAny(_ xs: any Collection&lt;Int&gt;) -&gt; Int { xs.reduce(0, +) }
+</code></pre>
+<p><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0358-primary-associated-types-in-stdlib.md">SE-0358</a> retrofitted these across the standard library — <code>Sequence&lt;Element&gt;</code>, <code>Collection&lt;Element&gt;</code>, <code>AsyncSequence&lt;Element, Failure&gt;</code>, and so on. This is why you can write <code>some Collection&lt;Int&gt;</code> today without declaring anything.</p>
+<h3 id="opaque-parameters-se-0341">Opaque parameters — SE-0341</h3>
+<p><code>some</code> in parameter position is pure sugar, but it is sugar you will use constantly:</p>
+<pre><code class="language-swift">func f(_ xs: some Collection&lt;Int&gt;) -&gt; Int { xs.count }
+
+// is exactly equivalent to:
+func f&lt;C: Collection&lt;Int&gt;&gt;(_ xs: C) -&gt; Int { xs.count }
+</code></pre>
+<p>Same code, same performance, no angle brackets. Use the generic form only when you need to <em>name</em> the type parameter — for example to constrain two parameters to the same type, which the <code>some</code> form cannot express.</p>
+<h3 id="implicitly-opened-existentials-se-0352">Implicitly opened existentials — SE-0352</h3>
+<p>This is the quiet one that makes the whole thing hang together. Given a value of existential type, the compiler can now "open" it to call a generic function:</p>
+<pre><code class="language-swift">protocol Shape { func area() -&gt; Double }
+
+func areaOf&lt;S: Shape&gt;(_ s: S) -&gt; Double { s.area() }
+
+func use(_ s: any Shape) -&gt; Double {
+  areaOf(s)   // ✅ Swift 5.7+: compiler opens the box and binds S to the dynamic type
+}
+</code></pre>
+<p>Before 5.7 this was an error, and the workaround was a protocol extension method that existed purely to bounce the call. The compiler now inserts the open automatically at the call site.</p>
+<p>The limit: the opened type only exists for the duration of that call. You cannot return it, because there is no way to name it in the return type.</p>
+<h3 id="unlocking-existentials-for-all-protocols-se-0309">Unlocking existentials for all protocols — SE-0309</h3>
+<p>Finally: <code>any</code> now works for protocols with associated types and <code>Self</code> requirements. Where a member's type would depend on the erased type, that member is unavailable through the existential — the compiler tells you which. Everything else is usable.</p>
+<hr>
+<h2 id="3-official-sources">3. Official sources</h2>
+<ul>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0335-existential-any.md">SE-0335 — Introduce existential <code>any</code></a> (Swift 5.6)</li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0309-unlock-existential-types-for-all-protocols.md">SE-0309 — Unlock existentials for all protocols</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0341-opaque-parameters.md">SE-0341 — Opaque Parameter Declarations</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0346-light-weight-same-type-syntax.md">SE-0346 — Lightweight same-type requirements for primary associated types</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0352-implicit-open-existentials.md">SE-0352 — Implicitly Opened Existentials</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0353-constrained-existential-types.md">SE-0353 — Constrained Existential Types</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0358-primary-associated-types-in-stdlib.md">SE-0358 — Primary Associated Types in the Standard Library</a></li>
+<li><a href="https://github.com/swiftlang/swift/blob/main/docs/ABI/TypeLayout.rst">Swift ABI — Type Layout</a> — the existential container layout quoted above</li>
+<li><a href="https://docs.swift.org/swift-book/documentation/the-swift-programming-language/opaquetypes/">The Swift Programming Language — Opaque and Boxed Types</a></li>
+</ul>
+<hr>
+<h2 id="4-where-it-lands-in-this-codebase">4. Where it lands in this codebase</h2>
+<p>The SDK made an interesting architectural choice that is worth examining through this lens.</p>
+<p><strong><code>Pokespeare</code> is a struct of closures, not a protocol.</strong> <code>Pokespeare.swift:3-5</code>:</p>
+<pre><code class="language-swift">public struct Pokespeare: Sendable {
+  private var _description: @Sendable (_ name: String) async throws -&gt; String
+  private var _sprite: @Sendable (_ name: String) async throws -&gt; URL
+}
+</code></pre>
+<p>The README explains the motivation: substitution in tests with no protocol to declare and no mock class to maintain. Ask yourself what the alternative would have cost. <code>protocol PokespeareProtocol</code> + <code>any PokespeareProtocol</code> stored in the view model means an existential box and witness-table dispatch on every call — plus a protocol declaration, plus a mock class per test target. The closure struct has neither. This is a good decision, and now you can articulate <em>why</em> in ABI terms.</p>
+<p><strong>Where existentials are used, they are used correctly.</strong> <code>APIClient.swift:14</code> — <code>private let session: any Session</code> — is a legitimate <code>any</code>: the concrete type genuinely varies (real <code>URLSession</code> in production, <code>MockedSession</code> in tests), and it is stored, not just passed. <code>Session</code> is not class-constrained (<code>Session.swift:3</code> — <code>protocol Session: Sendable</code>), so this is an opaque existential container. <code>URLSession</code> is a class, so the buffer holds a single pointer and fits inline.</p>
+<p><strong>Where the sugar is missing.</strong> <code>APIClient.swift:32</code>:</p>
+<pre><code class="language-swift">func perform&lt;R: HTTPCodableRequest&gt;(_ request: R) async throws -&gt; R.ResponseType
+</code></pre>
+<p>This one <em>must</em> stay generic — the return type <code>R.ResponseType</code> names the type parameter, which <code>some</code> cannot do. Good instinct to check, wrong candidate. Look instead for functions that take a generic parameter and never name it again.</p>
+<p><strong>A gap worth noticing.</strong> <code>HTTPCodableRequest</code> has an associated <code>ResponseType</code> but declares no primary associated type. If it did — <code>protocol HTTPCodableRequest&lt;ResponseType&gt;</code> — you could write <code>any HTTPCodableRequest&lt;PokemonDetailResponse&gt;</code>, which would make certain test helpers expressible.</p>
+<hr>
+<h2 id="5-exercise">5. Exercise</h2>
+<p><strong>Goal:</strong> feel the difference between <code>some</code> and <code>any</code> in this codebase, and add a primary associated type where it earns its place.</p>
+<h3 id="5a-measure-the-existential">5a — Measure the existential</h3>
+<p>In a scratch file (not in the project), write two versions of a small function: one taking <code>some Session</code>, one taking <code>any Session</code>. Read the generated SIL for each and find the difference:</p>
+<pre><code class="language-bash">xcrun swiftc -emit-sil -O yourfile.swift | swift demangle | less
+</code></pre>
+<p>Look for <code>open_existential_addr</code> / <code>witness_method</code> in the <code>any</code> version, and their absence in the <code>some</code> version. <strong>Write down what you saw</strong> — this is the kind of thing that only sticks once you have seen it in the IR.</p>
+<h3 id="5b-add-a-primary-associated-type">5b — Add a primary associated type</h3>
+<p>Give <code>HTTPCodableRequest</code> a primary associated type for its response:</p>
+<pre><code class="language-swift">protocol HTTPCodableRequest&lt;ResponseType&gt;: HTTPRequest { … }
+</code></pre>
+<p><strong>Acceptance criteria.</strong></p>
+<ol>
+<li>Everything still compiles and all 53 SDK tests pass.</li>
+<li>In <code>Pokespeare/Tests/</code>, write one new test that uses the constrained existential form — <code>any HTTPCodableRequest&lt;PokemonDetailResponse&gt;</code> — to hold a request whose concrete type is not statically known. If you cannot find a natural use, <strong>that is a valid finding</strong>: write it down as "primary associated type not justified here" and revert. Knowing when <em>not</em> to use a feature is the harder half.</li>
+<li><code>swiftlint lint --strict</code> clean.</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<h3 id="5c-apply-opaque-parameters">5c — Apply opaque parameters</h3>
+<p>Find at least one function in the SDK whose generic parameter is declared and then never named again, and convert it to the <code>some</code> form. Confirm the tests still pass. If there are none, say so — the codebase is small and may genuinely not have one.</p>
+<hr>
+<h2 id="6-pitfalls">6. Pitfalls</h2>
+<ul>
+<li><strong><code>any</code> in a hot loop.</strong> <code>[any Shape]</code> where <code>Shape</code> values exceed 3 words means one heap allocation per element. Profile before assuming, but know the mechanism.</li>
+<li><strong><code>some</code> in return position needs a single concrete type.</strong> Branching on a runtime condition to return different types requires <code>any</code>, or an enum, or <code>@ViewBuilder</code> if it is SwiftUI (which is neither — it builds a <code>TupleView</code>/<code>_ConditionalContent</code> with the branch encoded in the <em>type</em>).</li>
+<li><strong>Opened existentials cannot escape.</strong> You can pass an opened value into a generic function; you cannot return it or store it.</li>
+<li><strong><code>some</code> in parameter position cannot express relationships.</strong> Two <code>some Collection</code> parameters are two <em>independent</em> types. If you need them to match, use explicit generics.</li>
+<li><strong>SwiftUI's <code>some View</code> is the same feature.</strong> <code>body: some View</code> is an opaque type, which is why the enormous nested generic type of a view hierarchy never has to be spelled. Understanding this explains why <code>if</code>/<code>else</code> in a view body changes the <em>type</em>, and therefore the identity, and therefore resets state.</li>
+</ul>
+<hr>
+<h2 id="7-self-check">7. Self-check</h2>
+<p>Answer from memory before re-reading.</p>
+<ol>
+<li>How many bytes is the fixed-size buffer in an opaque existential container on a 64-bit platform, and what happens to a value that does not fit?</li>
+<li>Why does a class-constrained protocol produce a cheaper existential than an unconstrained one?</li>
+<li><code>func f(_ x: some P)</code> and <code>func f&lt;T: P&gt;(_ x: T)</code> — are these different at runtime? Is there anything the second can express that the first cannot?</li>
+<li>Why can a function returning <code>some Shape</code> not return <code>Circle()</code> on one branch and <code>Square()</code> on another, when a function returning <code>any Shape</code> can?</li>
+<li>What did SE-0352 change, and what problem did it remove the need to work around?</li>
+<li><code>Pokespeare</code> is a struct of closures rather than a protocol. Give the ABI-level argument for why that is cheaper than storing <code>any PokespeareProtocol</code>.</li>
+<li>In <code>body: some View</code>, what concrete type is actually being hidden, and why does SwiftUI need it hidden?</li>
+</ol>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/index.html"><span>Previous</span><strong>WWDC22 — Overview</strong></a><a class="pager-next" href="../wwdc22/02-regex-and-string-processing.html"><span>Next</span><strong>2 · Regex & String Processing</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-module-1-generics-and-existentials">WWDC22 · Module 1 — Generics and Existentials</a><ul>
+<li><a href="#1-what-shipped-and-what-problem-it-solves">1. What shipped, and what problem it solves</a></li>
+<li><a href="#2-how-it-actually-works">2. How it actually works</a><ul>
+<li><a href="#some-opaque-types-resolved-at-compile-time">some — opaque types, resolved at compile time</a></li>
+<li><a href="#any-existentials-resolved-at-runtime">any — existentials, resolved at runtime</a></li>
+<li><a href="#why-any-became-mandatory">Why any became mandatory</a></li>
+<li><a href="#primary-associated-types-se-0346">Primary associated types — SE-0346</a></li>
+<li><a href="#opaque-parameters-se-0341">Opaque parameters — SE-0341</a></li>
+<li><a href="#implicitly-opened-existentials-se-0352">Implicitly opened existentials — SE-0352</a></li>
+<li><a href="#unlocking-existentials-for-all-protocols-se-0309">Unlocking existentials for all protocols — SE-0309</a></li>
+</ul>
+</li>
+<li><a href="#3-official-sources">3. Official sources</a></li>
+<li><a href="#4-where-it-lands-in-this-codebase">4. Where it lands in this codebase</a></li>
+<li><a href="#5-exercise">5. Exercise</a><ul>
+<li><a href="#5a-measure-the-existential">5a — Measure the existential</a></li>
+<li><a href="#5b-add-a-primary-associated-type">5b — Add a primary associated type</a></li>
+<li><a href="#5c-apply-opaque-parameters">5c — Apply opaque parameters</a></li>
+</ul>
+</li>
+<li><a href="#6-pitfalls">6. Pitfalls</a></li>
+<li><a href="#7-self-check">7. Self-check</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Programma</a></li>
+<li><a href="../00-version-map.html">Mappa delle versioni</a></li>
+<li><a href="../00-baseline.html">Punto di partenza</a></li>
+<li><a href="../review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li class="active"><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-modulo-1-generics-ed-existential">WWDC22 · Modulo 1 — Generics ed existential</h1>
+<p><strong>Swift 5.7</strong> · <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0335-existential-any.md">SE-0335</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0309-unlock-existential-types-for-all-protocols.md">SE-0309</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0341-opaque-parameters.md">SE-0341</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0346-light-weight-same-type-syntax.md">SE-0346</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0352-implicit-open-existentials.md">SE-0352</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0353-constrained-existential-types.md">SE-0353</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0358-primary-associated-types-in-stdlib.md">SE-0358</a></p>
+<hr>
+<h2 id="1-cosa-e-uscito-e-quale-problema-risolve">1. Cosa è uscito, e quale problema risolve</h2>
+<p>Prima di Swift 5.7 generics e protocol avevano uno scalino di usabilità. Due sintomi che tutti hanno incontrato:</p>
+<p><strong>"Protocol can only be used as a generic constraint."</strong> Nel momento in cui un protocol aveva un associated type, non potevi scriverlo come tipo. <code>any Collection</code> era illegale. Le opzioni erano un type eraser scritto a mano, oppure ristrutturare l'intero call site attorno ai generics.</p>
+<p><strong><code>some</code> e <code>any</code> sembravano identici ma non lo erano.</strong> Entrambi scritti come nome nudo del protocol — <code>func f(_ x: Shape)</code> — anche se uno è un tipo concreto risolto a compile-time e l'altro è una scatola a runtime. I principianti non potevano distinguerli perché la sintassi non dava nulla da distinguere.</p>
+<p>Swift 5.7 ha sistemato entrambi, più l'ergonomia attorno. Il filo conduttore: <strong>rendere visibile nel sorgente la distinzione tra "un tipo specifico, scelto dal chiamante" e "un tipo qualsiasi, deciso a runtime", e poi rimuovere le restrizioni artificiali sul secondo.</strong></p>
+<hr>
+<h2 id="2-come-funziona-davvero">2. Come funziona davvero</h2>
+<p>È la sezione che conta. Se di questo modulo ricordi una cosa sola, che sia lo schema del layout.</p>
+<h3 id="some-tipi-opachi-risolti-a-compile-time"><code>some</code> — tipi opachi, risolti a compile-time</h3>
+<pre><code class="language-swift">func makeShape() -&gt; some Shape { Circle() }
+</code></pre>
+<p><code>some Shape</code> significa: <em>qui c'è esattamente un tipo concreto, il compilatore lo conosce, il chiamante no.</em> Il chiamante impara "questo è conforme a <code>Shape</code>" e nient'altro.</p>
+<p>Poiché il tipo è noto a compile-time, il compilatore può <strong>specializzare</strong>: emette una versione della funzione con <code>Circle</code> incorporato. Le chiamate a metodo sono dirette, il valore è memorizzato inline, niente boxing, niente indirezione. Il costo di <code>some</code> a runtime è <em>zero</em> — è uno strumento di occultamento dell'informazione, non di performance.</p>
+<p>La regola che frega: una funzione che restituisce <code>some Shape</code> deve restituire <strong>lo stesso</strong> tipo concreto su ogni percorso. Questo non compila:</p>
+<pre><code class="language-swift">func makeShape(circular: Bool) -&gt; some Shape {
+  circular ? Circle() : Square()   // ❌ due tipi concreti diversi
+}
+</code></pre>
+<h3 id="any-existential-risolti-a-runtime"><code>any</code> — existential, risolti a runtime</h3>
+<pre><code class="language-swift">let shapes: [any Shape] = [Circle(), Square()]
+</code></pre>
+<p><code>any Shape</code> significa: <em>un tipo qualsiasi conforme a <code>Shape</code>, potenzialmente diverso per ogni valore, deciso a runtime.</em> L'array eterogeneo qui sopra è possibile solo con <code>any</code>.</p>
+<p>Questo costa qualcosa, e il costo è specificato con precisione nella documentazione ABI di Swift. Dal <a href="https://github.com/swiftlang/swift/blob/main/docs/ABI/TypeLayout.rst">documento ufficiale sul layout dei tipi</a>:</p>
+<blockquote>
+<p>If there is no class constraint on a protocol or protocol composition type, the existential container has to accommodate a value of arbitrary size and alignment. It does this using a <strong>fixed-size buffer</strong>, which is three pointers in size and pointer-aligned.</p>
+</blockquote>
+<p>Il layout, citato dallo stesso documento:</p>
+<pre><code class="language-c">struct OpaqueExistentialContainer {
+  void *fixedSizeBuffer[3];              // 24 byte su 64 bit
+  Metadata *type;                         // che tipo c'è davvero dentro
+  WitnessTable *witnessTables[NUM_WITNESS_TABLES];  // come chiamarne i metodi
+};
+</code></pre>
+<p>Leggilo con attenzione, perché ne discendono direttamente tre conseguenze:</p>
+<ol>
+<li><strong>I valori ≤ 3 word stanno inline.</strong> Una <code>struct Point { var x, y: Double }</code> è 2 word — vive direttamente nel buffer. Gratis.</li>
+<li><strong>I valori &gt; 3 word finiscono sull'heap.</strong> Una struct con quattro <code>Double</code> non ci sta, quindi l'existential memorizza un puntatore a una <strong>side allocation</strong>. Metterne uno in un array significa un'allocazione heap <em>per elemento</em>. È il costo nascosto di <code>[any Shape]</code>.</li>
+<li><strong>Le chiamate a metodo passano da una witness table.</strong> Non una chiamata diretta, nemmeno una vtable — una tabella di puntatori a funzione cercata per conformance. Non è gratis, e non è inlinabile attraverso il confine.</li>
+</ol>
+<p>C'è un caso più economico, sempre dal documento ABI: se un protocol è vincolato a classi (<code>protocol P: AnyObject</code>), il compilatore usa un <code>ClassExistentialContainer</code> — un singolo puntatore, dato che le istanze di classe sono già un puntatore e portano già i propri metadata. Niente buffer a dimensione fissa, niente side allocation.</p>
+<p><strong>La regola pratica:</strong> usa <code>some</code> di default. Usa <code>any</code> quando ti serve davvero eterogeneità o tipi che variano a runtime — e sappi che lo stai pagando.</p>
+<h3 id="perche-any-e-diventato-obbligatorio">Perché <code>any</code> è diventato obbligatorio</h3>
+<p><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0335-existential-any.md">SE-0335</a> ha reso la parola chiave obbligatoria (in Swift 6 language mode; un warning prima). La motivazione è esattamente la confusione qui sopra: la cosa costosa sembrava identica a quella gratuita. Ora la cosa costosa si scrive più lunga, che è un segnale di design deliberato.</p>
+<p>Questo progetto segue già la regola — <code>APIClient.swift:14</code> scrive <code>private let session: any Session</code>, e <code>:12</code> scrive <code>@Sendable (Int) -&gt; (any Swift.Error)?</code>.</p>
+<h3 id="primary-associated-type-se-0346">Primary associated type — SE-0346</h3>
+<p>Il problema: <code>any Collection</code> non ti dice nulla sul tipo degli elementi. Prima di 5.7 non avevi modo di dire "una collection di <code>Int</code>" senza generics completi.</p>
+<p>Un protocol ora nomina alcuni dei suoi associated type come <em>primari</em>:</p>
+<pre><code class="language-swift">protocol Collection&lt;Element&gt;: Sequence {   // Element è primario
+  associatedtype Element
+}
+</code></pre>
+<p>e i chiamanti li vincolano posizionalmente:</p>
+<pre><code class="language-swift">func sum(_ xs: some Collection&lt;Int&gt;) -&gt; Int { xs.reduce(0, +) }
+func sumAny(_ xs: any Collection&lt;Int&gt;) -&gt; Int { xs.reduce(0, +) }
+</code></pre>
+<p><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0358-primary-associated-types-in-stdlib.md">SE-0358</a> li ha applicati retroattivamente a tutta la standard library — <code>Sequence&lt;Element&gt;</code>, <code>Collection&lt;Element&gt;</code>, <code>AsyncSequence&lt;Element, Failure&gt;</code> e così via. È il motivo per cui oggi puoi scrivere <code>some Collection&lt;Int&gt;</code> senza dichiarare nulla.</p>
+<h3 id="opaque-parameter-se-0341">Opaque parameter — SE-0341</h3>
+<p><code>some</code> in posizione di parametro è puro zucchero sintattico, ma è zucchero che userai di continuo:</p>
+<pre><code class="language-swift">func f(_ xs: some Collection&lt;Int&gt;) -&gt; Int { xs.count }
+
+// è esattamente equivalente a:
+func f&lt;C: Collection&lt;Int&gt;&gt;(_ xs: C) -&gt; Int { xs.count }
+</code></pre>
+<p>Stesso codice, stessa performance, niente parentesi angolari. Usa la forma generica solo quando devi <em>nominare</em> il parametro di tipo — per esempio per vincolare due parametri allo stesso tipo, cosa che la forma <code>some</code> non può esprimere.</p>
+<h3 id="existential-aperti-implicitamente-se-0352">Existential aperti implicitamente — SE-0352</h3>
+<p>È quello silenzioso che tiene insieme tutto il resto. Dato un valore di tipo existential, il compilatore può ora "aprirlo" per chiamare una funzione generica:</p>
+<pre><code class="language-swift">protocol Shape { func area() -&gt; Double }
+
+func areaOf&lt;S: Shape&gt;(_ s: S) -&gt; Double { s.area() }
+
+func use(_ s: any Shape) -&gt; Double {
+  areaOf(s)   // ✅ Swift 5.7+: il compilatore apre la scatola e lega S al tipo dinamico
+}
+</code></pre>
+<p>Prima di 5.7 era un errore, e il workaround era un metodo in protocol extension che esisteva solo per rimbalzare la chiamata. Ora il compilatore inserisce l'apertura automaticamente al call site.</p>
+<p>Il limite: il tipo aperto esiste solo per la durata di quella chiamata. Non puoi restituirlo, perché non c'è modo di nominarlo nel tipo di ritorno.</p>
+<h3 id="existential-per-tutti-i-protocol-se-0309">Existential per tutti i protocol — SE-0309</h3>
+<p>Infine: <code>any</code> ora funziona per protocol con associated type e requisiti su <code>Self</code>. Dove il tipo di un membro dipenderebbe dal tipo cancellato, quel membro non è disponibile attraverso l'existential — il compilatore ti dice quale. Tutto il resto è utilizzabile.</p>
+<hr>
+<h2 id="3-fonti-ufficiali">3. Fonti ufficiali</h2>
+<ul>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0335-existential-any.md">SE-0335 — Introduce existential <code>any</code></a> (Swift 5.6)</li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0309-unlock-existential-types-for-all-protocols.md">SE-0309 — Unlock existentials for all protocols</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0341-opaque-parameters.md">SE-0341 — Opaque Parameter Declarations</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0346-light-weight-same-type-syntax.md">SE-0346 — Lightweight same-type requirements for primary associated types</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0352-implicit-open-existentials.md">SE-0352 — Implicitly Opened Existentials</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0353-constrained-existential-types.md">SE-0353 — Constrained Existential Types</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0358-primary-associated-types-in-stdlib.md">SE-0358 — Primary Associated Types in the Standard Library</a></li>
+<li><a href="https://github.com/swiftlang/swift/blob/main/docs/ABI/TypeLayout.rst">Swift ABI — Type Layout</a> — il layout dell'existential container citato sopra</li>
+<li><a href="https://docs.swift.org/swift-book/documentation/the-swift-programming-language/opaquetypes/">The Swift Programming Language — Opaque and Boxed Types</a></li>
+</ul>
+<hr>
+<h2 id="4-dove-atterra-in-questo-codebase">4. Dove atterra in questo codebase</h2>
+<p>L'SDK ha fatto una scelta architetturale interessante che vale la pena esaminare con questa lente.</p>
+<p><strong><code>Pokespeare</code> è una struct di closure, non un protocol.</strong> <code>Pokespeare.swift:3-5</code>:</p>
+<pre><code class="language-swift">public struct Pokespeare: Sendable {
+  private var _description: @Sendable (_ name: String) async throws -&gt; String
+  private var _sprite: @Sendable (_ name: String) async throws -&gt; URL
+}
+</code></pre>
+<p>Il README spiega la motivazione: sostituzione nei test senza protocol da dichiarare e senza mock class da mantenere. Chiediti quanto sarebbe costata l'alternativa. <code>protocol PokespeareProtocol</code> + <code>any PokespeareProtocol</code> tenuto nel view model significa una scatola existential e dispatch via witness table a ogni chiamata — più una dichiarazione di protocol, più una mock class per test target. La struct di closure non ha né l'una né l'altra. È una buona decisione, e ora sai articolarne il <em>perché</em> in termini di ABI.</p>
+<p><strong>Dove si usano existential, si usano correttamente.</strong> <code>APIClient.swift:14</code> — <code>private let session: any Session</code> — è un <code>any</code> legittimo: il tipo concreto varia davvero (<code>URLSession</code> reale in produzione, <code>MockedSession</code> nei test), ed è memorizzato, non solo passato. <code>Session</code> non è vincolato a classi (<code>Session.swift:3</code> — <code>protocol Session: Sendable</code>), quindi è un opaque existential container. <code>URLSession</code> è una classe, quindi il buffer contiene un singolo puntatore e sta inline.</p>
+<p><strong>Dove manca lo zucchero.</strong> <code>APIClient.swift:32</code>:</p>
+<pre><code class="language-swift">func perform&lt;R: HTTPCodableRequest&gt;(_ request: R) async throws -&gt; R.ResponseType
+</code></pre>
+<p>Questa <em>deve</em> restare generica — il tipo di ritorno <code>R.ResponseType</code> nomina il parametro di tipo, cosa che <code>some</code> non può fare. Buon istinto controllarla, candidato sbagliato. Cerca invece funzioni che prendono un parametro generico e non lo nominano mai più.</p>
+<p><strong>Un buco da notare.</strong> <code>HTTPCodableRequest</code> ha un <code>ResponseType</code> associato ma non dichiara alcun primary associated type. Se lo facesse — <code>protocol HTTPCodableRequest&lt;ResponseType&gt;</code> — potresti scrivere <code>any HTTPCodableRequest&lt;PokemonDetailResponse&gt;</code>, il che renderebbe esprimibili certi helper di test.</p>
+<hr>
+<h2 id="5-esercizio">5. Esercizio</h2>
+<p><strong>Obiettivo:</strong> sentire la differenza tra <code>some</code> e <code>any</code> in questo codebase, e aggiungere un primary associated type dove se lo guadagna.</p>
+<h3 id="5a-misura-lexistential">5a — Misura l'existential</h3>
+<p>In un file di scarto (non nel progetto), scrivi due versioni di una piccola funzione: una che prende <code>some Session</code>, una che prende <code>any Session</code>. Leggi il SIL generato per entrambe e trova la differenza:</p>
+<pre><code class="language-bash">xcrun swiftc -emit-sil -O tuofile.swift | swift demangle | less
+</code></pre>
+<p>Cerca <code>open_existential_addr</code> / <code>witness_method</code> nella versione <code>any</code>, e la loro assenza nella versione <code>some</code>. <strong>Scrivi cosa hai visto</strong> — è il tipo di cosa che si fissa solo dopo averla vista nell'IR.</p>
+<h3 id="5b-aggiungi-un-primary-associated-type">5b — Aggiungi un primary associated type</h3>
+<p>Dai a <code>HTTPCodableRequest</code> un primary associated type per la sua risposta:</p>
+<pre><code class="language-swift">protocol HTTPCodableRequest&lt;ResponseType&gt;: HTTPRequest { … }
+</code></pre>
+<p><strong>Criteri di accettazione.</strong></p>
+<ol>
+<li>Tutto compila ancora e i 53 test SDK passano.</li>
+<li>In <code>Pokespeare/Tests/</code>, scrivi un nuovo test che usa la forma existential vincolata — <code>any HTTPCodableRequest&lt;PokemonDetailResponse&gt;</code> — per contenere una request il cui tipo concreto non è noto staticamente. Se non trovi un uso naturale, <strong>è un risultato valido</strong>: scrivilo come "primary associated type non giustificato qui" e fai marcia indietro. Sapere quando <em>non</em> usare una feature è la metà più difficile.</li>
+<li><code>swiftlint lint --strict</code> pulito.</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<h3 id="5c-applica-gli-opaque-parameter">5c — Applica gli opaque parameter</h3>
+<p>Trova almeno una funzione nell'SDK il cui parametro generico è dichiarato e poi mai più nominato, e convertila alla forma <code>some</code>. Verifica che i test passino ancora. Se non ce ne sono, dillo — il codebase è piccolo e potrebbe genuinamente non averne.</p>
+<hr>
+<h2 id="6-trappole">6. Trappole</h2>
+<ul>
+<li><strong><code>any</code> in un loop caldo.</strong> <code>[any Shape]</code> dove i valori <code>Shape</code> superano 3 word significa un'allocazione heap per elemento. Profila prima di dare per scontato, ma conosci il meccanismo.</li>
+<li><strong><code>some</code> in posizione di ritorno vuole un unico tipo concreto.</strong> Ramificare su una condizione a runtime per restituire tipi diversi richiede <code>any</code>, o un enum, o <code>@ViewBuilder</code> se è SwiftUI (che non è né l'uno né l'altro — costruisce un <code>TupleView</code>/<code>_ConditionalContent</code> con il ramo codificato nel <em>tipo</em>).</li>
+<li><strong>Gli existential aperti non possono uscire.</strong> Puoi passare un valore aperto a una funzione generica; non puoi restituirlo o memorizzarlo.</li>
+<li><strong><code>some</code> in posizione di parametro non può esprimere relazioni.</strong> Due parametri <code>some Collection</code> sono due tipi <em>indipendenti</em>. Se devono coincidere, usa generics espliciti.</li>
+<li><strong>Il <code>some View</code> di SwiftUI è la stessa feature.</strong> <code>body: some View</code> è un tipo opaco, ed è il motivo per cui l'enorme tipo generico annidato di una gerarchia di view non va mai scritto. Capirlo spiega perché un <code>if</code>/<code>else</code> nel body di una view cambia il <em>tipo</em>, quindi l'identità, quindi azzera lo stato.</li>
+</ul>
+<hr>
+<h2 id="7-autovalutazione">7. Autovalutazione</h2>
+<p>Rispondi a memoria prima di rileggere.</p>
+<ol>
+<li>Quanti byte è il buffer a dimensione fissa in un opaque existential container su piattaforma a 64 bit, e cosa succede a un valore che non ci sta?</li>
+<li>Perché un protocol vincolato a classi produce un existential più economico di uno non vincolato?</li>
+<li><code>func f(_ x: some P)</code> e <code>func f&lt;T: P&gt;(_ x: T)</code> — sono diversi a runtime? C'è qualcosa che il secondo può esprimere e il primo no?</li>
+<li>Perché una funzione che restituisce <code>some Shape</code> non può restituire <code>Circle()</code> su un ramo e <code>Square()</code> su un altro, mentre una che restituisce <code>any Shape</code> sì?</li>
+<li>Cosa ha cambiato SE-0352, e quale workaround ha reso non più necessario?</li>
+<li><code>Pokespeare</code> è una struct di closure invece che un protocol. Dai l'argomentazione a livello di ABI sul perché sia più economico che memorizzare <code>any PokespeareProtocol</code>.</li>
+<li>In <code>body: some View</code>, quale tipo concreto viene effettivamente nascosto, e perché SwiftUI ha bisogno di nasconderlo?</li>
+</ol>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/index.html"><span>Precedente</span><strong>WWDC22 — Panoramica</strong></a><a class="pager-next" href="../wwdc22/02-regex-and-string-processing.html"><span>Successivo</span><strong>2 · Regex ed elaborazione di stringhe</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-modulo-1-generics-ed-existential">WWDC22 · Modulo 1 — Generics ed existential</a><ul>
+<li><a href="#1-cosa-e-uscito-e-quale-problema-risolve">1. Cosa è uscito, e quale problema risolve</a></li>
+<li><a href="#2-come-funziona-davvero">2. Come funziona davvero</a><ul>
+<li><a href="#some-tipi-opachi-risolti-a-compile-time">some — tipi opachi, risolti a compile-time</a></li>
+<li><a href="#any-existential-risolti-a-runtime">any — existential, risolti a runtime</a></li>
+<li><a href="#perche-any-e-diventato-obbligatorio">Perché any è diventato obbligatorio</a></li>
+<li><a href="#primary-associated-type-se-0346">Primary associated type — SE-0346</a></li>
+<li><a href="#opaque-parameter-se-0341">Opaque parameter — SE-0341</a></li>
+<li><a href="#existential-aperti-implicitamente-se-0352">Existential aperti implicitamente — SE-0352</a></li>
+<li><a href="#existential-per-tutti-i-protocol-se-0309">Existential per tutti i protocol — SE-0309</a></li>
+</ul>
+</li>
+<li><a href="#3-fonti-ufficiali">3. Fonti ufficiali</a></li>
+<li><a href="#4-dove-atterra-in-questo-codebase">4. Dove atterra in questo codebase</a></li>
+<li><a href="#5-esercizio">5. Esercizio</a><ul>
+<li><a href="#5a-misura-lexistential">5a — Misura l'existential</a></li>
+<li><a href="#5b-aggiungi-un-primary-associated-type">5b — Aggiungi un primary associated type</a></li>
+<li><a href="#5c-applica-gli-opaque-parameter">5c — Applica gli opaque parameter</a></li>
+</ul>
+</li>
+<li><a href="#6-trappole">6. Trappole</a></li>
+<li><a href="#7-autovalutazione">7. Autovalutazione</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

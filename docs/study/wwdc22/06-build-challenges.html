@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>6 · Build Challenges · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Curriculum</a></li>
+<li><a href="../00-version-map.html">Version Map</a></li>
+<li><a href="../00-baseline.html">Baseline</a></li>
+<li><a href="../review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Overview</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li class="active"><a href="../wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-module-6-build-challenges">WWDC22 · Module 6 — Build Challenges</h1>
+<p>Modules 1–5 taught the APIs. This module makes you <strong>re-implement, from scratch, the WWDC22 technology this project already uses</strong> — by building features large enough that you cannot avoid it.</p>
+<p>The distinction matters. Reading <code>RetryPolicy.swift</code> and thinking "yes, <code>Duration</code>, understood" is not the same as designing a new manager and discovering for yourself where <code>Sendable</code> bites, where the error boundary belongs, and why the existing code made the choices it did.</p>
+<p>Each challenge is a <strong>real feature</strong> against <strong>real endpoints</strong>, verified live while writing this document.</p>
+<hr>
+<h2 id="what-is-already-in-the-project-and-how-each-challenge-forces-it">What is already in the project, and how each challenge forces it</h2>
+<table>
+<thead>
+<tr>
+<th>WWDC22 tech</th>
+<th>Already at</th>
+<th>Challenge that forces you to rebuild it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sendable</code> / <code>@Sendable</code> closures</td>
+<td><code>Pokespeare.swift:3-5</code>, <code>APIClient.swift:9</code></td>
+<td>A, B, C — every new manager must be <code>Sendable</code></td>
+</tr>
+<tr>
+<td><code>any</code> existentials</td>
+<td><code>APIClient.swift:14</code></td>
+<td>A — new request types behind one client</td>
+</tr>
+<tr>
+<td>Primary associated types</td>
+<td>absent</td>
+<td>A (stretch)</td>
+</tr>
+<tr>
+<td><code>Clock</code> / <code>Duration</code></td>
+<td><code>RetryPolicy.swift:9,42</code></td>
+<td>A — per-request timeout budget</td>
+</tr>
+<tr>
+<td><code>Regex</code></td>
+<td>absent</td>
+<td>C — filter parsing</td>
+</tr>
+<tr>
+<td><code>NavigationStack</code> routing</td>
+<td><code>SearchView.swift:14</code>, unused</td>
+<td>B, C</td>
+</tr>
+<tr>
+<td><code>Layout</code> / <code>Grid</code> / <code>ViewThatFits</code></td>
+<td>absent</td>
+<td>B, C</td>
+</tr>
+<tr>
+<td>Swift Charts</td>
+<td>absent</td>
+<td>C</td>
+</tr>
+<tr>
+<td><code>if</code>/<code>switch</code> expressions, <code>if let</code> shorthand</td>
+<td>throughout</td>
+<td>all</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="the-endpoints-verified-live">The endpoints (verified live)</h2>
+<p>All four returned HTTP 200 while this document was written.</p>
+<p><strong><code>GET /api/v2/pokemon-species/{name}</code></strong> — already used by <code>PokemonSpeciesRequest</code>. Contains a key this project currently ignores:</p>
+<pre><code class="language-json">{ &quot;evolution_chain&quot;: { &quot;url&quot;: &quot;https://pokeapi.co/api/v2/evolution-chain/10/&quot; } }
+</code></pre>
+<p>Note carefully: <strong>a URL, not an id.</strong> There is no <code>evolution_chain.id</code> field. This is a real design problem, not a detail — see Challenge A.</p>
+<p><strong><code>GET /api/v2/evolution-chain/{id}</code></strong> — a recursive tree:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: 10,
+  &quot;chain&quot;: {
+    &quot;species&quot;: { &quot;name&quot;: &quot;pichu&quot; },
+    &quot;evolution_details&quot;: [],
+    &quot;evolves_to&quot;: [
+      { &quot;species&quot;: { &quot;name&quot;: &quot;pikachu&quot; },
+        &quot;evolution_details&quot;: [ { &quot;min_level&quot;: null, &quot;trigger&quot;: {} } ],
+        &quot;evolves_to&quot;: [ { &quot;species&quot;: { &quot;name&quot;: &quot;raichu&quot; }, &quot;evolves_to&quot;: [] } ] }
+    ]
+  }
+}
+</code></pre>
+<p>Verified for chain 10: <code>pichu → pikachu → raichu</code>. Branching chains exist (Eevee is chain 67) — your model must handle <code>evolves_to</code> having more than one element.</p>
+<p><strong><code>GET /api/v2/type/{name}</code></strong> — <code>damage_relations</code> has exactly six keys. Verified for <code>electric</code>:</p>
+<pre><code>double_damage_from → [ground]
+double_damage_to   → [flying, water]
+half_damage_from   → [flying, steel, electric]
+half_damage_to     → [grass, electric, dragon]
+no_damage_from     → []
+no_damage_to       → [ground]
+</code></pre>
+<p><strong><code>GET /api/v2/ability/{name}</code></strong> — <code>effect_entries</code> and <code>flavor_text_entries</code>, both language-tagged exactly like the flavor text <code>PokemonManager</code> already handles.</p>
+<hr>
+<h2 id="rules-that-apply-to-every-challenge">Rules that apply to every challenge</h2>
+<p>These are the project's existing invariants. Breaking one is a failed challenge even if the feature works.</p>
+<ol>
+<li><strong>The public SDK surface stays deliberate.</strong> Today it is exactly four types: <code>Pokespeare</code>, <code>Pokespeare.Error</code>, <code>PokemonView</code>, <code>PokemonViewModel</code>. Anything new that becomes <code>public</code> must be a decision you can defend — audit finding <strong>C-17</strong> was accidental public surface.</li>
+<li><strong>One transport.</strong> <code>APIClient</code> is the only thing that performs a request (<code>APIClient.swift:3-8</code>). No new manager gets its own <code>URLSession</code> — finding <strong>C-03</strong> was exactly that duplication.</li>
+<li><strong>One error boundary.</strong> <code>Pokespeare.Error.from(error:)</code> (<code>Error.swift:109-124</code>) is the single mapping point, and its case ordering is load-bearing. New error types slot into that switch; they do not get their own escape route. Findings <strong>C-01</strong> and <strong>C-25</strong> were both this.</li>
+<li><strong>No <code>Optional</code> as an error channel.</strong> Finding <strong>C-05</strong>. If three things can go wrong, three cases — not one <code>nil</code>.</li>
+<li><strong>Everything <code>Sendable</code>, nothing <code>@unchecked</code></strong> in production code.</li>
+<li><strong>Tests: no assertions inside <code>catch</code>.</strong> Finding <strong>C-10</strong>. Use <code>#expect(throws:)</code>.</li>
+<li><strong>Integration tests are tagged and gated</strong> behind <code>RUN_INTEGRATION_TESTS</code> (<code>TestTags.swift</code>). Live endpoints are rate-limited; CI must stay green without them.</li>
+<li><strong>Localize user-facing strings</strong> into both catalogs, en + it. Finding <strong>C-21</strong>.</li>
+<li><strong>Accessibility is not optional.</strong> VoiceOver labels, Dynamic Type. Finding <strong>C-23</strong>.</li>
+</ol>
+<hr>
+<h2 id="challenge-a-evolution-chain-service">Challenge A — Evolution chain service</h2>
+<p><strong>Size:</strong> large (the main one). <strong>Forces:</strong> <code>Sendable</code>, existentials, generic requests, <code>Clock</code>/<code>Duration</code>, structured concurrency, the error boundary.</p>
+<h3 id="goal">Goal</h3>
+<p>Add <code>Pokespeare.evolutionChain(for:) async throws -&gt; EvolutionChain</code> returning the full evolution line for a Pokémon name.</p>
+<h3 id="why-this-is-harder-than-it-looks">Why this is harder than it looks</h3>
+<p>Three genuine design problems, in increasing order of interest:</p>
+<p><strong>A1 — You get a URL, not an id.</strong> <code>pokemon-species</code> gives <code>evolution_chain.url</code>. Your options:</p>
+<ul>
+<li>Parse the id out of the URL path and build a normal <code>EvolutionChainRequest(id:)</code>.</li>
+<li>Make the request able to be constructed from an absolute URL.</li>
+</ul>
+<p><code>HTTPRequest</code> today builds its URL from host + path components (<code>HTTPRequest.swift</code>, <code>makeURLRequest()</code>). Whichever you choose, <strong>write down the argument against the other one.</strong> Hint: consider what happens if PokéAPI changes its URL layout, and consider which option is testable without a network.</p>
+<p><strong>A2 — The response is recursive.</strong> <code>chain.evolves_to[].evolves_to[]…</code>, arbitrarily deep, and branching (Eevee has eight). Your response model must be recursive, and your domain model probably should <em>not</em> be — a flat list of stages, or a tree you actually want to render, is likely nicer than mirroring the JSON. The existing response models all hand-write <code>init(from:)</code> with nested containers (<code>PokemonSpeciesResponse.swift:31-44</code>); follow that style or justify departing from it.</p>
+<p><strong>A3 — Two sequential requests.</strong> Species, then chain. The second depends on the first, so <code>async let</code> does <strong>not</strong> apply — unlike <code>SearchViewModel.swift:172-173</code>, where the two calls are independent. Understanding <em>why</em> that difference exists is half the point of this challenge.</p>
+<h3 id="steps">Steps</h3>
+<ol>
+<li><code>EvolutionChainRequest</code> conforming to <code>HTTPCodableRequest</code>.</li>
+<li><code>EvolutionChainResponse</code> — recursive, <code>Decodable</code>.</li>
+<li><code>EvolutionManager</code>, <code>Sendable</code>, taking an <code>APIClient</code>. Domain logic only: no transport. Mirror <code>PokemonManager.swift</code>.</li>
+<li><code>EvolutionManager.Error</code> with real cases, and a <code>Pokespeare.Error.from(error:)</code> overload. Add public cases only if the user could act on them differently.</li>
+<li>Wire a new closure into <code>Pokespeare</code> — it is a struct of closures (<code>Pokespeare.swift:3-5</code>), so adding a service means adding a stored closure, a public method, and a line in <code>live(pokemonManager:translationManager:)</code>. <strong>This changes a public initializer.</strong> Think about whether that is a source-breaking change and what you would do about it in a shipped SDK.</li>
+<li>Add a per-request timeout budget using <code>Duration</code>, respecting the injectable-clock work from Module 3 if you did it.</li>
+</ol>
+<h3 id="acceptance-criteria">Acceptance criteria</h3>
+<ol>
+<li><code>evolutionChain(for: "pikachu")</code> returns <code>pichu → pikachu → raichu</code> in order.</li>
+<li>A branching chain (<code>eevee</code>) returns all branches, not just the first.</li>
+<li>A Pokémon with no evolutions (<code>tauros</code>) returns a single-stage chain — <strong>not</strong> an error, and not an empty array that a caller must special-case.</li>
+<li>Unit tests with <code>MockedSession</code> fixtures for: happy path, branching, single-stage, 404, malformed body. No live network.</li>
+<li>Exactly one integration test, tagged <code>.integration</code> and gated.</li>
+<li>Every failure arrives as a <code>Pokespeare.Error</code>. Prove it — a test that asserts a transport failure does not surface as <code>.unknown</code> (that is finding <strong>C-01</strong>, and it is the single most valuable regression test in the SDK).</li>
+<li>All 53 existing SDK tests still pass.</li>
+<li><code>swiftlint lint --strict</code> clean.</li>
+</ol>
+<h3 id="stretch">Stretch</h3>
+<p>Give <code>HTTPCodableRequest</code> a primary associated type (Module 1) and use <code>any HTTPCodableRequest&lt;EvolutionChainResponse&gt;</code> somewhere it genuinely helps. If it does not help, say so and revert — that is the correct outcome and a real finding.</p>
+<hr>
+<h2 id="challenge-b-type-matchup-screen">Challenge B — Type matchup screen</h2>
+<p><strong>Size:</strong> medium. <strong>Forces:</strong> <code>NavigationStack</code> routing, <code>Grid</code>, <code>ViewThatFits</code>, a second new manager, localization, accessibility.</p>
+<h3 id="goal_1">Goal</h3>
+<p>From a Pokémon's detail view, navigate to a screen showing what it is strong and weak against, built from <code>/type/{name}</code>.</p>
+<p>A Pokémon has one or two types — <code>PokemonDetailRequest</code> already fetches the detail payload, which carries them. For two types, effectiveness <strong>multiplies</strong> (double from ground × half from ground = neutral). That combination logic is domain logic and belongs in the manager, not the view, and it is exactly the kind of thing that should have unit tests with hand-built fixtures.</p>
+<h3 id="steps_1">Steps</h3>
+<ol>
+<li><code>TypeRequest</code>, <code>TypeResponse</code> (the six <code>damage_relations</code> keys), <code>TypeManager</code>.</li>
+<li>Combination logic for dual types, as a pure function. Test it in isolation — no network, no view.</li>
+<li>A SwiftUI screen using <code>Grid</code>/<code>GridRow</code> for the effectiveness table.</li>
+<li>Reach it with <code>navigationDestination</code> — this is where Module 4's routing work pays off. If you kept the sheet, you now have a concrete reason not to.</li>
+<li><code>ViewThatFits</code> so the table degrades to a list at accessibility text sizes.</li>
+<li>Localize every label into en + it, both catalogs.</li>
+</ol>
+<h3 id="acceptance-criteria_1">Acceptance criteria</h3>
+<ol>
+<li>Electric shows weak-to-ground, resists flying/steel/electric, no damage to ground. Verified values are in the endpoint section above.</li>
+<li>A dual-type Pokémon computes multiplied effectiveness, covered by unit tests including a ×4 and a ×0 case.</li>
+<li>Readable at the largest accessibility text size — check on device/simulator, not in the canvas.</li>
+<li>VoiceOver announces each cell meaningfully. "Two" is not meaningful; "Ground, double damage" is.</li>
+<li>No hardcoded English. Both <code>.xcstrings</code> updated.</li>
+<li>All existing tests pass; new manager has unit tests with fixtures.</li>
+</ol>
+<hr>
+<h2 id="challenge-c-search-filters-and-history-insights">Challenge C — Search filters and history insights</h2>
+<p><strong>Size:</strong> medium. <strong>Forces:</strong> <code>Regex</code>, Swift Charts, <code>Layout</code>, SwiftData querying.</p>
+<h3 id="goal_2">Goal</h3>
+<p>Let the search field accept simple filter syntax, and add a small insights view over the search history.</p>
+<p><strong>Filter syntax</strong>, parsed with <code>Regex</code> (Module 2):</p>
+<pre><code>type:electric          → filter history by type
+before:2026-01-01      → filter by searchDate
+pika                   → plain substring match
+type:electric pika     → combined
+</code></pre>
+<h3 id="steps_2">Steps</h3>
+<ol>
+<li>A <code>Regex</code>-based parser producing a typed <code>SearchFilter</code> value. Remember <code>Regex</code> is not <code>Sendable</code> — Module 2 §3 covers it, and the SDK has no <code>@MainActor</code>.</li>
+<li>Apply filters to the history. Today it is <code>first(where:)</code> in memory (<code>SearchViewModel.swift:143</code>) with a hand-built <code>FetchDescriptor</code> (<code>:256</code>). <code>#Predicate</code> is Batch 2 — for now, do it honestly in memory and <strong>write down what you would change once you have <code>#Predicate</code>.</strong></li>
+<li>An insights view: searches per day from <code>searchDate</code>, as a <code>BarMark</code> chart.</li>
+<li>Accessibility: charts need explicit labels. An unlabelled chart in this app is a regression against commit <code>9f787fc</code>.</li>
+</ol>
+<h3 id="acceptance-criteria_2">Acceptance criteria</h3>
+<ol>
+<li>Parser unit tests, parameterized, covering: each filter alone, combined, malformed input, empty input. Malformed input must degrade to plain-text search, never throw into the UI.</li>
+<li>Invalid filter values do not crash and do not silently return everything.</li>
+<li>Chart has an accessibility label and per-mark values.</li>
+<li>Localized, both catalogs.</li>
+<li>All existing tests pass.</li>
+</ol>
+<hr>
+<h2 id="how-to-choose">How to choose</h2>
+<ul>
+<li><strong>Doing one?</strong> Challenge A. It is the one that rebuilds the SDK's actual architecture.</li>
+<li><strong>Doing two?</strong> A then B. B consumes A's navigation work.</li>
+<li><strong>All three?</strong> A → B → C. C is the lightest on SDK architecture and the heaviest on UI.</li>
+</ul>
+<p>Do not start B or C before Module 4, and do not start A before Module 3 if you intend to do the injectable-clock exercise — A is much more interesting with a testable clock.</p>
+<hr>
+<h2 id="what-i-will-look-at-during-review">What I will look at during review</h2>
+<p>When you tell me the batch is done, this is what gets read. Stated up front so nothing is a surprise:</p>
+<ul>
+<li>Does <code>APIClient</code> remain the only transport?</li>
+<li>Does every new error path terminate in <code>Pokespeare.Error</code>, with the mapping ordering intact?</li>
+<li>Is anything <code>public</code> that did not need to be?</li>
+<li>Is there an <code>Optional</code> standing in for an error?</li>
+<li>Do any tests assert inside a <code>catch</code>?</li>
+<li>Are integration tests gated?</li>
+<li>Is the new UI usable at maximum Dynamic Type, and does VoiceOver say something useful?</li>
+<li>Are new user-facing strings in <strong>both</strong> catalogs?</li>
+<li>Where did you deviate from the existing patterns, and can you defend it?</li>
+</ul>
+<p>The last one carries the most weight. A defended deviation beats an undefended imitation.</p>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/05-platform-debuts.html"><span>Previous</span><strong>5 · Platform Debuts</strong></a><a class="pager-next" href="../review-protocol.html"><span>Next</span><strong>Review Protocol</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-module-6-build-challenges">WWDC22 · Module 6 — Build Challenges</a><ul>
+<li><a href="#what-is-already-in-the-project-and-how-each-challenge-forces-it">What is already in the project, and how each challenge forces it</a></li>
+<li><a href="#the-endpoints-verified-live">The endpoints (verified live)</a></li>
+<li><a href="#rules-that-apply-to-every-challenge">Rules that apply to every challenge</a></li>
+<li><a href="#challenge-a-evolution-chain-service">Challenge A — Evolution chain service</a><ul>
+<li><a href="#goal">Goal</a></li>
+<li><a href="#why-this-is-harder-than-it-looks">Why this is harder than it looks</a></li>
+<li><a href="#steps">Steps</a></li>
+<li><a href="#acceptance-criteria">Acceptance criteria</a></li>
+<li><a href="#stretch">Stretch</a></li>
+</ul>
+</li>
+<li><a href="#challenge-b-type-matchup-screen">Challenge B — Type matchup screen</a><ul>
+<li><a href="#goal_1">Goal</a></li>
+<li><a href="#steps_1">Steps</a></li>
+<li><a href="#acceptance-criteria_1">Acceptance criteria</a></li>
+</ul>
+</li>
+<li><a href="#challenge-c-search-filters-and-history-insights">Challenge C — Search filters and history insights</a><ul>
+<li><a href="#goal_2">Goal</a></li>
+<li><a href="#steps_2">Steps</a></li>
+<li><a href="#acceptance-criteria_2">Acceptance criteria</a></li>
+</ul>
+</li>
+<li><a href="#how-to-choose">How to choose</a></li>
+<li><a href="#what-i-will-look-at-during-review">What I will look at during review</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Programma</a></li>
+<li><a href="../00-version-map.html">Mappa delle versioni</a></li>
+<li><a href="../00-baseline.html">Punto di partenza</a></li>
+<li><a href="../review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li class="active"><a href="../wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-modulo-6-sfide-di-implementazione">WWDC22 · Modulo 6 — Sfide di implementazione</h1>
+<p>I moduli 1–5 hanno insegnato le API. Questo modulo ti fa <strong>re-implementare da zero la tecnologia WWDC22 che questo progetto già usa</strong> — costruendo feature abbastanza grandi da non poterlo evitare.</p>
+<p>La distinzione conta. Leggere <code>RetryPolicy.swift</code> e pensare "sì, <code>Duration</code>, chiaro" non è la stessa cosa che progettare un nuovo manager e scoprire da solo dove <code>Sendable</code> morde, dove va il confine degli errori, e perché il codice esistente ha fatto le scelte che ha fatto.</p>
+<p>Ogni sfida è una <strong>feature reale</strong> contro <strong>endpoint reali</strong>, verificati dal vivo mentre scrivevo questo documento.</p>
+<hr>
+<h2 id="cosa-ce-gia-nel-progetto-e-come-ogni-sfida-lo-forza">Cosa c'è già nel progetto, e come ogni sfida lo forza</h2>
+<table>
+<thead>
+<tr>
+<th>Tecnologia WWDC22</th>
+<th>Già presente in</th>
+<th>Sfida che ti costringe a ricostruirla</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Closure <code>Sendable</code> / <code>@Sendable</code></td>
+<td><code>Pokespeare.swift:3-5</code>, <code>APIClient.swift:9</code></td>
+<td>A, B, C — ogni nuovo manager deve essere <code>Sendable</code></td>
+</tr>
+<tr>
+<td>Existential <code>any</code></td>
+<td><code>APIClient.swift:14</code></td>
+<td>A — nuovi tipi di request dietro un unico client</td>
+</tr>
+<tr>
+<td>Primary associated type</td>
+<td>assente</td>
+<td>A (stretch)</td>
+</tr>
+<tr>
+<td><code>Clock</code> / <code>Duration</code></td>
+<td><code>RetryPolicy.swift:9,42</code></td>
+<td>A — budget di timeout per richiesta</td>
+</tr>
+<tr>
+<td><code>Regex</code></td>
+<td>assente</td>
+<td>C — parsing dei filtri</td>
+</tr>
+<tr>
+<td>Routing con <code>NavigationStack</code></td>
+<td><code>SearchView.swift:14</code>, inutilizzato</td>
+<td>B, C</td>
+</tr>
+<tr>
+<td><code>Layout</code> / <code>Grid</code> / <code>ViewThatFits</code></td>
+<td>assente</td>
+<td>B, C</td>
+</tr>
+<tr>
+<td>Swift Charts</td>
+<td>assente</td>
+<td>C</td>
+</tr>
+<tr>
+<td>Espressioni <code>if</code>/<code>switch</code>, forma breve <code>if let</code></td>
+<td>ovunque</td>
+<td>tutte</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="gli-endpoint-verificati-dal-vivo">Gli endpoint (verificati dal vivo)</h2>
+<p>Tutti e quattro hanno restituito HTTP 200 mentre scrivevo questo documento.</p>
+<p><strong><code>GET /api/v2/pokemon-species/{name}</code></strong> — già usato da <code>PokemonSpeciesRequest</code>. Contiene una chiave che questo progetto attualmente ignora:</p>
+<pre><code class="language-json">{ &quot;evolution_chain&quot;: { &quot;url&quot;: &quot;https://pokeapi.co/api/v2/evolution-chain/10/&quot; } }
+</code></pre>
+<p>Nota bene: <strong>un URL, non un id.</strong> Non esiste un campo <code>evolution_chain.id</code>. È un problema di design vero, non un dettaglio — vedi la Sfida A.</p>
+<p><strong><code>GET /api/v2/evolution-chain/{id}</code></strong> — un albero ricorsivo:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: 10,
+  &quot;chain&quot;: {
+    &quot;species&quot;: { &quot;name&quot;: &quot;pichu&quot; },
+    &quot;evolution_details&quot;: [],
+    &quot;evolves_to&quot;: [
+      { &quot;species&quot;: { &quot;name&quot;: &quot;pikachu&quot; },
+        &quot;evolution_details&quot;: [ { &quot;min_level&quot;: null, &quot;trigger&quot;: {} } ],
+        &quot;evolves_to&quot;: [ { &quot;species&quot;: { &quot;name&quot;: &quot;raichu&quot; }, &quot;evolves_to&quot;: [] } ] }
+    ]
+  }
+}
+</code></pre>
+<p>Verificato per la catena 10: <code>pichu → pikachu → raichu</code>. Esistono catene ramificate (Eevee è la catena 67) — il tuo modello deve gestire <code>evolves_to</code> con più di un elemento.</p>
+<p><strong><code>GET /api/v2/type/{name}</code></strong> — <code>damage_relations</code> ha esattamente sei chiavi. Verificato per <code>electric</code>:</p>
+<pre><code>double_damage_from → [ground]
+double_damage_to   → [flying, water]
+half_damage_from   → [flying, steel, electric]
+half_damage_to     → [grass, electric, dragon]
+no_damage_from     → []
+no_damage_to       → [ground]
+</code></pre>
+<p><strong><code>GET /api/v2/ability/{name}</code></strong> — <code>effect_entries</code> e <code>flavor_text_entries</code>, entrambi taggati per lingua esattamente come il flavor text che <code>PokemonManager</code> già gestisce.</p>
+<hr>
+<h2 id="regole-valide-per-ogni-sfida">Regole valide per ogni sfida</h2>
+<p>Sono le invarianti già in vigore nel progetto. Romperne una è una sfida fallita anche se la feature funziona.</p>
+<ol>
+<li><strong>La superficie pubblica dell'SDK resta deliberata.</strong> Oggi sono esattamente quattro tipi: <code>Pokespeare</code>, <code>Pokespeare.Error</code>, <code>PokemonView</code>, <code>PokemonViewModel</code>. Qualsiasi cosa nuova che diventi <code>public</code> dev'essere una decisione che sai difendere — il finding <strong>C-17</strong> era superficie pubblica accidentale.</li>
+<li><strong>Un solo transport.</strong> <code>APIClient</code> è l'unica cosa che esegue una richiesta (<code>APIClient.swift:3-8</code>). Nessun nuovo manager si prende la propria <code>URLSession</code> — il finding <strong>C-03</strong> era esattamente quella duplicazione.</li>
+<li><strong>Un solo confine degli errori.</strong> <code>Pokespeare.Error.from(error:)</code> (<code>Error.swift:109-124</code>) è l'unico punto di mappatura, e l'ordinamento dei suoi case è portante. I nuovi tipi d'errore si inseriscono in quello switch; non si prendono una via di fuga propria. I finding <strong>C-01</strong> e <strong>C-25</strong> erano entrambi questo.</li>
+<li><strong>Niente <code>Optional</code> come canale d'errore.</strong> Finding <strong>C-05</strong>. Se tre cose possono andare male, tre case — non un <code>nil</code>.</li>
+<li><strong>Tutto <code>Sendable</code>, niente <code>@unchecked</code></strong> nel codice di produzione.</li>
+<li><strong>Test: nessuna assertion dentro <code>catch</code>.</strong> Finding <strong>C-10</strong>. Usa <code>#expect(throws:)</code>.</li>
+<li><strong>I test di integrazione sono taggati e protetti</strong> da <code>RUN_INTEGRATION_TESTS</code> (<code>TestTags.swift</code>). Gli endpoint reali hanno rate limit; la CI deve restare verde senza di essi.</li>
+<li><strong>Localizza le stringhe utente</strong> in entrambi i catalog, en + it. Finding <strong>C-21</strong>.</li>
+<li><strong>L'accessibilità non è facoltativa.</strong> Label VoiceOver, Dynamic Type. Finding <strong>C-23</strong>.</li>
+</ol>
+<hr>
+<h2 id="sfida-a-servizio-catena-evolutiva">Sfida A — Servizio catena evolutiva</h2>
+<p><strong>Dimensione:</strong> grande (la principale). <strong>Forza:</strong> <code>Sendable</code>, existential, request generiche, <code>Clock</code>/<code>Duration</code>, concorrenza strutturata, il confine degli errori.</p>
+<h3 id="obiettivo">Obiettivo</h3>
+<p>Aggiungere <code>Pokespeare.evolutionChain(for:) async throws -&gt; EvolutionChain</code> che restituisce la linea evolutiva completa per un nome di Pokémon.</p>
+<h3 id="perche-e-piu-difficile-di-quanto-sembri">Perché è più difficile di quanto sembri</h3>
+<p>Tre problemi di design veri, in ordine crescente di interesse:</p>
+<p><strong>A1 — Ottieni un URL, non un id.</strong> <code>pokemon-species</code> dà <code>evolution_chain.url</code>. Le tue opzioni:</p>
+<ul>
+<li>Estrarre l'id dal path dell'URL e costruire una normale <code>EvolutionChainRequest(id:)</code>.</li>
+<li>Rendere la request costruibile da un URL assoluto.</li>
+</ul>
+<p><code>HTTPRequest</code> oggi costruisce il suo URL da host + componenti di path (<code>HTTPRequest.swift</code>, <code>makeURLRequest()</code>). Qualunque cosa tu scelga, <strong>scrivi l'argomentazione contro l'altra.</strong> Indizio: considera cosa succede se PokéAPI cambia la struttura dei suoi URL, e considera quale opzione è testabile senza rete.</p>
+<p><strong>A2 — La risposta è ricorsiva.</strong> <code>chain.evolves_to[].evolves_to[]…</code>, profonda arbitrariamente, e ramificata (Eevee ne ha otto). Il tuo modello di risposta dev'essere ricorsivo, e il tuo modello di dominio probabilmente <strong>non</strong> dovrebbe esserlo — una lista piatta di stadi, o un albero che vuoi davvero renderizzare, è verosimilmente più comodo che rispecchiare il JSON. I modelli di risposta esistenti scrivono tutti <code>init(from:)</code> a mano con container annidati (<code>PokemonSpeciesResponse.swift:31-44</code>); segui quello stile o giustifica lo scostamento.</p>
+<p><strong>A3 — Due richieste sequenziali.</strong> Prima species, poi chain. La seconda dipende dalla prima, quindi <code>async let</code> <strong>non</strong> si applica — a differenza di <code>SearchViewModel.swift:172-173</code>, dove le due chiamate sono indipendenti. Capire <em>perché</em> esiste quella differenza è metà del senso di questa sfida.</p>
+<h3 id="passi">Passi</h3>
+<ol>
+<li><code>EvolutionChainRequest</code> conforme a <code>HTTPCodableRequest</code>.</li>
+<li><code>EvolutionChainResponse</code> — ricorsiva, <code>Decodable</code>.</li>
+<li><code>EvolutionManager</code>, <code>Sendable</code>, che prende un <code>APIClient</code>. Solo logica di dominio: nessun transport. Rispecchia <code>PokemonManager.swift</code>.</li>
+<li><code>EvolutionManager.Error</code> con case veri, e un overload di <code>Pokespeare.Error.from(error:)</code>. Aggiungi case pubblici solo se l'utente potrebbe agire diversamente.</li>
+<li>Collega una nuova closure a <code>Pokespeare</code> — è una struct di closure (<code>Pokespeare.swift:3-5</code>), quindi aggiungere un servizio significa aggiungere una closure memorizzata, un metodo pubblico e una riga in <code>live(pokemonManager:translationManager:)</code>. <strong>Questo cambia un initializer pubblico.</strong> Ragiona se sia una modifica source-breaking e cosa faresti al riguardo in un SDK spedito.</li>
+<li>Aggiungi un budget di timeout per richiesta usando <code>Duration</code>, rispettando il lavoro sul clock iniettabile del Modulo 3 se l'hai fatto.</li>
+</ol>
+<h3 id="criteri-di-accettazione">Criteri di accettazione</h3>
+<ol>
+<li><code>evolutionChain(for: "pikachu")</code> restituisce <code>pichu → pikachu → raichu</code> in ordine.</li>
+<li>Una catena ramificata (<code>eevee</code>) restituisce tutti i rami, non solo il primo.</li>
+<li>Un Pokémon senza evoluzioni (<code>tauros</code>) restituisce una catena a stadio singolo — <strong>non</strong> un errore, e non un array vuoto che il chiamante debba trattare come caso speciale.</li>
+<li>Test unitari con fixture <code>MockedSession</code> per: percorso felice, ramificazione, stadio singolo, 404, corpo malformato. Nessuna rete reale.</li>
+<li>Esattamente un test di integrazione, taggato <code>.integration</code> e protetto.</li>
+<li>Ogni fallimento arriva come <code>Pokespeare.Error</code>. Dimostralo — un test che asserisce che un fallimento di transport non emerge come <code>.unknown</code> (è il finding <strong>C-01</strong>, ed è il singolo test di regressione più prezioso dell'SDK).</li>
+<li>Tutti i 53 test SDK esistenti passano ancora.</li>
+<li><code>swiftlint lint --strict</code> pulito.</li>
+</ol>
+<h3 id="stretch">Stretch</h3>
+<p>Dai a <code>HTTPCodableRequest</code> un primary associated type (Modulo 1) e usa <code>any HTTPCodableRequest&lt;EvolutionChainResponse&gt;</code> dove aiuta davvero. Se non aiuta, dillo e fai marcia indietro — è l'esito corretto e un risultato reale.</p>
+<hr>
+<h2 id="sfida-b-schermata-efficacia-dei-tipi">Sfida B — Schermata efficacia dei tipi</h2>
+<p><strong>Dimensione:</strong> media. <strong>Forza:</strong> routing con <code>NavigationStack</code>, <code>Grid</code>, <code>ViewThatFits</code>, un secondo nuovo manager, localizzazione, accessibilità.</p>
+<h3 id="obiettivo_1">Obiettivo</h3>
+<p>Dalla view di dettaglio di un Pokémon, navigare a una schermata che mostra contro cosa è forte e debole, costruita da <code>/type/{name}</code>.</p>
+<p>Un Pokémon ha uno o due tipi — <code>PokemonDetailRequest</code> già scarica il payload di dettaglio, che li contiene. Per due tipi l'efficacia si <strong>moltiplica</strong> (doppio da terra × metà da terra = neutro). Quella logica di combinazione è logica di dominio e appartiene al manager, non alla view, ed è esattamente il genere di cosa che dovrebbe avere test unitari con fixture costruite a mano.</p>
+<h3 id="passi_1">Passi</h3>
+<ol>
+<li><code>TypeRequest</code>, <code>TypeResponse</code> (le sei chiavi di <code>damage_relations</code>), <code>TypeManager</code>.</li>
+<li>Logica di combinazione per i doppi tipi, come funzione pura. Testala in isolamento — nessuna rete, nessuna view.</li>
+<li>Una schermata SwiftUI che usa <code>Grid</code>/<code>GridRow</code> per la tabella di efficacia.</li>
+<li>Raggiungila con <code>navigationDestination</code> — è qui che il lavoro di routing del Modulo 4 rende. Se hai tenuto lo sheet, ora hai un motivo concreto per non farlo.</li>
+<li><code>ViewThatFits</code> così la tabella degrada a lista alle dimensioni di testo accessibili.</li>
+<li>Localizza ogni etichetta in en + it, entrambi i catalog.</li>
+</ol>
+<h3 id="criteri-di-accettazione_1">Criteri di accettazione</h3>
+<ol>
+<li>Electric mostra debolezza a terra, resiste a volante/acciaio/elettro, nessun danno a terra. I valori verificati sono nella sezione endpoint qui sopra.</li>
+<li>Un Pokémon a doppio tipo calcola l'efficacia moltiplicata, coperto da test unitari inclusi un caso ×4 e uno ×0.</li>
+<li>Leggibile alla massima dimensione di testo accessibile — controlla su dispositivo/simulatore, non nel canvas.</li>
+<li>VoiceOver annuncia ogni cella in modo sensato. "Due" non è sensato; "Terra, danno doppio" sì.</li>
+<li>Nessun inglese hardcoded. Entrambi gli <code>.xcstrings</code> aggiornati.</li>
+<li>Tutti i test esistenti passano; il nuovo manager ha test unitari con fixture.</li>
+</ol>
+<hr>
+<h2 id="sfida-c-filtri-di-ricerca-e-statistiche-sulla-cronologia">Sfida C — Filtri di ricerca e statistiche sulla cronologia</h2>
+<p><strong>Dimensione:</strong> media. <strong>Forza:</strong> <code>Regex</code>, Swift Charts, <code>Layout</code>, query SwiftData.</p>
+<h3 id="obiettivo_2">Obiettivo</h3>
+<p>Far accettare al campo di ricerca una sintassi di filtro semplice, e aggiungere una piccola view di statistiche sulla cronologia di ricerca.</p>
+<p><strong>Sintassi dei filtri</strong>, parsata con <code>Regex</code> (Modulo 2):</p>
+<pre><code>type:electric          → filtra la cronologia per tipo
+before:2026-01-01      → filtra per searchDate
+pika                   → match su sottostringa semplice
+type:electric pika     → combinati
+</code></pre>
+<h3 id="passi_2">Passi</h3>
+<ol>
+<li>Un parser basato su <code>Regex</code> che produce un valore tipizzato <code>SearchFilter</code>. Ricorda che <code>Regex</code> non è <code>Sendable</code> — il Modulo 2 §3 lo copre, e l'SDK non ha <code>@MainActor</code>.</li>
+<li>Applica i filtri alla cronologia. Oggi è <code>first(where:)</code> in memoria (<code>SearchViewModel.swift:143</code>) con un <code>FetchDescriptor</code> costruito a mano (<code>:256</code>). <code>#Predicate</code> è materia del Batch 2 — per ora fallo onestamente in memoria e <strong>scrivi cosa cambieresti una volta che avrai <code>#Predicate</code>.</strong></li>
+<li>Una view di statistiche: ricerche per giorno da <code>searchDate</code>, come grafico <code>BarMark</code>.</li>
+<li>Accessibilità: i grafici hanno bisogno di etichette esplicite. Un grafico senza etichette in quest'app è una regressione rispetto al commit <code>9f787fc</code>.</li>
+</ol>
+<h3 id="criteri-di-accettazione_2">Criteri di accettazione</h3>
+<ol>
+<li>Test unitari del parser, parametrizzati, che coprono: ogni filtro da solo, combinati, input malformato, input vuoto. L'input malformato deve degradare a ricerca testuale semplice, mai lanciare nella UI.</li>
+<li>Valori di filtro non validi non causano crash e non restituiscono silenziosamente tutto.</li>
+<li>Il grafico ha un'etichetta di accessibilità e valori per mark.</li>
+<li>Localizzato, entrambi i catalog.</li>
+<li>Tutti i test esistenti passano.</li>
+</ol>
+<hr>
+<h2 id="come-scegliere">Come scegliere</h2>
+<ul>
+<li><strong>Ne fai una?</strong> La Sfida A. È quella che ricostruisce l'architettura vera dell'SDK.</li>
+<li><strong>Ne fai due?</strong> A poi B. B consuma il lavoro di navigazione di A.</li>
+<li><strong>Tutte e tre?</strong> A → B → C. C è la più leggera sull'architettura dell'SDK e la più pesante sulla UI.</li>
+</ul>
+<p>Non iniziare B o C prima del Modulo 4, e non iniziare A prima del Modulo 3 se intendi fare l'esercizio del clock iniettabile — A è molto più interessante con un clock testabile.</p>
+<hr>
+<h2 id="cosa-guardero-durante-la-revisione">Cosa guarderò durante la revisione</h2>
+<p>Quando mi dirai che il batch è finito, è questo che verrà letto. Enunciato in anticipo così nulla è una sorpresa:</p>
+<ul>
+<li><code>APIClient</code> resta l'unico transport?</li>
+<li>Ogni nuovo percorso d'errore termina in <code>Pokespeare.Error</code>, con l'ordinamento della mappatura intatto?</li>
+<li>C'è qualcosa di <code>public</code> che non serviva lo fosse?</li>
+<li>C'è un <code>Optional</code> che fa le veci di un errore?</li>
+<li>Qualche test asserisce dentro un <code>catch</code>?</li>
+<li>I test di integrazione sono protetti?</li>
+<li>La nuova UI è usabile al massimo Dynamic Type, e VoiceOver dice qualcosa di utile?</li>
+<li>Le nuove stringhe utente sono in <strong>entrambi</strong> i catalog?</li>
+<li>Dove ti sei scostato dai pattern esistenti, e sai difenderlo?</li>
+</ul>
+<p>L'ultima ha il peso maggiore. Uno scostamento difeso batte un'imitazione non difesa.</p>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/05-platform-debuts.html"><span>Precedente</span><strong>5 · Debutti di piattaforma</strong></a><a class="pager-next" href="../review-protocol.html"><span>Successivo</span><strong>Protocollo di revisione</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-modulo-6-sfide-di-implementazione">WWDC22 · Modulo 6 — Sfide di implementazione</a><ul>
+<li><a href="#cosa-ce-gia-nel-progetto-e-come-ogni-sfida-lo-forza">Cosa c'è già nel progetto, e come ogni sfida lo forza</a></li>
+<li><a href="#gli-endpoint-verificati-dal-vivo">Gli endpoint (verificati dal vivo)</a></li>
+<li><a href="#regole-valide-per-ogni-sfida">Regole valide per ogni sfida</a></li>
+<li><a href="#sfida-a-servizio-catena-evolutiva">Sfida A — Servizio catena evolutiva</a><ul>
+<li><a href="#obiettivo">Obiettivo</a></li>
+<li><a href="#perche-e-piu-difficile-di-quanto-sembri">Perché è più difficile di quanto sembri</a></li>
+<li><a href="#passi">Passi</a></li>
+<li><a href="#criteri-di-accettazione">Criteri di accettazione</a></li>
+<li><a href="#stretch">Stretch</a></li>
+</ul>
+</li>
+<li><a href="#sfida-b-schermata-efficacia-dei-tipi">Sfida B — Schermata efficacia dei tipi</a><ul>
+<li><a href="#obiettivo_1">Obiettivo</a></li>
+<li><a href="#passi_1">Passi</a></li>
+<li><a href="#criteri-di-accettazione_1">Criteri di accettazione</a></li>
+</ul>
+</li>
+<li><a href="#sfida-c-filtri-di-ricerca-e-statistiche-sulla-cronologia">Sfida C — Filtri di ricerca e statistiche sulla cronologia</a><ul>
+<li><a href="#obiettivo_2">Obiettivo</a></li>
+<li><a href="#passi_2">Passi</a></li>
+<li><a href="#criteri-di-accettazione_2">Criteri di accettazione</a></li>
+</ul>
+</li>
+<li><a href="#come-scegliere">Come scegliere</a></li>
+<li><a href="#cosa-guardero-durante-la-revisione">Cosa guarderò durante la revisione</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

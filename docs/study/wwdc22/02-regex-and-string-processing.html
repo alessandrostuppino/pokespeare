@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2 · Regex & String Processing · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Curriculum</a></li>
+<li><a href="../00-version-map.html">Version Map</a></li>
+<li><a href="../00-baseline.html">Baseline</a></li>
+<li><a href="../review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Overview</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li class="active"><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-module-2-regex-and-string-processing">WWDC22 · Module 2 — Regex and String Processing</h1>
+<p><strong>Swift 5.7</strong> · <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0350-regex-type-overview.md">SE-0350</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0351-regex-builder.md">SE-0351</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0354-regex-literals.md">SE-0354</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0355-regex-syntax-run-time-construction.md">SE-0355</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0357-algorithms-string-processing.md">SE-0357</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0363-unicode-for-string-processing.md">SE-0363</a></p>
+<blockquote>
+<p>Every snippet in this document was typechecked against the iOS 26.4 SDK in Swift 6 language mode before being written down.</p>
+</blockquote>
+<hr>
+<h2 id="1-what-shipped-and-what-problem-it-solves">1. What shipped, and what problem it solves</h2>
+<p>Swift shipped without native regular expressions for eight years. What you had was <code>NSRegularExpression</code>: a class from Foundation, initialized from a <code>String</code> pattern, throwing at runtime if the pattern was malformed, returning <code>NSRange</code> values you had to convert back into <code>String.Index</code> — a conversion that is genuinely easy to get wrong because <code>NSRange</code> counts UTF-16 code units and <code>String.Index</code> does not count anything simple at all.</p>
+<p>Swift 5.7 shipped a six-proposal package that replaces all of it:</p>
+<ul>
+<li>A <strong><code>Regex</code> type</strong>, generic over what it captures, so captures are <em>typed</em> rather than stringly-indexed.</li>
+<li><strong>Literals</strong> — <code>/pattern/</code> — parsed and validated <strong>at compile time</strong>. A malformed pattern is now a build error.</li>
+<li>A <strong>result-builder DSL</strong> (<code>RegexBuilder</code>) for patterns that have outgrown being readable as a one-liner.</li>
+<li><strong>String algorithms</strong> built on top: <code>split</code>, <code>replacing</code>, <code>trimmingPrefix</code>, <code>ranges(of:)</code>, <code>contains</code>.</li>
+<li><strong>Unicode-correct matching semantics</strong>, with an explicit switch between grapheme-cluster and Unicode-scalar level.</li>
+</ul>
+<p>The headline change is the compile-time validation. A typo in an <code>NSRegularExpression</code> pattern ships to users. A typo in a <code>/…/</code> literal fails the build.</p>
+<hr>
+<h2 id="2-how-it-actually-works">2. How it actually works</h2>
+<h3 id="the-type-carries-the-captures">The type carries the captures</h3>
+<pre><code class="language-swift">let r = /(\d+)-(\d+)/
+// r: Regex&lt;(Substring, Substring, Substring)&gt;
+</code></pre>
+<p><code>Regex</code> is generic over its <code>Output</code>. With no captures, <code>Output</code> is <code>Substring</code> — the whole match. With <em>n</em> capture groups, <code>Output</code> is an <em>(n+1)</em>-tuple: the whole match first, then each group. The compiler derives that tuple <strong>by parsing the literal at compile time</strong>.</p>
+<p>That is why this is safe:</p>
+<pre><code class="language-swift">guard let m = s.firstMatch(of: /(\d+)/) else { return nil }
+return Int(m.1)          // m.1 is Substring — statically known to exist
+</code></pre>
+<p>There is no "group 3 does not exist" runtime failure, because group 3 does not typecheck.</p>
+<p>Named captures become tuple labels:</p>
+<pre><code class="language-swift">guard let m = s.wholeMatch(of: /(?&lt;key&gt;\w+)=(?&lt;value&gt;\w+)/) else { return nil }
+return (String(m.key), String(m.value))     // ✅ named, not positional
+</code></pre>
+<h3 id="three-ways-to-build-one-and-when-each-applies">Three ways to build one, and when each applies</h3>
+<p><strong>Literal</strong> — compile-time validated, zero runtime cost to construct, captures typed. Default choice.</p>
+<pre><code class="language-swift">s.wholeMatch(of: /[a-z][a-z\-']{1,29}/)
+</code></pre>
+<p><strong>Builder DSL</strong> — for patterns that a reader would otherwise have to decode:</p>
+<pre><code class="language-swift">import RegexBuilder
+
+let pattern = Regex {
+  Anchor.startOfSubject
+  CharacterClass(&quot;a&quot;...&quot;z&quot;)
+  Repeat(1...29) {
+    CharacterClass.anyOf(&quot;-'&quot;).union(CharacterClass(&quot;a&quot;...&quot;z&quot;))
+  }
+  Anchor.endOfSubject
+}
+</code></pre>
+<p>More verbose, but diffable, commentable, and composable — you can factor a sub-pattern into a <code>let</code> and reuse it. The DSL is a result builder, exactly like SwiftUI's <code>body</code>.</p>
+<p><strong>Runtime string</strong> — when the pattern genuinely is not known until runtime (user-supplied search, config file):</p>
+<pre><code class="language-swift">func runtime(_ pattern: String) throws -&gt; Regex&lt;AnyRegexOutput&gt; {
+  try Regex(pattern)     // throws — this is the only form that can fail at runtime
+}
+</code></pre>
+<p>Note the <code>Output</code> type: <code>AnyRegexOutput</code>. The compiler cannot know the capture shape, so you are back to dynamic access. This is the escape hatch, and it should feel like one.</p>
+<h3 id="matching-semantics-the-unicode-part-everybody-skips">Matching semantics: the Unicode part everybody skips</h3>
+<p>By default, Swift matches at the <strong>grapheme cluster</strong> level — the same level <code>String</code> iterates at. <code>.</code> matches one user-perceived character, so it matches <code>🇮🇹</code> as one thing, and <code>e</code> + combining-acute as one thing.</p>
+<p><code>NSRegularExpression</code> matches UTF-16 code units. This is a real behavioural difference, not a detail. If you are porting a pattern and the results differ on non-ASCII input, this is why.</p>
+<p>You can opt into scalar-level matching with <code>.matchingSemantics(.unicodeScalar)</code> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0363-unicode-for-string-processing.md">SE-0363</a>).</p>
+<p>Options are applied as methods on the regex, not as flags in the pattern:</p>
+<pre><code class="language-swift">let ci = /pikachu/.ignoresCase()
+</code></pre>
+<h3 id="the-string-algorithms">The string algorithms</h3>
+<p><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0357-algorithms-string-processing.md">SE-0357</a> generalized the <code>String</code> API so that anything taking a separator or a pattern takes a <code>RegexComponent</code>:</p>
+<pre><code class="language-swift">s.replacing(/\s+/, with: &quot; &quot;)     // collapse whitespace runs
+s.split(separator: /,\s*/)        // split on comma with optional spaces
+s.trimmingPrefix(/\s+/)           // drop leading whitespace
+s.contains(/pikachu/.ignoresCase())
+s.ranges(of: /a/)
+</code></pre>
+<p>These are the ones you will reach for most often. Most "I need a regex" moments are really one of these five.</p>
+<hr>
+<h2 id="3-the-trap-regex-is-not-sendable">3. The trap: <code>Regex</code> is not <code>Sendable</code></h2>
+<p>This is verified, not remembered. Compiling this in Swift 6 language mode:</p>
+<pre><code class="language-swift">let g = /[a-z]+/
+nonisolated func fromNonisolated(_ s: String) -&gt; Bool {
+  s.wholeMatch(of: g) != nil
+}
+</code></pre>
+<p>produces:</p>
+<pre><code>error: main actor-isolated let 'g' can not be referenced from a nonisolated context
+</code></pre>
+<p>And explicitly:</p>
+<pre><code>error: type 'Regex&lt;Substring&gt;' does not conform to the 'Sendable' protocol
+</code></pre>
+<p><strong>What is happening.</strong> <code>Regex</code> is not <code>Sendable</code>. Under Swift 6, a global <code>let</code> of a non-<code>Sendable</code> type cannot be globally accessible without isolation, so the compiler infers <code>@MainActor</code> for it. The declaration compiles fine — the error only fires at the point where <strong>nonisolated</strong> code touches it.</p>
+<p>That last part matters, and it is why this bug hides: your global regex constant compiles, and your <code>@MainActor</code> view model uses it happily. It only explodes the day you reference it from a <code>nonisolated</code> helper or a detached task.</p>
+<p><strong>Two fixes, both verified to compile:</strong></p>
+<pre><code class="language-swift">// A — build it at the use site. Constructing from a literal is cheap.
+nonisolated func a(_ s: String) -&gt; Bool {
+  s.wholeMatch(of: /[a-z]+/) != nil
+}
+
+// B — a static *computed* property: a fresh Regex per access, no shared state.
+enum Patterns {
+  static var name: Regex&lt;Substring&gt; { /[a-z]+/ }
+}
+nonisolated func b(_ s: String) -&gt; Bool {
+  s.wholeMatch(of: Patterns.name) != nil
+}
+</code></pre>
+<p>Note that B is <code>static var</code> with a getter, <strong>not</strong> <code>static let</code>. A <code>static let</code> would reintroduce exactly the shared non-<code>Sendable</code> global the compiler objected to.</p>
+<p>This matters directly for the exercise below, because the SDK is not <code>@MainActor</code> anywhere.</p>
+<hr>
+<h2 id="4-official-sources">4. Official sources</h2>
+<ul>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0350-regex-type-overview.md">SE-0350 — Regex Type and Overview</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0351-regex-builder.md">SE-0351 — Regex builder DSL</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0354-regex-literals.md">SE-0354 — Regex Literals</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0355-regex-syntax-run-time-construction.md">SE-0355 — Regex Syntax and Run-time Construction</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0357-algorithms-string-processing.md">SE-0357 — Regex-powered string processing algorithms</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0363-unicode-for-string-processing.md">SE-0363 — Unicode for String Processing</a></li>
+<li><a href="https://developer.apple.com/documentation/swift/regex">Apple — <code>Regex</code> documentation</a></li>
+<li><a href="https://developer.apple.com/documentation/regexbuilder">Apple — <code>RegexBuilder</code> framework</a></li>
+</ul>
+<hr>
+<h2 id="5-where-it-lands-in-this-codebase">5. Where it lands in this codebase</h2>
+<p>Input validation is currently done twice, in two different ad-hoc ways, and neither says what it means.</p>
+<p><strong><code>SearchViewModel.swift:87-89</code></strong> — a magic number doing two jobs:</p>
+<pre><code class="language-swift">var isSearchButtonVisible: Bool {
+  searchText.count &gt; 2
+}
+</code></pre>
+<p>This single expression is <em>both</em> "should the Search button appear" <em>and</em> "is this input valid" — it is consulted again as a guard at <code>:140</code>. The audit recorded this as finding <strong>C-20</strong>. Two different questions sharing one answer is exactly how a UI rule and a validation rule drift apart later.</p>
+<p><strong><code>SearchViewModel.swift:233-236</code></strong> — character filtering by closure:</p>
+<pre><code class="language-swift">func searchTextDidChange() {
+  let filtered = searchText.filter { $0.isLetter || $0.isWhitespace }
+  searchText = filtered != searchText ? filtered : searchText
+}
+</code></pre>
+<p>This permits <code>"   "</code> (whitespace only) and <code>"a"</code> (too short) and rejects <code>"farfetch'd"</code> and <code>"ho-oh"</code> and <code>"mr. mime"</code> — all of which are real Pokémon names. The filter is simultaneously too permissive and too strict.</p>
+<p>A regex states the actual rule in one place, and states it in a form a reader can check against reality.</p>
+<hr>
+<h2 id="6-exercise">6. Exercise</h2>
+<p><strong>Goal:</strong> replace both ad-hoc rules with one named, tested, regex-backed validator — and hit the <code>Sendable</code> trap deliberately so you remember it.</p>
+<h3 id="6a-write-the-validator">6a — Write the validator</h3>
+<p>Add a validator that answers "is this a plausible Pokémon name?" Real names to satisfy: <code>pikachu</code>, <code>mr. mime</code>, <code>farfetch'd</code>, <code>ho-oh</code>, <code>nidoran♀</code>, <code>porygon-z</code>. Names to reject: <code>""</code>, <code>"  "</code>, <code>"a"</code>, <code>"123"</code>, <code>"&lt;script&gt;"</code>.</p>
+<p>Decide deliberately where it lives:</p>
+<ul>
+<li>In the <strong>app</strong> (<code>Demo/PokeApp/</code>), it is a UI concern — and the app is <code>@MainActor</code>, so the <code>Sendable</code> trap will not bite.</li>
+<li>In the <strong>SDK</strong> (<code>Pokespeare/</code>), it is an API-contract concern — and the SDK has no <code>@MainActor</code> anywhere, so a <code>static let</code> regex <strong>will</strong> fail to compile.</li>
+</ul>
+<p>Try the SDK placement first, with a <code>static let</code>, specifically to see the error. Then fix it. Then decide where it actually belongs and write down why.</p>
+<h3 id="6b-separate-the-two-questions">6b — Separate the two questions</h3>
+<p>Split <code>isSearchButtonVisible</code> into two properties with two names: one for "the button should be visible", one for "this input is valid enough to send". They may currently return the same value — the point is that they are now allowed to diverge without a bug.</p>
+<h3 id="6c-test-it">6c — Test it</h3>
+<p>Add a <strong>parameterized</strong> Swift Testing case, matching the conventions already used in this repo (see <code>SearchViewModelTests.swift:120-125</code> for the tuple-argument style):</p>
+<pre><code class="language-swift">@Test(arguments: [
+  (&quot;pikachu&quot;, true), (&quot;mr. mime&quot;, true), (&quot;farfetch'd&quot;, true),
+  (&quot;ho-oh&quot;, true), (&quot;&quot;, false), (&quot;  &quot;, false), (&quot;a&quot;, false), (&quot;123&quot;, false),
+])
+func validatesNames(_ name: String, _ expected: Bool) { … }
+</code></pre>
+<p><strong>Acceptance criteria.</strong></p>
+<ol>
+<li>The new test passes, covering every case above.</li>
+<li>All 71 existing tests still pass (53 SDK + 18 app).</li>
+<li><code>searchTextDidChange</code>'s <code>filter</code> closure is gone, replaced by the regex rule — or you have written down a concrete reason it must stay.</li>
+<li><code>swiftlint lint --strict</code> clean.</li>
+<li>You can state, in one sentence, why the regex could not be a <code>static let</code> in the SDK.</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<h3 id="6d-optional-the-builder-form">6d — Optional: the builder form</h3>
+<p>Rewrite your pattern using <code>RegexBuilder</code> and keep whichever version a reader would understand faster. There is no correct answer; there is a defensible one. Write down which you kept and why.</p>
+<hr>
+<h2 id="7-pitfalls">7. Pitfalls</h2>
+<ul>
+<li><strong><code>Regex</code> is not <code>Sendable</code>.</strong> Covered above. The failure appears at the <em>use</em> site, not the declaration, so it hides until nonisolated code touches it.</li>
+<li><strong><code>static let</code> vs <code>static var</code> for patterns.</strong> In non-<code>MainActor</code> code, only the computed <code>var</code> form is safe.</li>
+<li><strong>Grapheme vs scalar semantics.</strong> Swift defaults to grapheme clusters; <code>NSRegularExpression</code> uses UTF-16 code units. Ported patterns can silently change behaviour on emoji, combining marks, and flags.</li>
+<li><strong>The <code>/…/</code> literal vs the division operator.</strong> Swift's parser handles the ambiguity, but bare <code>/</code> inside a literal must be escaped. For patterns containing many slashes, use the extended form <code>#/ … /#</code>.</li>
+<li><strong><code>AnyRegexOutput</code> throws away the type safety</strong> that is the whole point. If you find yourself using <code>try Regex(String)</code> for a pattern that is actually a constant, use a literal instead.</li>
+<li><strong>Do not validate with a regex what the server will validate anyway.</strong> Client-side name validation here is a UX affordance (fail fast, no wasted request), not a security boundary. <code>Pokespeare.Error.pokemonNotFound</code> remains the authority.</li>
+</ul>
+<hr>
+<h2 id="8-self-check">8. Self-check</h2>
+<ol>
+<li>Given <code>/(\d+)-(\w+)/</code>, what is the full type of the resulting <code>Regex</code>, including the <code>Output</code> tuple arity?</li>
+<li>Which of the three construction forms can fail at runtime, and what is its <code>Output</code> type?</li>
+<li>Why does a global <code>let</code> holding a <code>Regex</code> compile fine but fail when used from a <code>nonisolated</code> function?</li>
+<li>Why must the fix be <code>static var</code> rather than <code>static let</code>?</li>
+<li>What is the difference between Swift's default matching semantics and <code>NSRegularExpression</code>'s, and name one input where they differ.</li>
+<li>Name three <code>String</code> methods from SE-0357 that take a regex, and one case where reaching for one of them is better than writing a match by hand.</li>
+<li>In <code>SearchViewModel</code>, what two distinct questions is <code>searchText.count &gt; 2</code> currently answering, and what is the concrete bug that this sets up?</li>
+</ol>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/01-generics-and-existentials.html"><span>Previous</span><strong>1 · Generics & Existentials</strong></a><a class="pager-next" href="../wwdc22/03-concurrency-foundations.html"><span>Next</span><strong>3 · Concurrency Foundations</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-module-2-regex-and-string-processing">WWDC22 · Module 2 — Regex and String Processing</a><ul>
+<li><a href="#1-what-shipped-and-what-problem-it-solves">1. What shipped, and what problem it solves</a></li>
+<li><a href="#2-how-it-actually-works">2. How it actually works</a><ul>
+<li><a href="#the-type-carries-the-captures">The type carries the captures</a></li>
+<li><a href="#three-ways-to-build-one-and-when-each-applies">Three ways to build one, and when each applies</a></li>
+<li><a href="#matching-semantics-the-unicode-part-everybody-skips">Matching semantics: the Unicode part everybody skips</a></li>
+<li><a href="#the-string-algorithms">The string algorithms</a></li>
+</ul>
+</li>
+<li><a href="#3-the-trap-regex-is-not-sendable">3. The trap: Regex is not Sendable</a></li>
+<li><a href="#4-official-sources">4. Official sources</a></li>
+<li><a href="#5-where-it-lands-in-this-codebase">5. Where it lands in this codebase</a></li>
+<li><a href="#6-exercise">6. Exercise</a><ul>
+<li><a href="#6a-write-the-validator">6a — Write the validator</a></li>
+<li><a href="#6b-separate-the-two-questions">6b — Separate the two questions</a></li>
+<li><a href="#6c-test-it">6c — Test it</a></li>
+<li><a href="#6d-optional-the-builder-form">6d — Optional: the builder form</a></li>
+</ul>
+</li>
+<li><a href="#7-pitfalls">7. Pitfalls</a></li>
+<li><a href="#8-self-check">8. Self-check</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Programma</a></li>
+<li><a href="../00-version-map.html">Mappa delle versioni</a></li>
+<li><a href="../00-baseline.html">Punto di partenza</a></li>
+<li><a href="../review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li class="active"><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li><a href="../wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-modulo-2-regex-ed-elaborazione-di-stringhe">WWDC22 · Modulo 2 — Regex ed elaborazione di stringhe</h1>
+<p><strong>Swift 5.7</strong> · <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0350-regex-type-overview.md">SE-0350</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0351-regex-builder.md">SE-0351</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0354-regex-literals.md">SE-0354</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0355-regex-syntax-run-time-construction.md">SE-0355</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0357-algorithms-string-processing.md">SE-0357</a>, <a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0363-unicode-for-string-processing.md">SE-0363</a></p>
+<blockquote>
+<p>Ogni frammento di questo documento è stato verificato col typechecker contro l'SDK iOS 26.4 in Swift 6 language mode prima di essere scritto.</p>
+</blockquote>
+<hr>
+<h2 id="1-cosa-e-uscito-e-quale-problema-risolve">1. Cosa è uscito, e quale problema risolve</h2>
+<p>Swift è uscito senza espressioni regolari native per otto anni. Quello che avevi era <code>NSRegularExpression</code>: una classe di Foundation, inizializzata da un pattern <code>String</code>, che lanciava a runtime se il pattern era malformato, e restituiva valori <code>NSRange</code> da riconvertire in <code>String.Index</code> — una conversione genuinamente facile da sbagliare, perché <code>NSRange</code> conta code unit UTF-16 e <code>String.Index</code> non conta nulla di semplice.</p>
+<p>Swift 5.7 ha rilasciato un pacchetto di sei proposte che sostituisce tutto questo:</p>
+<ul>
+<li>Un <strong>tipo <code>Regex</code></strong>, generico su ciò che cattura, così le catture sono <em>tipizzate</em> invece che indicizzate per stringa.</li>
+<li><strong>Literal</strong> — <code>/pattern/</code> — parsati e validati <strong>a compile-time</strong>. Un pattern malformato è ora un errore di build.</li>
+<li>Un <strong>DSL result-builder</strong> (<code>RegexBuilder</code>) per pattern che hanno superato la leggibilità di una riga sola.</li>
+<li><strong>Algoritmi su stringhe</strong> costruiti sopra: <code>split</code>, <code>replacing</code>, <code>trimmingPrefix</code>, <code>ranges(of:)</code>, <code>contains</code>.</li>
+<li><strong>Semantica di matching corretta per Unicode</strong>, con un interruttore esplicito tra livello grapheme cluster e Unicode scalar.</li>
+</ul>
+<p>Il cambiamento principale è la validazione a compile-time. Un refuso in un pattern <code>NSRegularExpression</code> arriva agli utenti. Un refuso in un literal <code>/…/</code> fa fallire la build.</p>
+<hr>
+<h2 id="2-come-funziona-davvero">2. Come funziona davvero</h2>
+<h3 id="il-tipo-porta-le-catture">Il tipo porta le catture</h3>
+<pre><code class="language-swift">let r = /(\d+)-(\d+)/
+// r: Regex&lt;(Substring, Substring, Substring)&gt;
+</code></pre>
+<p><code>Regex</code> è generico sul suo <code>Output</code>. Senza catture, <code>Output</code> è <code>Substring</code> — l'intero match. Con <em>n</em> gruppi di cattura, <code>Output</code> è una tupla di <em>(n+1)</em> elementi: prima il match intero, poi ogni gruppo. Il compilatore ricava quella tupla <strong>parsando il literal a compile-time</strong>.</p>
+<p>Ecco perché questo è sicuro:</p>
+<pre><code class="language-swift">guard let m = s.firstMatch(of: /(\d+)/) else { return nil }
+return Int(m.1)          // m.1 è Substring — noto staticamente come esistente
+</code></pre>
+<p>Non esiste un fallimento a runtime del tipo "il gruppo 3 non esiste", perché il gruppo 3 non passa il typecheck.</p>
+<p>Le catture nominate diventano etichette di tupla:</p>
+<pre><code class="language-swift">guard let m = s.wholeMatch(of: /(?&lt;key&gt;\w+)=(?&lt;value&gt;\w+)/) else { return nil }
+return (String(m.key), String(m.value))     // ✅ nominate, non posizionali
+</code></pre>
+<h3 id="tre-modi-per-costruirne-una-e-quando-usarli">Tre modi per costruirne una, e quando usarli</h3>
+<p><strong>Literal</strong> — validato a compile-time, costo zero a runtime per costruirlo, catture tipizzate. Scelta di default.</p>
+<pre><code class="language-swift">s.wholeMatch(of: /[a-z][a-z\-']{1,29}/)
+</code></pre>
+<p><strong>DSL builder</strong> — per pattern che altrimenti un lettore dovrebbe decifrare:</p>
+<pre><code class="language-swift">import RegexBuilder
+
+let pattern = Regex {
+  Anchor.startOfSubject
+  CharacterClass(&quot;a&quot;...&quot;z&quot;)
+  Repeat(1...29) {
+    CharacterClass.anyOf(&quot;-'&quot;).union(CharacterClass(&quot;a&quot;...&quot;z&quot;))
+  }
+  Anchor.endOfSubject
+}
+</code></pre>
+<p>Più verboso, ma diffabile, commentabile e componibile — puoi estrarre un sotto-pattern in un <code>let</code> e riusarlo. Il DSL è un result builder, esattamente come il <code>body</code> di SwiftUI.</p>
+<p><strong>Stringa a runtime</strong> — quando il pattern davvero non è noto fino a runtime (ricerca fornita dall'utente, file di configurazione):</p>
+<pre><code class="language-swift">func runtime(_ pattern: String) throws -&gt; Regex&lt;AnyRegexOutput&gt; {
+  try Regex(pattern)     // throws — è l'unica forma che può fallire a runtime
+}
+</code></pre>
+<p>Nota il tipo <code>Output</code>: <code>AnyRegexOutput</code>. Il compilatore non può conoscere la forma delle catture, quindi torni all'accesso dinamico. Questa è la via di fuga, e deve sembrarlo.</p>
+<h3 id="semantica-di-matching-la-parte-unicode-che-tutti-saltano">Semantica di matching: la parte Unicode che tutti saltano</h3>
+<p>Di default Swift fa matching a livello di <strong>grapheme cluster</strong> — lo stesso livello su cui itera <code>String</code>. <code>.</code> corrisponde a un carattere percepito dall'utente, quindi corrisponde a <code>🇮🇹</code> come una cosa sola, e a <code>e</code> + accento combinante come una cosa sola.</p>
+<p><code>NSRegularExpression</code> fa matching su code unit UTF-16. È una differenza di comportamento reale, non un dettaglio. Se stai portando un pattern e i risultati differiscono su input non ASCII, il motivo è questo.</p>
+<p>Puoi passare al matching a livello di scalar con <code>.matchingSemantics(.unicodeScalar)</code> (<a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0363-unicode-for-string-processing.md">SE-0363</a>).</p>
+<p>Le opzioni si applicano come metodi sulla regex, non come flag nel pattern:</p>
+<pre><code class="language-swift">let ci = /pikachu/.ignoresCase()
+</code></pre>
+<h3 id="gli-algoritmi-su-stringhe">Gli algoritmi su stringhe</h3>
+<p><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0357-algorithms-string-processing.md">SE-0357</a> ha generalizzato l'API di <code>String</code> così che tutto ciò che prende un separatore o un pattern prende un <code>RegexComponent</code>:</p>
+<pre><code class="language-swift">s.replacing(/\s+/, with: &quot; &quot;)     // comprime sequenze di spazi
+s.split(separator: /,\s*/)        // divide su virgola con spazi opzionali
+s.trimmingPrefix(/\s+/)           // toglie gli spazi iniziali
+s.contains(/pikachu/.ignoresCase())
+s.ranges(of: /a/)
+</code></pre>
+<p>Sono quelli a cui ricorrerai più spesso. La maggior parte dei momenti "mi serve una regex" è in realtà uno di questi cinque.</p>
+<hr>
+<h2 id="3-la-trappola-regex-non-e-sendable">3. La trappola: <code>Regex</code> non è <code>Sendable</code></h2>
+<p>Questo è verificato, non ricordato. Compilando questo in Swift 6 language mode:</p>
+<pre><code class="language-swift">let g = /[a-z]+/
+nonisolated func fromNonisolated(_ s: String) -&gt; Bool {
+  s.wholeMatch(of: g) != nil
+}
+</code></pre>
+<p>si ottiene:</p>
+<pre><code>error: main actor-isolated let 'g' can not be referenced from a nonisolated context
+</code></pre>
+<p>E esplicitamente:</p>
+<pre><code>error: type 'Regex&lt;Substring&gt;' does not conform to the 'Sendable' protocol
+</code></pre>
+<p><strong>Cosa sta succedendo.</strong> <code>Regex</code> non è <code>Sendable</code>. In Swift 6, un <code>let</code> globale di tipo non <code>Sendable</code> non può essere accessibile globalmente senza isolamento, quindi il compilatore gli inferisce <code>@MainActor</code>. La dichiarazione compila benissimo — l'errore scatta solo nel punto in cui codice <strong>nonisolated</strong> lo tocca.</p>
+<p>Quest'ultima parte conta, ed è il motivo per cui il bug si nasconde: la tua costante regex globale compila, e il tuo view model <code>@MainActor</code> la usa contento. Esplode solo il giorno in cui la referenzi da un helper <code>nonisolated</code> o da un task distaccato.</p>
+<p><strong>Due fix, entrambi verificati che compilano:</strong></p>
+<pre><code class="language-swift">// A — costruiscila nel punto d'uso. Costruire da un literal è economico.
+nonisolated func a(_ s: String) -&gt; Bool {
+  s.wholeMatch(of: /[a-z]+/) != nil
+}
+
+// B — una proprietà statica *calcolata*: una Regex nuova a ogni accesso, nessuno stato condiviso.
+enum Patterns {
+  static var name: Regex&lt;Substring&gt; { /[a-z]+/ }
+}
+nonisolated func b(_ s: String) -&gt; Bool {
+  s.wholeMatch(of: Patterns.name) != nil
+}
+</code></pre>
+<p>Nota che B è <code>static var</code> con un getter, <strong>non</strong> <code>static let</code>. Un <code>static let</code> reintrodurrebbe esattamente il globale condiviso non <code>Sendable</code> a cui il compilatore si opponeva.</p>
+<p>Questo conta direttamente per l'esercizio qui sotto, perché l'SDK non è <code>@MainActor</code> da nessuna parte.</p>
+<hr>
+<h2 id="4-fonti-ufficiali">4. Fonti ufficiali</h2>
+<ul>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0350-regex-type-overview.md">SE-0350 — Regex Type and Overview</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0351-regex-builder.md">SE-0351 — Regex builder DSL</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0354-regex-literals.md">SE-0354 — Regex Literals</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0355-regex-syntax-run-time-construction.md">SE-0355 — Regex Syntax and Run-time Construction</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0357-algorithms-string-processing.md">SE-0357 — Regex-powered string processing algorithms</a></li>
+<li><a href="https://github.com/swiftlang/swift-evolution/blob/main/proposals/0363-unicode-for-string-processing.md">SE-0363 — Unicode for String Processing</a></li>
+<li><a href="https://developer.apple.com/documentation/swift/regex">Apple — documentazione <code>Regex</code></a></li>
+<li><a href="https://developer.apple.com/documentation/regexbuilder">Apple — framework <code>RegexBuilder</code></a></li>
+</ul>
+<hr>
+<h2 id="5-dove-atterra-in-questo-codebase">5. Dove atterra in questo codebase</h2>
+<p>La validazione dell'input è fatta attualmente due volte, in due modi improvvisati diversi, e nessuno dei due dice cosa intende.</p>
+<p><strong><code>SearchViewModel.swift:87-89</code></strong> — un numero magico che fa due lavori:</p>
+<pre><code class="language-swift">var isSearchButtonVisible: Bool {
+  searchText.count &gt; 2
+}
+</code></pre>
+<p>Questa singola espressione è <em>sia</em> "il bottone Search deve comparire" <em>sia</em> "questo input è valido" — viene riconsultata come guardia a <code>:140</code>. L'audit l'ha registrata come finding <strong>C-20</strong>. Due domande diverse che condividono una risposta sola è esattamente il modo in cui una regola di UI e una di validazione divergono più avanti.</p>
+<p><strong><code>SearchViewModel.swift:233-236</code></strong> — filtro dei caratteri via closure:</p>
+<pre><code class="language-swift">func searchTextDidChange() {
+  let filtered = searchText.filter { $0.isLetter || $0.isWhitespace }
+  searchText = filtered != searchText ? filtered : searchText
+}
+</code></pre>
+<p>Questo permette <code>"   "</code> (solo spazi) e <code>"a"</code> (troppo corto) e rifiuta <code>"farfetch'd"</code>, <code>"ho-oh"</code> e <code>"mr. mime"</code> — tutti nomi di Pokémon reali. Il filtro è simultaneamente troppo permissivo e troppo restrittivo.</p>
+<p>Una regex enuncia la regola vera in un posto solo, e la enuncia in una forma che un lettore può confrontare con la realtà.</p>
+<hr>
+<h2 id="6-esercizio">6. Esercizio</h2>
+<p><strong>Obiettivo:</strong> sostituire entrambe le regole improvvisate con un unico validatore basato su regex, nominato e testato — e sbattere deliberatamente contro la trappola <code>Sendable</code> per ricordartela.</p>
+<h3 id="6a-scrivi-il-validatore">6a — Scrivi il validatore</h3>
+<p>Aggiungi un validatore che risponda a "questo è un nome di Pokémon plausibile?". Nomi reali da soddisfare: <code>pikachu</code>, <code>mr. mime</code>, <code>farfetch'd</code>, <code>ho-oh</code>, <code>nidoran♀</code>, <code>porygon-z</code>. Nomi da rifiutare: <code>""</code>, <code>"  "</code>, <code>"a"</code>, <code>"123"</code>, <code>"&lt;script&gt;"</code>.</p>
+<p>Decidi deliberatamente dove vive:</p>
+<ul>
+<li>Nell'<strong>app</strong> (<code>Demo/PokeApp/</code>) è una questione di UI — e l'app è <code>@MainActor</code>, quindi la trappola <code>Sendable</code> non morde.</li>
+<li>Nell'<strong>SDK</strong> (<code>Pokespeare/</code>) è una questione di contratto dell'API — e l'SDK non ha <code>@MainActor</code> da nessuna parte, quindi un <code>static let</code> regex <strong>non compilerà</strong>.</li>
+</ul>
+<p>Prova prima la collocazione nell'SDK, con un <code>static let</code>, apposta per vedere l'errore. Poi sistemalo. Poi decidi dove sta davvero e scrivi perché.</p>
+<h3 id="6b-separa-le-due-domande">6b — Separa le due domande</h3>
+<p>Dividi <code>isSearchButtonVisible</code> in due proprietà con due nomi: una per "il bottone deve essere visibile", una per "questo input è abbastanza valido da essere inviato". Al momento possono restituire lo stesso valore — il punto è che ora possono divergere senza generare un bug.</p>
+<h3 id="6c-testalo">6c — Testalo</h3>
+<p>Aggiungi un caso Swift Testing <strong>parametrizzato</strong>, coerente con le convenzioni già in uso nel repo (vedi <code>SearchViewModelTests.swift:120-125</code> per lo stile con argomenti a tupla):</p>
+<pre><code class="language-swift">@Test(arguments: [
+  (&quot;pikachu&quot;, true), (&quot;mr. mime&quot;, true), (&quot;farfetch'd&quot;, true),
+  (&quot;ho-oh&quot;, true), (&quot;&quot;, false), (&quot;  &quot;, false), (&quot;a&quot;, false), (&quot;123&quot;, false),
+])
+func validatesNames(_ name: String, _ expected: Bool) { … }
+</code></pre>
+<p><strong>Criteri di accettazione.</strong></p>
+<ol>
+<li>Il nuovo test passa, coprendo ogni caso qui sopra.</li>
+<li>Tutti i 71 test esistenti passano ancora (53 SDK + 18 app).</li>
+<li>La closure <code>filter</code> di <code>searchTextDidChange</code> è sparita, sostituita dalla regola regex — oppure hai scritto un motivo concreto per cui deve restare.</li>
+<li><code>swiftlint lint --strict</code> pulito.</li>
+<li>Sai dire, in una frase, perché la regex non poteva essere un <code>static let</code> nell'SDK.</li>
+</ol>
+<pre><code class="language-bash">xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<h3 id="6d-facoltativo-la-forma-builder">6d — Facoltativo: la forma builder</h3>
+<p>Riscrivi il tuo pattern usando <code>RegexBuilder</code> e tieni la versione che un lettore capirebbe più in fretta. Non c'è una risposta corretta; ce n'è una difendibile. Scrivi quale hai tenuto e perché.</p>
+<hr>
+<h2 id="7-trappole">7. Trappole</h2>
+<ul>
+<li><strong><code>Regex</code> non è <code>Sendable</code>.</strong> Trattato sopra. Il fallimento compare nel punto d'<em>uso</em>, non nella dichiarazione, quindi si nasconde finché codice nonisolated non la tocca.</li>
+<li><strong><code>static let</code> vs <code>static var</code> per i pattern.</strong> In codice non <code>@MainActor</code>, solo la forma <code>var</code> calcolata è sicura.</li>
+<li><strong>Semantica grapheme vs scalar.</strong> Swift usa i grapheme cluster di default; <code>NSRegularExpression</code> usa code unit UTF-16. I pattern portati possono cambiare comportamento silenziosamente su emoji, segni combinanti e bandiere.</li>
+<li><strong>Il literal <code>/…/</code> e l'operatore di divisione.</strong> Il parser di Swift gestisce l'ambiguità, ma una <code>/</code> nuda dentro un literal va escapata. Per pattern con molte barre, usa la forma estesa <code>#/ … /#</code>.</li>
+<li><strong><code>AnyRegexOutput</code> butta via la type safety</strong> che è tutto il punto. Se ti ritrovi a usare <code>try Regex(String)</code> per un pattern che in realtà è una costante, usa un literal.</li>
+<li><strong>Non validare con una regex ciò che il server validerà comunque.</strong> La validazione del nome lato client qui è un affordance di UX (fallisci subito, nessuna richiesta sprecata), non un confine di sicurezza. <code>Pokespeare.Error.pokemonNotFound</code> resta l'autorità.</li>
+</ul>
+<hr>
+<h2 id="8-autovalutazione">8. Autovalutazione</h2>
+<ol>
+<li>Data <code>/(\d+)-(\w+)/</code>, qual è il tipo completo della <code>Regex</code> risultante, inclusa l'arietà della tupla <code>Output</code>?</li>
+<li>Quale delle tre forme di costruzione può fallire a runtime, e qual è il suo tipo <code>Output</code>?</li>
+<li>Perché un <code>let</code> globale che contiene una <code>Regex</code> compila benissimo ma fallisce quando viene usato da una funzione <code>nonisolated</code>?</li>
+<li>Perché il fix deve essere <code>static var</code> e non <code>static let</code>?</li>
+<li>Qual è la differenza tra la semantica di matching di default di Swift e quella di <code>NSRegularExpression</code>, e nomina un input su cui differiscono.</li>
+<li>Nomina tre metodi di <code>String</code> da SE-0357 che prendono una regex, e un caso in cui ricorrere a uno di essi è meglio che scrivere un match a mano.</li>
+<li>In <code>SearchViewModel</code>, a quali due domande distinte sta rispondendo attualmente <code>searchText.count &gt; 2</code>, e qual è il bug concreto che questo prepara?</li>
+</ol>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/01-generics-and-existentials.html"><span>Precedente</span><strong>1 · Generics ed existentials</strong></a><a class="pager-next" href="../wwdc22/03-concurrency-foundations.html"><span>Successivo</span><strong>3 · Fondamenta di concorrenza</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-modulo-2-regex-ed-elaborazione-di-stringhe">WWDC22 · Modulo 2 — Regex ed elaborazione di stringhe</a><ul>
+<li><a href="#1-cosa-e-uscito-e-quale-problema-risolve">1. Cosa è uscito, e quale problema risolve</a></li>
+<li><a href="#2-come-funziona-davvero">2. Come funziona davvero</a><ul>
+<li><a href="#il-tipo-porta-le-catture">Il tipo porta le catture</a></li>
+<li><a href="#tre-modi-per-costruirne-una-e-quando-usarli">Tre modi per costruirne una, e quando usarli</a></li>
+<li><a href="#semantica-di-matching-la-parte-unicode-che-tutti-saltano">Semantica di matching: la parte Unicode che tutti saltano</a></li>
+<li><a href="#gli-algoritmi-su-stringhe">Gli algoritmi su stringhe</a></li>
+</ul>
+</li>
+<li><a href="#3-la-trappola-regex-non-e-sendable">3. La trappola: Regex non è Sendable</a></li>
+<li><a href="#4-fonti-ufficiali">4. Fonti ufficiali</a></li>
+<li><a href="#5-dove-atterra-in-questo-codebase">5. Dove atterra in questo codebase</a></li>
+<li><a href="#6-esercizio">6. Esercizio</a><ul>
+<li><a href="#6a-scrivi-il-validatore">6a — Scrivi il validatore</a></li>
+<li><a href="#6b-separa-le-due-domande">6b — Separa le due domande</a></li>
+<li><a href="#6c-testalo">6c — Testalo</a></li>
+<li><a href="#6d-facoltativo-la-forma-builder">6d — Facoltativo: la forma builder</a></li>
+</ul>
+</li>
+<li><a href="#7-trappole">7. Trappole</a></li>
+<li><a href="#8-autovalutazione">8. Autovalutazione</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>

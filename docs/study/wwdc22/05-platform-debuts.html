@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>5 · Platform Debuts · Swift Study</title>
+<meta name="description" content="Swift &amp; Apple platform study curriculum, WWDC22 to WWDC25, applied to the Pokespeare project.">
+<link rel="stylesheet" href="../assets/style.css">
+<script>/* set theme+lang before paint to avoid flash */
+(function(){try{var t=localStorage.getItem('study-theme');if(t)document.documentElement.dataset.theme=t;
+var p=new URLSearchParams(location.search).get('lang');var l=p||localStorage.getItem('study-lang');
+if(l==='it'||l==='en'){document.documentElement.dataset.lang=l;document.documentElement.lang=l;}}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+<button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+<span class="brand"><span class="lang" data-l="en">Swift Study</span><span class="lang" data-l="it">Studio Swift</span></span>
+<div class="spacer"></div>
+<div class="lang-switch" role="group" aria-label="Language">
+<button data-set-lang="en" aria-pressed="true">EN</button><button data-set-lang="it" aria-pressed="false">IT</button>
+</div>
+<button class="icon-btn" id="theme-btn" aria-label="Toggle theme">
+<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>
+<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></button>
+</header>
+<div class="shell" id="content">
+<div class="lang" data-l="en">
+<nav class="sidebar-nav" aria-label="Contents">
+<p class="nav-title">Swift Study<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Curriculum</a></li>
+<li><a href="../00-version-map.html">Version Map</a></li>
+<li><a href="../00-baseline.html">Baseline</a></li>
+<li><a href="../review-protocol.html">Review Protocol</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Overview</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics & Existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex & String Processing</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Concurrency Foundations</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · SwiftUI Navigation & Layout</a></li>
+<li class="active"><a href="../wwdc22/05-platform-debuts.html">5 · Platform Debuts</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Build Challenges</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-module-5-platform-debuts-app-intents-swift-charts-lock-screen-widgets-transferable">WWDC22 · Module 5 — Platform Debuts: App Intents, Swift Charts, Lock Screen Widgets, Transferable</h1>
+<p><strong>iOS 16</strong> · Four frameworks that all debuted at WWDC22 and are all absent from this project. This module is broader and shallower than the previous four by design — each of these earns a deeper pass in a later batch, where they were substantially extended.</p>
+<blockquote>
+<p>Every snippet here was typechecked against the iOS 26.4 SDK in Swift 6 language mode.</p>
+</blockquote>
+<hr>
+<h2 id="1-app-intents">1. App Intents</h2>
+<h3 id="what-it-is-and-why-it-replaced-what-came-before">What it is, and why it replaced what came before</h3>
+<p><strong>App Intents</strong> is how your app exposes actions to the rest of the system: Shortcuts, Siri, Spotlight, the Action button, widgets, and (from iOS 18) Apple Intelligence.</p>
+<p>It replaced SiriKit Intents, and the difference is not cosmetic. SiriKit required a <code>.intentdefinition</code> file, a code generator, and a separate app extension target. App Intents is <strong>pure Swift in your app target</strong> — a protocol conformance, and that is the whole integration.</p>
+<pre><code class="language-swift">import AppIntents
+
+struct ShowPokemonIntent: AppIntent {
+  static let title: LocalizedStringResource = &quot;Show Pokémon&quot;
+  static let openAppWhenRun = true
+
+  @Parameter(title: &quot;Name&quot;)
+  var name: String
+
+  func perform() async throws -&gt; some IntentResult &amp; ProvidesDialog {
+    .result(dialog: &quot;Showing \(name)&quot;)
+  }
+}
+</code></pre>
+<p>Three things to notice:</p>
+<ul>
+<li><strong><code>title</code> is a <code>LocalizedStringResource</code>,</strong> not a <code>String</code>. This is the type that Batch 2 covers properly — it defers localization to <em>display</em> time rather than resolving at construction. The system needs that, because it may display your intent's name in Shortcuts under a locale your app is not currently running in. This project's habit of pre-resolving <code>String(localized:)</code> at init (<code>SearchViewModel.swift:40-56</code>) would be actively wrong here.</li>
+<li><strong><code>perform()</code> is <code>async throws</code></strong> and returns a result type composed from protocols — <code>ProvidesDialog</code>, <code>ReturnsValue</code>, <code>ShowsSnippetView</code>, and so on, mixed as needed.</li>
+<li><strong><code>@Parameter</code></strong> makes the property appear as an editable field in the Shortcuts editor, with a type-appropriate control, for free.</li>
+</ul>
+<p><code>AppShortcutsProvider</code> publishes intents that should be available with no user setup at all:</p>
+<pre><code class="language-swift">struct Shortcuts: AppShortcutsProvider {
+  static var appShortcuts: [AppShortcut] {
+    AppShortcut(
+      intent: ShowPokemonIntent(),
+      phrases: [&quot;Show \(.applicationName)&quot;],
+      shortTitle: &quot;Show&quot;,
+      systemImageName: &quot;sparkles&quot;
+    )
+  }
+}
+</code></pre>
+<p>Phrases must interpolate <code>\(.applicationName)</code> — the system requires your app's name in the phrase so users cannot collide with other apps' commands.</p>
+<h3 id="why-this-project-should-care">Why this project should care</h3>
+<p>App Intents is the natural consumer of the navigation work from Module 4. "Hey Siri, show Pikachu in PokéSpeare" needs somewhere to navigate <em>to</em> — which means it needs a path to assign, which the sheet-based presentation does not have. Do Module 4 first.</p>
+<p><strong>Later batches:</strong> interactive widgets driven by intents (WWDC23), Control Widgets and Apple Intelligence integration (WWDC24), Spotlight integration (WWDC25).</p>
+<hr>
+<h2 id="2-swift-charts">2. Swift Charts</h2>
+<p>A declarative charting framework built on the same layout and result-builder machinery as SwiftUI.</p>
+<pre><code class="language-swift">Chart(data) { p in
+  BarMark(x: .value(&quot;Day&quot;, p.day), y: .value(&quot;Count&quot;, p.count))
+    .foregroundStyle(by: .value(&quot;Day&quot;, p.day))
+}
+.chartXAxis { AxisMarks() }
+</code></pre>
+<p>The mental model is <strong>grammar of graphics</strong>: you do not configure a chart object, you describe marks and the data dimensions they encode. <code>BarMark</code>, <code>LineMark</code>, <code>PointMark</code>, <code>AreaMark</code>, <code>RuleMark</code>, <code>RectangleMark</code>, <code>SectorMark</code> (iOS 17). <code>.value("Label", keyPath)</code> is a <em>plottable value</em> — the string is the axis label and the legend entry, so it is user-visible and must be localized.</p>
+<p><code>.foregroundStyle(by:)</code>, <code>.symbol(by:)</code>, and <code>.lineStyle(by:)</code> create a series split <em>and</em> a legend automatically.</p>
+<p><strong>Accessibility is not free.</strong> Charts generate an audio-graph representation, but only if your data is <code>Identifiable</code> and you supply <code>.accessibilityLabel</code>/<code>.accessibilityValue</code> on the marks. Given the accessibility work already done in this project (commit <code>9f787fc</code>), do not regress the standard by adding an unlabelled chart.</p>
+<p><strong>Later batches:</strong> <code>SectorMark</code> and scrolling charts (WWDC23), function plotting (WWDC24), 3D charts (WWDC25).</p>
+<hr>
+<h2 id="3-lock-screen-widgets">3. Lock Screen Widgets</h2>
+<p>WidgetKit shipped at WWDC20; WWDC22 added the <strong>accessory families</strong> for the Lock Screen and, later, the Watch complications and Dynamic Island surfaces:</p>
+<pre><code class="language-swift">StaticConfiguration(kind: &quot;w&quot;, provider: P()) { _ in Text(&quot;x&quot;) }
+  .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline, .systemSmall])
+</code></pre>
+<p>The accessory families render in a constrained, <strong>desaturated</strong> widget rendering mode — you get shape and hierarchy, not colour. Design for that: <code>.widgetAccentable()</code> marks the parts that should take the accent tint.</p>
+<p>The <code>TimelineProvider</code> model is the part worth understanding, because it is unlike normal app code. You do not update a widget; you hand the system a <strong>timeline</strong> of pre-rendered future entries plus a <code>TimelinePolicy</code> for when to ask you again (<code>.atEnd</code>, <code>.after(date)</code>, <code>.never</code>). The system decides when to actually refresh, subject to a budget. You cannot force a refresh on a schedule you choose — <code>WidgetCenter.shared.reloadTimelines(ofKind:)</code> is a request, not a command.</p>
+<p><strong>Later batches:</strong> interactive widgets via App Intents (WWDC23), Control Widgets and the iOS 18 rendering changes (WWDC24).</p>
+<hr>
+<h2 id="4-transferable-and-sharelink">4. Transferable and <code>ShareLink</code></h2>
+<p><code>Transferable</code> is a protocol describing how a type converts to and from data for sharing, drag-and-drop, and the pasteboard — replacing the <code>NSItemProvider</code>/UTI dance.</p>
+<pre><code class="language-swift">struct Card: Transferable {
+  let name: String
+  static var transferRepresentation: some TransferRepresentation {
+    ProxyRepresentation(exporting: \.name)
+  }
+}
+
+ShareLink(item: Card(name: &quot;Pikachu&quot;), preview: SharePreview(&quot;Pikachu&quot;))
+</code></pre>
+<p>Representations, in rough order of preference: <code>CodableRepresentation</code> (JSON, for your own app's types), <code>DataRepresentation</code> (raw bytes with a UTType), <code>FileRepresentation</code> (a file URL), <code>ProxyRepresentation</code> (delegate to another <code>Transferable</code> type — the simplest case, above).</p>
+<p>You can declare several; the receiver picks the best one it understands. <code>ShareLink</code> then gets you the system share sheet with a single view.</p>
+<hr>
+<h2 id="5-official-sources">5. Official sources</h2>
+<ul>
+<li><a href="https://developer.apple.com/documentation/appintents">Apple — App Intents</a> · <a href="https://developer.apple.com/documentation/appintents/appintent"><code>AppIntent</code></a> · <a href="https://developer.apple.com/documentation/appintents/appshortcutsprovider"><code>AppShortcutsProvider</code></a></li>
+<li><a href="https://developer.apple.com/documentation/charts">Apple — Swift Charts</a> · <a href="https://developer.apple.com/documentation/charts/chart"><code>Chart</code></a></li>
+<li><a href="https://developer.apple.com/documentation/widgetkit">Apple — WidgetKit</a> · <a href="https://developer.apple.com/documentation/widgetkit/creating-accessory-widgets-and-watch-complications">Creating accessory widgets</a></li>
+<li><a href="https://developer.apple.com/documentation/coretransferable/transferable">Apple — <code>Transferable</code></a> · <a href="https://developer.apple.com/documentation/swiftui/sharelink"><code>ShareLink</code></a></li>
+<li><a href="https://developer.apple.com/design/human-interface-guidelines/widgets">Apple — Human Interface Guidelines: Widgets</a></li>
+</ul>
+<hr>
+<h2 id="6-where-it-lands-in-this-codebase">6. Where it lands in this codebase</h2>
+<p>None of these four exist in the project. But the data to drive them already does.</p>
+<p><code>Demo/PokeApp/Models/Pokemon.swift</code> stores <code>name</code>, <code>shakespeareanDescription</code>, <code>spriteUrl</code>, and <code>searchDate</code>. That is enough for:</p>
+<ul>
+<li><strong>App Intent</strong> — "show Pokémon X", which needs the navigation from Module 4.</li>
+<li><strong>Lock Screen widget</strong> — the most recently searched Pokémon. The history is already ordered by <code>searchDate</code> (<code>SearchViewModel.swift:256</code>).</li>
+<li><strong><code>ShareLink</code></strong> — share a Pokémon's name plus description from the detail view. Genuinely one line once <code>Pokemon</code> is <code>Transferable</code>.</li>
+<li><strong>Chart</strong> — searches per day from <code>searchDate</code>. Honestly, this is thin: a hobby app's search history is not interesting data. Do the chart to learn the API, not because the app needs it.</li>
+</ul>
+<p><strong>The one real obstacle.</strong> A widget extension is a <strong>separate process</strong> with a separate bundle. It cannot read the app's SwiftData store as configured today, because <code>PokeApp.swift:28</code> puts the store in <code>URL.applicationSupportDirectory</code> — inside the app's own container. Sharing requires an <strong>App Group</strong> and moving the store into the group container.</p>
+<p>That is a genuine architectural change, and it is the interesting part of the exercise. It also touches the store-recovery path at <code>PokeApp.swift:27-47</code>, which currently deletes and rebuilds on failure — with two processes opening the same store, "delete and rebuild" is a considerably more dangerous move than it was with one.</p>
+<hr>
+<h2 id="7-exercise">7. Exercise</h2>
+<p>Pick <strong>one</strong> of A or B. Both are real features; neither is busywork. Do not do all four frameworks — breadth here is for orientation, and depth comes later.</p>
+<h3 id="option-a-sharelink-small-30-minutes">Option A — <code>ShareLink</code> (small, ~30 minutes)</h3>
+<p>Make <code>Pokemon</code> conform to <code>Transferable</code> and add a <code>ShareLink</code> to the detail view.</p>
+<p><strong>Acceptance criteria.</strong>
+1. Sharing to Messages produces readable text with the name and description.
+2. <code>Pokemon</code> is a SwiftData <code>@Model</code> <strong>class</strong> — reason explicitly about whether to make the model itself <code>Transferable</code> or to introduce a small <code>Sendable</code> value type for sharing. Write down your reasoning. (Consider: <code>@Model</code> classes are not <code>Sendable</code>, and <code>Transferable</code> values cross process boundaries.)
+3. All 71 tests still pass; <code>swiftlint lint --strict</code> clean.</p>
+<h3 id="option-b-app-intent-lock-screen-widget-substantial-several-hours">Option B — App Intent + Lock Screen widget (substantial, several hours)</h3>
+<p>Expose "show Pokémon X" as an App Intent, and add a widget showing the most recent search.</p>
+<p><strong>Do Module 4 first.</strong> Without a navigation path, the intent has nowhere to send the app.</p>
+<p><strong>Steps.</strong>
+1. Add an App Group capability shared by the app and a new widget extension target.
+2. Move the SwiftData store into the group container. Revisit the recovery logic at <code>PokeApp.swift:27-47</code> — with two processes, reason about what happens if the widget is reading while the app deletes.
+3. Write <code>ShowPokemonIntent</code>, using <code>LocalizedStringResource</code> for <code>title</code> (not <code>String(localized:)</code>).
+4. Add an <code>AppShortcutsProvider</code> so it works in Siri with no user setup.
+5. Add a widget supporting <code>.accessoryRectangular</code> and <code>.systemSmall</code>.</p>
+<p><strong>Acceptance criteria.</strong>
+1. The intent appears in the Shortcuts app and navigates the running app to the right Pokémon.
+2. The widget shows the most recent search and updates after a new one.
+3. The widget is legible in the desaturated accessory rendering mode — check on the Lock Screen, not just in the widget gallery.
+4. VoiceOver reads the widget meaningfully.
+5. All 71 existing tests still pass. The intent's logic is covered by at least one new test.
+6. <code>swiftlint lint --strict</code> clean, and CI green — note that adding a target changes the build, so watch the first CI run.</p>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<hr>
+<h2 id="8-pitfalls">8. Pitfalls</h2>
+<ul>
+<li><strong><code>LocalizedStringResource</code>, not <code>String</code>,</strong> for anything the system displays outside your app. Pre-resolved strings freeze the locale at construction; Shortcuts may display your intent under a different one.</li>
+<li><strong>Widgets are a separate process.</strong> No shared memory, no shared container without an App Group, and a strict memory limit — do not decode a large image in a timeline entry.</li>
+<li><strong>You do not control widget refresh.</strong> The timeline policy is a hint against a system budget.</li>
+<li><strong>Accessory families are desaturated.</strong> Colour-carried meaning disappears. Use <code>.widgetAccentable()</code> and rely on shape and hierarchy.</li>
+<li><strong>App Intents parameters must be resolvable without your UI.</strong> <code>perform()</code> may run with the app not in the foreground, or not running at all.</li>
+<li><strong><code>.value("Label", …)</code> strings in Swift Charts are user-visible.</strong> They are axis labels and legend entries — localize them.</li>
+<li><strong>A chart without accessibility labels is worse than no chart</strong> in an app that already got VoiceOver right.</li>
+<li><strong>Adding an App Group changes provisioning.</strong> Expect a signing detour, and expect CI to need attention.</li>
+</ul>
+<hr>
+<h2 id="9-self-check">9. Self-check</h2>
+<ol>
+<li>What did App Intents replace, and what is the concrete developer-experience difference?</li>
+<li>Why is <code>AppIntent.title</code> a <code>LocalizedStringResource</code> rather than a <code>String</code>? Give the failure mode of using a pre-resolved <code>String</code>.</li>
+<li>What must an <code>AppShortcut</code> phrase interpolate, and why does the system require it?</li>
+<li>Describe the <code>TimelineProvider</code> contract. Can you guarantee a widget updates every 5 minutes?</li>
+<li>What is "widget rendering mode" for accessory families, and what does it mean for a design that encodes meaning in colour?</li>
+<li>Name three <code>TransferRepresentation</code> kinds and when you would choose each.</li>
+<li>In Swift Charts, what does <code>.foregroundStyle(by:)</code> do beyond setting a colour?</li>
+<li>This app's SwiftData store lives in <code>URL.applicationSupportDirectory</code>. Precisely why does that block a widget from reading it, and what does the fix change about the store-recovery logic in <code>PokeApp.swift</code>?</li>
+</ol>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/04-swiftui-navigation-and-layout.html"><span>Previous</span><strong>4 · SwiftUI Navigation & Layout</strong></a><a class="pager-next" href="../wwdc22/06-build-challenges.html"><span>Next</span><strong>6 · Build Challenges</strong></a></nav>
+</article>
+<aside class="toc"><p>On this page</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-module-5-platform-debuts-app-intents-swift-charts-lock-screen-widgets-transferable">WWDC22 · Module 5 — Platform Debuts: App Intents, Swift Charts, Lock Screen Widgets, Transferable</a><ul>
+<li><a href="#1-app-intents">1. App Intents</a><ul>
+<li><a href="#what-it-is-and-why-it-replaced-what-came-before">What it is, and why it replaced what came before</a></li>
+<li><a href="#why-this-project-should-care">Why this project should care</a></li>
+</ul>
+</li>
+<li><a href="#2-swift-charts">2. Swift Charts</a></li>
+<li><a href="#3-lock-screen-widgets">3. Lock Screen Widgets</a></li>
+<li><a href="#4-transferable-and-sharelink">4. Transferable and ShareLink</a></li>
+<li><a href="#5-official-sources">5. Official sources</a></li>
+<li><a href="#6-where-it-lands-in-this-codebase">6. Where it lands in this codebase</a></li>
+<li><a href="#7-exercise">7. Exercise</a><ul>
+<li><a href="#option-a-sharelink-small-30-minutes">Option A — ShareLink (small, ~30 minutes)</a></li>
+<li><a href="#option-b-app-intent-lock-screen-widget-substantial-several-hours">Option B — App Intent + Lock Screen widget (substantial, several hours)</a></li>
+</ul>
+</li>
+<li><a href="#8-pitfalls">8. Pitfalls</a></li>
+<li><a href="#9-self-check">9. Self-check</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div><div class="lang" data-l="it">
+<nav class="sidebar-nav" aria-label="Indice">
+<p class="nav-title">Studio Swift<small>WWDC22 → WWDC25</small></p>
+<ul>
+<li><a href="../index.html">Programma</a></li>
+<li><a href="../00-version-map.html">Mappa delle versioni</a></li>
+<li><a href="../00-baseline.html">Punto di partenza</a></li>
+<li><a href="../review-protocol.html">Protocollo di revisione</a></li>
+</ul>
+<p class="nav-group">WWDC22 · Swift 5.7 · iOS 16</p>
+<ul>
+<li><a href="../wwdc22/index.html">WWDC22 — Panoramica</a></li>
+<li><a href="../wwdc22/01-generics-and-existentials.html">1 · Generics ed existentials</a></li>
+<li><a href="../wwdc22/02-regex-and-string-processing.html">2 · Regex ed elaborazione di stringhe</a></li>
+<li><a href="../wwdc22/03-concurrency-foundations.html">3 · Fondamenta di concorrenza</a></li>
+<li><a href="../wwdc22/04-swiftui-navigation-and-layout.html">4 · Navigazione e layout in SwiftUI</a></li>
+<li class="active"><a href="../wwdc22/05-platform-debuts.html">5 · Debutti di piattaforma</a></li>
+<li><a href="../wwdc22/06-build-challenges.html">6 · Sfide di implementazione</a></li>
+</ul>
+</nav>
+<article class="doc">
+<h1 id="wwdc22-modulo-5-debutti-di-piattaforma-app-intents-swift-charts-widget-da-lock-screen-transferable">WWDC22 · Modulo 5 — Debutti di piattaforma: App Intents, Swift Charts, widget da lock screen, Transferable</h1>
+<p><strong>iOS 16</strong> · Quattro framework che hanno debuttato tutti a WWDC22 e sono tutti assenti da questo progetto. Questo modulo è deliberatamente più largo e meno profondo dei quattro precedenti — ciascuno di questi si guadagna un passaggio più approfondito in un batch successivo, dove sono stati estesi in modo sostanziale.</p>
+<blockquote>
+<p>Ogni frammento qui è stato verificato col typechecker contro l'SDK iOS 26.4 in Swift 6 language mode.</p>
+</blockquote>
+<hr>
+<h2 id="1-app-intents">1. App Intents</h2>
+<h3 id="cose-e-perche-ha-sostituito-cio-che-cera-prima">Cos'è, e perché ha sostituito ciò che c'era prima</h3>
+<p><strong>App Intents</strong> è il modo in cui la tua app espone azioni al resto del sistema: Comandi rapidi, Siri, Spotlight, il tasto Azione, i widget e (da iOS 18) Apple Intelligence.</p>
+<p>Ha sostituito SiriKit Intents, e la differenza non è cosmetica. SiriKit richiedeva un file <code>.intentdefinition</code>, un generatore di codice e un target di app extension separato. App Intents è <strong>puro Swift nel target dell'app</strong> — una conformance a un protocol, e l'integrazione è tutta lì.</p>
+<pre><code class="language-swift">import AppIntents
+
+struct ShowPokemonIntent: AppIntent {
+  static let title: LocalizedStringResource = &quot;Show Pokémon&quot;
+  static let openAppWhenRun = true
+
+  @Parameter(title: &quot;Name&quot;)
+  var name: String
+
+  func perform() async throws -&gt; some IntentResult &amp; ProvidesDialog {
+    .result(dialog: &quot;Showing \(name)&quot;)
+  }
+}
+</code></pre>
+<p>Tre cose da notare:</p>
+<ul>
+<li><strong><code>title</code> è un <code>LocalizedStringResource</code>,</strong> non una <code>String</code>. È il tipo che il Batch 2 tratta come si deve — rimanda la localizzazione al momento della <em>visualizzazione</em> invece di risolverla alla costruzione. Il sistema ne ha bisogno, perché potrebbe mostrare il nome del tuo intent in Comandi rapidi sotto un locale in cui la tua app non sta girando. L'abitudine di questo progetto di pre-risolvere <code>String(localized:)</code> all'init (<code>SearchViewModel.swift:40-56</code>) sarebbe qui attivamente sbagliata.</li>
+<li><strong><code>perform()</code> è <code>async throws</code></strong> e restituisce un tipo di risultato composto da protocol — <code>ProvidesDialog</code>, <code>ReturnsValue</code>, <code>ShowsSnippetView</code> e così via, mescolati secondo necessità.</li>
+<li><strong><code>@Parameter</code></strong> fa comparire la proprietà come campo modificabile nell'editor di Comandi rapidi, con un controllo adatto al tipo, gratis.</li>
+</ul>
+<p><code>AppShortcutsProvider</code> pubblica gli intent che devono essere disponibili senza alcuna configurazione da parte dell'utente:</p>
+<pre><code class="language-swift">struct Shortcuts: AppShortcutsProvider {
+  static var appShortcuts: [AppShortcut] {
+    AppShortcut(
+      intent: ShowPokemonIntent(),
+      phrases: [&quot;Show \(.applicationName)&quot;],
+      shortTitle: &quot;Show&quot;,
+      systemImageName: &quot;sparkles&quot;
+    )
+  }
+}
+</code></pre>
+<p>Le frasi devono interpolare <code>\(.applicationName)</code> — il sistema richiede il nome della tua app nella frase così gli utenti non possono collidere con i comandi di altre app.</p>
+<h3 id="perche-a-questo-progetto-dovrebbe-interessare">Perché a questo progetto dovrebbe interessare</h3>
+<p>App Intents è il consumatore naturale del lavoro di navigazione del Modulo 4. "Hey Siri, mostra Pikachu in PokéSpeare" ha bisogno di un posto <em>dove</em> navigare — cioè di un path da assegnare, che la presentazione basata su sheet non ha. Fai prima il Modulo 4.</p>
+<p><strong>Batch successivi:</strong> widget interattivi guidati da intent (WWDC23), Control Widget e integrazione con Apple Intelligence (WWDC24), integrazione Spotlight (WWDC25).</p>
+<hr>
+<h2 id="2-swift-charts">2. Swift Charts</h2>
+<p>Un framework di grafici dichiarativo costruito sulla stessa macchina di layout e result builder di SwiftUI.</p>
+<pre><code class="language-swift">Chart(data) { p in
+  BarMark(x: .value(&quot;Day&quot;, p.day), y: .value(&quot;Count&quot;, p.count))
+    .foregroundStyle(by: .value(&quot;Day&quot;, p.day))
+}
+.chartXAxis { AxisMarks() }
+</code></pre>
+<p>Il modello mentale è la <strong>grammatica dei grafici</strong>: non configuri un oggetto grafico, descrivi mark e le dimensioni dei dati che codificano. <code>BarMark</code>, <code>LineMark</code>, <code>PointMark</code>, <code>AreaMark</code>, <code>RuleMark</code>, <code>RectangleMark</code>, <code>SectorMark</code> (iOS 17). <code>.value("Label", keyPath)</code> è un <em>valore plottabile</em> — la stringa è l'etichetta dell'asse e la voce di legenda, quindi è visibile all'utente e va localizzata.</p>
+<p><code>.foregroundStyle(by:)</code>, <code>.symbol(by:)</code> e <code>.lineStyle(by:)</code> creano una divisione in serie <em>e</em> una legenda automaticamente.</p>
+<p><strong>L'accessibilità non è gratis.</strong> I grafici generano una rappresentazione audio-graph, ma solo se i tuoi dati sono <code>Identifiable</code> e fornisci <code>.accessibilityLabel</code>/<code>.accessibilityValue</code> sui mark. Dato il lavoro di accessibilità già fatto in questo progetto (commit <code>9f787fc</code>), non far regredire lo standard aggiungendo un grafico senza etichette.</p>
+<p><strong>Batch successivi:</strong> <code>SectorMark</code> e grafici scrollabili (WWDC23), plotting di funzioni (WWDC24), grafici 3D (WWDC25).</p>
+<hr>
+<h2 id="3-widget-da-lock-screen">3. Widget da lock screen</h2>
+<p>WidgetKit è uscito a WWDC20; WWDC22 ha aggiunto le <strong>famiglie accessory</strong> per la schermata di blocco e, più tardi, le complicazioni di Watch e le superfici della Dynamic Island:</p>
+<pre><code class="language-swift">StaticConfiguration(kind: &quot;w&quot;, provider: P()) { _ in Text(&quot;x&quot;) }
+  .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline, .systemSmall])
+</code></pre>
+<p>Le famiglie accessory rendono in una modalità di rendering vincolata e <strong>desaturata</strong> — ottieni forma e gerarchia, non colore. Progetta per quello: <code>.widgetAccentable()</code> marca le parti che devono prendere la tinta d'accento.</p>
+<p>Il modello <code>TimelineProvider</code> è la parte che vale la pena capire, perché non assomiglia al normale codice di app. Non aggiorni un widget; consegni al sistema una <strong>timeline</strong> di entry future pre-renderizzate più una <code>TimelinePolicy</code> per quando richiederti (<code>.atEnd</code>, <code>.after(date)</code>, <code>.never</code>). Il sistema decide quando ricaricare davvero, soggetto a un budget. Non puoi forzare un refresh su una cadenza che scegli tu — <code>WidgetCenter.shared.reloadTimelines(ofKind:)</code> è una richiesta, non un comando.</p>
+<p><strong>Batch successivi:</strong> widget interattivi via App Intents (WWDC23), Control Widget e i cambiamenti di rendering di iOS 18 (WWDC24).</p>
+<hr>
+<h2 id="4-transferable-e-sharelink">4. Transferable e <code>ShareLink</code></h2>
+<p><code>Transferable</code> è un protocol che descrive come un tipo si converte da e verso dati per condivisione, drag-and-drop e pasteboard — sostituendo il balletto <code>NSItemProvider</code>/UTI.</p>
+<pre><code class="language-swift">struct Card: Transferable {
+  let name: String
+  static var transferRepresentation: some TransferRepresentation {
+    ProxyRepresentation(exporting: \.name)
+  }
+}
+
+ShareLink(item: Card(name: &quot;Pikachu&quot;), preview: SharePreview(&quot;Pikachu&quot;))
+</code></pre>
+<p>Rappresentazioni, in ordine indicativo di preferenza: <code>CodableRepresentation</code> (JSON, per i tipi della tua app), <code>DataRepresentation</code> (byte grezzi con un UTType), <code>FileRepresentation</code> (un URL di file), <code>ProxyRepresentation</code> (delega a un altro tipo <code>Transferable</code> — il caso più semplice, sopra).</p>
+<p>Puoi dichiararne diverse; il destinatario sceglie la migliore che capisce. <code>ShareLink</code> poi ti dà il share sheet di sistema con una sola view.</p>
+<hr>
+<h2 id="5-fonti-ufficiali">5. Fonti ufficiali</h2>
+<ul>
+<li><a href="https://developer.apple.com/documentation/appintents">Apple — App Intents</a> · <a href="https://developer.apple.com/documentation/appintents/appintent"><code>AppIntent</code></a> · <a href="https://developer.apple.com/documentation/appintents/appshortcutsprovider"><code>AppShortcutsProvider</code></a></li>
+<li><a href="https://developer.apple.com/documentation/charts">Apple — Swift Charts</a> · <a href="https://developer.apple.com/documentation/charts/chart"><code>Chart</code></a></li>
+<li><a href="https://developer.apple.com/documentation/widgetkit">Apple — WidgetKit</a> · <a href="https://developer.apple.com/documentation/widgetkit/creating-accessory-widgets-and-watch-complications">Creating accessory widgets</a></li>
+<li><a href="https://developer.apple.com/documentation/coretransferable/transferable">Apple — <code>Transferable</code></a> · <a href="https://developer.apple.com/documentation/swiftui/sharelink"><code>ShareLink</code></a></li>
+<li><a href="https://developer.apple.com/design/human-interface-guidelines/widgets">Apple — Human Interface Guidelines: Widgets</a></li>
+</ul>
+<hr>
+<h2 id="6-dove-atterra-in-questo-codebase">6. Dove atterra in questo codebase</h2>
+<p>Nessuno di questi quattro esiste nel progetto. Ma i dati per alimentarli ci sono già.</p>
+<p><code>Demo/PokeApp/Models/Pokemon.swift</code> memorizza <code>name</code>, <code>shakespeareanDescription</code>, <code>spriteUrl</code> e <code>searchDate</code>. Basta per:</p>
+<ul>
+<li><strong>App Intent</strong> — "mostra il Pokémon X", che ha bisogno della navigazione del Modulo 4.</li>
+<li><strong>Widget da lock screen</strong> — il Pokémon cercato più di recente. La cronologia è già ordinata per <code>searchDate</code> (<code>SearchViewModel.swift:256</code>).</li>
+<li><strong><code>ShareLink</code></strong> — condividere nome e descrizione di un Pokémon dalla view di dettaglio. Genuinamente una riga, una volta che <code>Pokemon</code> è <code>Transferable</code>.</li>
+<li><strong>Grafico</strong> — ricerche per giorno da <code>searchDate</code>. Onestamente è debole: la cronologia di ricerca di un'app hobbistica non è un dato interessante. Fai il grafico per imparare l'API, non perché l'app ne abbia bisogno.</li>
+</ul>
+<p><strong>L'unico ostacolo reale.</strong> Un'estensione widget è un <strong>processo separato</strong> con un bundle separato. Non può leggere lo store SwiftData dell'app com'è configurato oggi, perché <code>PokeApp.swift:28</code> mette lo store in <code>URL.applicationSupportDirectory</code> — dentro il container dell'app stessa. Condividerlo richiede un <strong>App Group</strong> e lo spostamento dello store nel container del gruppo.</p>
+<p>È un cambiamento architetturale vero, ed è la parte interessante dell'esercizio. Tocca anche il percorso di recupero dello store a <code>PokeApp.swift:27-47</code>, che oggi cancella e ricostruisce in caso di fallimento — con due processi che aprono lo stesso store, "cancella e ricostruisci" è una mossa considerevolmente più pericolosa di quanto fosse con uno solo.</p>
+<hr>
+<h2 id="7-esercizio">7. Esercizio</h2>
+<p>Scegli <strong>una</strong> tra A e B. Sono entrambe feature reali; nessuna delle due è lavoro fine a sé stesso. Non fare tutti e quattro i framework — qui la larghezza serve all'orientamento, la profondità arriva dopo.</p>
+<h3 id="opzione-a-sharelink-piccola-30-minuti">Opzione A — <code>ShareLink</code> (piccola, ~30 minuti)</h3>
+<p>Fai conformare <code>Pokemon</code> a <code>Transferable</code> e aggiungi uno <code>ShareLink</code> alla view di dettaglio.</p>
+<p><strong>Criteri di accettazione.</strong>
+1. Condividere su Messaggi produce testo leggibile con nome e descrizione.
+2. <code>Pokemon</code> è una <strong>classe</strong> <code>@Model</code> di SwiftData — ragiona esplicitamente se rendere <code>Transferable</code> il modello stesso o introdurre un piccolo value type <code>Sendable</code> per la condivisione. Scrivi il tuo ragionamento. (Considera: le classi <code>@Model</code> non sono <code>Sendable</code>, e i valori <code>Transferable</code> attraversano confini di processo.)
+3. Tutti i 71 test passano ancora; <code>swiftlint lint --strict</code> pulito.</p>
+<h3 id="opzione-b-app-intent-widget-da-lock-screen-sostanziale-diverse-ore">Opzione B — App Intent + widget da lock screen (sostanziale, diverse ore)</h3>
+<p>Esponi "mostra il Pokémon X" come App Intent, e aggiungi un widget che mostra la ricerca più recente.</p>
+<p><strong>Fai prima il Modulo 4.</strong> Senza un path di navigazione l'intent non ha dove mandare l'app.</p>
+<p><strong>Passi.</strong>
+1. Aggiungi una capability App Group condivisa tra l'app e un nuovo target di estensione widget.
+2. Sposta lo store SwiftData nel container del gruppo. Rivedi la logica di recupero a <code>PokeApp.swift:27-47</code> — con due processi, ragiona su cosa succede se il widget sta leggendo mentre l'app cancella.
+3. Scrivi <code>ShowPokemonIntent</code>, usando <code>LocalizedStringResource</code> per <code>title</code> (non <code>String(localized:)</code>).
+4. Aggiungi un <code>AppShortcutsProvider</code> così funziona in Siri senza configurazione da parte dell'utente.
+5. Aggiungi un widget che supporta <code>.accessoryRectangular</code> e <code>.systemSmall</code>.</p>
+<p><strong>Criteri di accettazione.</strong>
+1. L'intent compare nell'app Comandi rapidi e naviga l'app in esecuzione sul Pokémon giusto.
+2. Il widget mostra la ricerca più recente e si aggiorna dopo una nuova.
+3. Il widget è leggibile nella modalità di rendering accessory desaturata — controlla sulla schermata di blocco, non solo nella galleria widget.
+4. VoiceOver legge il widget in modo sensato.
+5. Tutti i 71 test esistenti passano ancora. La logica dell'intent è coperta da almeno un nuovo test.
+6. <code>swiftlint lint --strict</code> pulito, e CI verde — nota che aggiungere un target cambia la build, quindi tieni d'occhio la prima CI.</p>
+<pre><code class="language-bash">xcodebuild test -project Demo/PokeApp.xcodeproj -scheme PokeApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild test -scheme Pokespeare -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+</code></pre>
+<hr>
+<h2 id="8-trappole">8. Trappole</h2>
+<ul>
+<li><strong><code>LocalizedStringResource</code>, non <code>String</code>,</strong> per tutto ciò che il sistema mostra fuori dalla tua app. Le stringhe pre-risolte congelano il locale alla costruzione; Comandi rapidi potrebbe mostrare il tuo intent sotto un altro.</li>
+<li><strong>I widget sono un processo separato.</strong> Nessuna memoria condivisa, nessun container condiviso senza un App Group, e un limite di memoria stretto — non decodificare un'immagine grande in una entry di timeline.</li>
+<li><strong>Non controlli il refresh del widget.</strong> La timeline policy è un suggerimento contro un budget di sistema.</li>
+<li><strong>Le famiglie accessory sono desaturate.</strong> Il significato veicolato dal colore sparisce. Usa <code>.widgetAccentable()</code> e affidati a forma e gerarchia.</li>
+<li><strong>I parametri di App Intents devono essere risolvibili senza la tua UI.</strong> <code>perform()</code> può girare con l'app non in primo piano, o non in esecuzione affatto.</li>
+<li><strong>Le stringhe <code>.value("Label", …)</code> in Swift Charts sono visibili all'utente.</strong> Sono etichette d'asse e voci di legenda — localizzale.</li>
+<li><strong>Un grafico senza etichette di accessibilità è peggio di nessun grafico</strong> in un'app che ha già fatto bene VoiceOver.</li>
+<li><strong>Aggiungere un App Group cambia il provisioning.</strong> Aspettati una deviazione sulla firma, e aspettati che la CI abbia bisogno di attenzione.</li>
+</ul>
+<hr>
+<h2 id="9-autovalutazione">9. Autovalutazione</h2>
+<ol>
+<li>Cosa ha sostituito App Intents, e qual è la differenza concreta nell'esperienza di sviluppo?</li>
+<li>Perché <code>AppIntent.title</code> è un <code>LocalizedStringResource</code> invece di una <code>String</code>? Dai la modalità di fallimento dell'usare una <code>String</code> pre-risolta.</li>
+<li>Cosa deve interpolare una frase di <code>AppShortcut</code>, e perché il sistema lo richiede?</li>
+<li>Descrivi il contratto di <code>TimelineProvider</code>. Puoi garantire che un widget si aggiorni ogni 5 minuti?</li>
+<li>Cos'è la "widget rendering mode" per le famiglie accessory, e cosa comporta per un design che codifica significato nel colore?</li>
+<li>Nomina tre tipi di <code>TransferRepresentation</code> e quando sceglieresti ciascuno.</li>
+<li>In Swift Charts, cosa fa <code>.foregroundStyle(by:)</code> oltre a impostare un colore?</li>
+<li>Lo store SwiftData di quest'app vive in <code>URL.applicationSupportDirectory</code>. Perché esattamente questo impedisce a un widget di leggerlo, e cosa cambia il fix riguardo alla logica di recupero dello store in <code>PokeApp.swift</code>?</li>
+</ol>
+<nav class="pager"><a class="pager-prev" href="../wwdc22/04-swiftui-navigation-and-layout.html"><span>Precedente</span><strong>4 · Navigazione e layout in SwiftUI</strong></a><a class="pager-next" href="../wwdc22/06-build-challenges.html"><span>Successivo</span><strong>6 · Sfide di implementazione</strong></a></nav>
+</article>
+<aside class="toc"><p>In questa pagina</p><div class="toc">
+<ul>
+<li><a href="#wwdc22-modulo-5-debutti-di-piattaforma-app-intents-swift-charts-widget-da-lock-screen-transferable">WWDC22 · Modulo 5 — Debutti di piattaforma: App Intents, Swift Charts, widget da lock screen, Transferable</a><ul>
+<li><a href="#1-app-intents">1. App Intents</a><ul>
+<li><a href="#cose-e-perche-ha-sostituito-cio-che-cera-prima">Cos'è, e perché ha sostituito ciò che c'era prima</a></li>
+<li><a href="#perche-a-questo-progetto-dovrebbe-interessare">Perché a questo progetto dovrebbe interessare</a></li>
+</ul>
+</li>
+<li><a href="#2-swift-charts">2. Swift Charts</a></li>
+<li><a href="#3-widget-da-lock-screen">3. Widget da lock screen</a></li>
+<li><a href="#4-transferable-e-sharelink">4. Transferable e ShareLink</a></li>
+<li><a href="#5-fonti-ufficiali">5. Fonti ufficiali</a></li>
+<li><a href="#6-dove-atterra-in-questo-codebase">6. Dove atterra in questo codebase</a></li>
+<li><a href="#7-esercizio">7. Esercizio</a><ul>
+<li><a href="#opzione-a-sharelink-piccola-30-minuti">Opzione A — ShareLink (piccola, ~30 minuti)</a></li>
+<li><a href="#opzione-b-app-intent-widget-da-lock-screen-sostanziale-diverse-ore">Opzione B — App Intent + widget da lock screen (sostanziale, diverse ore)</a></li>
+</ul>
+</li>
+<li><a href="#8-trappole">8. Trappole</a></li>
+<li><a href="#9-autovalutazione">9. Autovalutazione</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</div>
+<script src="../assets/app.js"></script>
+</body>
+</html>
